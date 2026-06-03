@@ -8,20 +8,24 @@ from __future__ import annotations
 from typing import Optional
 
 from .causal import CausalGraph
-from .enums import CausalEdgeKind, EventScale
+from .enums import ActivationMode, CausalEdgeKind, EventScale
 from .models import CausalNode, CausalSeed, World
 
 
 def fire_seeds(world: World) -> list[CausalSeed]:
-    """Fire every unfired seed that has matured by the world's current year.
+    """Fire every matured GUARANTEED seed at the world's current year.
 
     Deterministic: a seed is mature when ``current_year >= planted_year +
-    maturation_time``. Fired seeds are marked and returned in a stable order.
+    maturation_time``. PROBABILISTIC seeds are deferred to P3 (probability is
+    driven by world state there). Fired seeds are marked and returned in a
+    stable order.
     """
     matured = [
         s
         for s in world.seeds
-        if not s.fired and world.current_year >= s.planted_year + s.maturation_time
+        if not s.fired
+        and s.activation_mode == ActivationMode.GUARANTEED
+        and world.current_year >= s.planted_year + s.maturation_time
     ]
     matured.sort(key=lambda s: (s.planted_year, s.id))
     for seed in matured:

@@ -11,6 +11,7 @@ from typing import Annotated, Optional
 from pydantic import BaseModel, Field
 
 from .enums import (
+    ActivationMode,
     CausalEdgeKind,
     DeathCause,
     DiscoveryType,
@@ -180,16 +181,31 @@ class Evaluation(BaseModel):
     heritage: int = 0
 
 
+class LifeSummary(BaseModel):
+    """Generated at death; consumed by personal history, inheritance, and
+    ending generation (review request)."""
+
+    life_id: str
+    title: str = ""
+    dominant_axis: Optional[ThemeAxis] = None
+    seeds_created: list[str] = Field(default_factory=list)
+    heritage_created: list[str] = Field(default_factory=list)
+    notable_events: list[str] = Field(default_factory=list)
+
+
 class Life(BaseModel):
     id: str
     player_id: str
     birth_year: int
+    age: int = 0  # current age during the life
+    turns: int = 0  # action-time turns elapsed (drives aging)
     death_year: Optional[int] = None
     age_at_death: Optional[int] = None
     death_cause: Optional[DeathCause] = None
     talent: Optional[Talent] = None
     activity_log: list[ActivityRecord] = Field(default_factory=list)
     evaluation: Evaluation = Field(default_factory=Evaluation)
+    summary: Optional[LifeSummary] = None
 
 
 # --- Memory -------------------------------------------------------------
@@ -224,6 +240,9 @@ class CausalSeed(BaseModel):
     planted_year: int = 0
     planted_by_life_id: Optional[str] = None
     fired: bool = False
+    # Firing model (section 9.3). P1/P2 use GUARANTEED; PROBABILISTIC is for P3.
+    activation_mode: ActivationMode = ActivationMode.GUARANTEED
+    base_probability: float = 1.0
 
 
 class CausalEdge(BaseModel):

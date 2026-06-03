@@ -12,7 +12,8 @@ from .enums import FactionType, SeedDomain, ThemeAxis, WildCardStatus
 from .models import ThemeSnapshot, World, WorldTheme
 
 BASE_AXIS = 20
-SEED_PUSH = 5
+SEED_PUSH = 5  # a fired seed's contribution
+PLANTED_PUSH = 2  # an as-yet-unfired player seed's smaller contribution
 
 SEED_DOMAIN_TO_THEME: dict[SeedDomain, ThemeAxis] = {
     SeedDomain.DISCOVERY: ThemeAxis.INNOVATION,
@@ -43,6 +44,8 @@ def compute_theme(world: World) -> WorldTheme:
     for seed in world.seeds:
         if seed.fired:
             axes[SEED_DOMAIN_TO_THEME[seed.domain]] += SEED_PUSH
+        elif seed.planted_by_life_id:  # player intent nudges the world (section C)
+            axes[SEED_DOMAIN_TO_THEME[seed.domain]] += PLANTED_PUSH
 
     for wildcard in world.wildcards.wildcards:
         if wildcard.status == WildCardStatus.IGNITED:

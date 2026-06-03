@@ -335,7 +335,8 @@ Each dungeon has a **Theme Affinity**; clearing it pushes WorldTheme (B->C link)
 ```
 CausalNode (= Event)  : id, scale(LARGE/MED/SMALL), domain, year, location, actors[], caused_by[CausalEdge]
 CausalEdge            : from(cause) -> to(effect), weight, kind(ENABLE/TRIGGER/AMPLIFY/SUPPRESS)
-CausalSeed            : domain, magnitude, target(faction/npc/city/tech), maturation_time, decay  (player action)
+CausalSeed            : domain, magnitude, target(faction/npc/city/tech), maturation_time, decay,
+                        activation_mode(GUARANTEED|PROBABILISTIC), base_probability  (player action)
 ```
 
 ### 9.2 Generation principle (answer to R1)
@@ -347,6 +348,8 @@ The AI is never asked to *invent* history; what happened (state change) and why 
 
 ### 9.3 Event firing
 During skip, each latent event's probability `= f(world_state, active_seeds, faction_tensions, wildcard_trajectory, world_theme)`. A fired event automatically attaches the contributing factors as parent edges. If a player seed contributed, a link is always created (resolves R2).
+
+Seeds carry an `activation_mode`: `GUARANTEED` seeds fire deterministically once matured (P1/P2 behavior — all seeds are GUARANTEED for now); `PROBABILISTIC` seeds fire by `base_probability` scaled by world state, introduced in P3.
 
 ### 9.4 Tracing UX
 From any event, walk toward parents. "Hundred-year war <- general's independence <- merchant league <- mine discovery <- [YOU] age-22 investment." Reaching a player node highlights it.
@@ -372,8 +375,11 @@ Core persisted entities (see `src/chronicle_forge/models.py` for the authoritati
 ```
 World        { id, seed, current_year, max_year, theme: WorldTheme, ending_class? }
 Player       { id, current_life_id, powers: PlayerPowers, inherited{knowledge[],titles[],traits[],skills[]} }
-Life         { id, player_id, birth_year, death_year, age_at_death, death_cause,
-               talent, activity_log[], evaluation{8 lenses} }
+Life         { id, player_id, birth_year, age, turns, death_year, age_at_death,
+               death_cause, talent, activity_log[], evaluation{8 lenses}, summary? }
+LifeSummary  { life_id, title, dominant_axis, seeds_created[], heritage_created[],
+               notable_events[] }   # generated at death; feeds personal history /
+                                    # inheritance / ending generation
 NPC          { id, tier, attributes(6.2), lifecycle, alive, lineage{lineage_id,parent_ids[],generation} }
 Faction      { id, type, power, ideology, relations{} }
 Location     { id, type(village/dungeon/field), state, theme_affinity }

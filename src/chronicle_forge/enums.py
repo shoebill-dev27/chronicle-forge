@@ -169,3 +169,11 @@ class DeathCause(str, Enum):
     LIFESPAN = "lifespan"
     COMBAT = "combat"
     CHOICE = "choice"
+
+
+class ActivationMode(str, Enum):
+    """How a causal seed fires (section 9.3). P1/P2 use GUARANTEED only;
+    PROBABILISTIC firing is introduced in P3 when world state drives probability."""
+
+    GUARANTEED = "guaranteed"
+    PROBABILISTIC = "probabilistic"
