@@ -1,0 +1,36 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Keys / certs
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# Local game saves / generated worlds
+*.db
+*.sqlite
+*.sqlite3
+saves/
+generated/
+
+# Editor / tooling
+.claude/
+.cursor/
+.vscode/
+.idea/
+.DS_Store
