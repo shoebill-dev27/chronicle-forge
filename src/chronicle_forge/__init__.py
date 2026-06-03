@@ -7,9 +7,26 @@ presentation layer are added in later roadmap phases.
 
 from __future__ import annotations
 
+from .causal import CausalCycleError, CausalGraph
+from .generation import fire_seeds, generate_events
+from .heritage import compute_heritage_score, promote_heritage
+from .pipeline import advance_history
+from .theme import compute_theme
 from .timeskip import compute_skip_years
 from .worldgen import generate_world
 
 __version__ = "0.3.0"
 
-__all__ = ["generate_world", "compute_skip_years", "__version__"]
+__all__ = [
+    "generate_world",
+    "compute_skip_years",
+    "CausalGraph",
+    "CausalCycleError",
+    "fire_seeds",
+    "generate_events",
+    "compute_theme",
+    "promote_heritage",
+    "compute_heritage_score",
+    "advance_history",
+    "__version__",
+]

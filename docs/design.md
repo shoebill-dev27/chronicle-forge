@@ -277,9 +277,16 @@ The 7 axes are kept; **Heritage** is added as a cross-cutting 8th lens (separate
 ```
 HeritageNode (= promoted long-lived CausalSeed)
   type : school / thought / technology / institution / heir / monument
-  longevity_score = sum over descendant events of (descendant_count * elapsed_years * weight)
+  reach     : breadth -> count of transitive descendant events in the causal DAG
+  longevity : depth   -> years the legacy has propagated since its founding event
+  heritage_score = round(weight * longevity * (1 + reach))
 ```
-Founding a school -> decades later produces a thinker -> later institutionalized: the more descendant nodes, the higher the score. The Heritage tab in the codex/world history lists the player's legacy and is the main material for the Ending text.
+Reach and longevity are tracked separately. The `(1 + reach)` term lets a young
+legacy with no descendants still accrue value from longevity, while reach
+amplifies it; `weight` favors culture-/mentoring-oriented legacies (school,
+thought, institution, heir = 2; technology, monument = 1). Founding a school ->
+decades later produces a thinker -> later institutionalized: the more descendant
+nodes (reach) and the longer it propagates (longevity), the higher the score. The Heritage tab in the codex/world history lists the player's legacy and is the main material for the Ending text.
 
 ---
 
@@ -290,8 +297,9 @@ Bidirectional: primarily an emergent indicator computed from world state, but pl
 WorldTheme {
   axes : { warfare, innovation, faith, commerce, governance, culture }  # each 0..100
   dominant : the leading axis (the world's current "color")
-  history  : per-year trajectory (overlayable with personal history)
+  history  : [ThemeSnapshot]   # typed trajectory, overlayable with personal history
 }
+ThemeSnapshot { year, axes{ThemeAxis:int}, dominant }
 ```
 - **Inputs:** faction power, unresolved WildCards, dungeon discoveries, player seed domains.
 - **Outputs (feedback):**
@@ -334,6 +342,8 @@ CausalSeed            : domain, magnitude, target(faction/npc/city/tech), matura
 > State transitions are decided **deterministically by the rules engine** -> causal edges are attached **structurally at generation time** -> the AI only **narrates/interprets** the already-fixed graph.
 
 The AI is never asked to *invent* history; what happened (state change) and why (edges) are fixed first, and the AI only prose-ifies them, guaranteeing traceable-without-contradiction causality.
+
+**DAG guarantee:** the causal structure is enforced acyclic. `CausalGraph.add_edge` rejects any edge whose effect is already a transitive cause of its cause (and self-loops), raising `CausalCycleError`. This keeps "trace why this happened" terminating and contradiction-free (R1).
 
 ### 9.3 Event firing
 During skip, each latent event's probability `= f(world_state, active_seeds, faction_tensions, wildcard_trajectory, world_theme)`. A fired event automatically attaches the contributing factors as parent edges. If a player seed contributed, a link is always created (resolves R2).

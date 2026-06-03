@@ -108,12 +108,21 @@ class Location(BaseModel):
     theme_affinity: Optional[ThemeAxis] = None
 
 
+class ThemeSnapshot(BaseModel):
+    """A point-in-time record of the World Theme, kept per generation step so
+    the theme trajectory can be overlaid with personal history (section C)."""
+
+    year: int
+    axes: dict[ThemeAxis, int] = Field(default_factory=dict)
+    dominant: Optional[ThemeAxis] = None
+
+
 class WorldTheme(BaseModel):
     """Bidirectional world tendency (section C): emergent indicator that the
     player can also push."""
 
     axes: dict[ThemeAxis, int] = Field(default_factory=dict)
-    history: list[dict] = Field(default_factory=list)
+    history: list[ThemeSnapshot] = Field(default_factory=list)
 
     @property
     def dominant(self) -> Optional[ThemeAxis]:
@@ -236,12 +245,18 @@ class CausalNode(BaseModel):
 
 
 class HeritageNode(BaseModel):
-    """Promoted long-lived causal seed; the basis of the Heritage lens (section D)."""
+    """Promoted long-lived causal seed; the basis of the Heritage lens (section D).
+
+    Reach (breadth) and longevity (depth in time) are tracked separately; the
+    composite ``heritage_score`` is computed from both (see heritage.py).
+    """
 
     id: str
     seed_id: str
     type: HeritageType
-    longevity_score: int = 0
+    reach: int = 0  # breadth: transitive descendant events in the causal DAG
+    longevity: int = 0  # depth: years the legacy has propagated since its event
+    heritage_score: int = 0  # = round(weight * longevity * (1 + reach))
 
 
 # --- Discovery / dungeon link (section B) ------------------------------
