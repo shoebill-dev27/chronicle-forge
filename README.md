@@ -22,16 +22,26 @@ few bounded decisions.
 
 ## Status
 
-P0 (foundation): data model + deterministic world generation. See the roadmap
-in the design document (section 14).
+P0–P5 complete: deterministic foundation, causal core, micro loop (a life),
+macro loop (death → time-skip → history → reincarnation, reproducible from the
+seed), and a read-only observability layer. See the roadmap in the design
+document (section 14). Next: P4 (AI integration).
+
+## Running a world
+
+```bash
+# simulate a full world deterministically and print the developer report
+PYTHONPATH=src python -m chronicle_forge 42
+```
+
+The report (read-only, no AI) shows the world summary, player lives, personal
+history, theme trajectory, major events, wildcard history, the heritage Top 10,
+and the NPC codex — enough to read a finished world and judge it as a game.
 
 ## Development
 
 ```bash
-# install in editable mode with dev tooling
-pip install -e ".[dev]"
-
-# run tests
+# run tests (no install needed; pytest uses pythonpath=src)
 pytest
 
 # format

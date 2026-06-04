@@ -113,6 +113,7 @@ def generate_world(seed: int, max_year: int = config.DEV_WORLD_MAX_YEARS) -> Wor
     for i in range(config.MVP_NPC_COUNT):
         tier = NPCTier.S if i < config.MVP_IMPORTANT_NPC_COUNT else NPCTier.A
         faction = rng.choice(factions)
+        age = rng.randint(16, 60)
         npcs.append(
             NPC(
                 id=ids.next("npc"),
@@ -120,8 +121,9 @@ def generate_world(seed: int, max_year: int = config.DEV_WORLD_MAX_YEARS) -> Wor
                 tier=tier,
                 personality=_make_personality(rng),
                 lifecycle=Lifecycle(
-                    age=rng.randint(16, 60),
+                    age=age,
                     faction_id=faction.id,
+                    birth_year=-age,  # world starts at year 0
                 ),
             )
         )

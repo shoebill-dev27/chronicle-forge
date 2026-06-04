@@ -177,6 +177,7 @@ def step_npcs_lifecycle(world: World, rng: DeterministicRNG) -> None:
         npc.lifecycle.age += 1
         if npc.lifecycle.age > NPC_DEATH_AGE and rng.random() < NPC_DEATH_PROBABILITY:
             npc.alive = False
+            npc.lifecycle.death_year = world.current_year
         elif (
             npc.personality.ambitious > 70 and rng.random() < NPC_PROMOTION_PROBABILITY
         ):

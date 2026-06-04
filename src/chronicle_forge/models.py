@@ -61,6 +61,8 @@ class Lifecycle(BaseModel):
     occupation: str = "villager"
     faction_id: Optional[str] = None
     life_stage: str = "adult"
+    birth_year: Optional[int] = None  # world year of birth (negative = before year 0)
+    death_year: Optional[int] = None  # set when the NPC dies during the skip
 
 
 class Lineage(BaseModel):

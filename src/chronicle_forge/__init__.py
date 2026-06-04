@@ -29,7 +29,17 @@ from .npc import step_npc
 from .pipeline import advance_history
 from .powers import foresight, imprint, manifest_amplify
 from .theme import compute_theme
+from .autoplay import simulate_report, simulate_world
+from .ending import classify_ending
 from .timeskip import compute_skip_years
+from .views import (
+    full_report,
+    render_causal_trace,
+    render_heritage_ranking,
+    render_npc_codex,
+    render_personal_history,
+    render_world_summary,
+)
 from .worldgen import generate_world
 
 __version__ = "0.3.0"
@@ -68,5 +78,15 @@ __all__ = [
     "step_factions",
     "step_npcs_lifecycle",
     "derive_rng",
+    # observability (P5)
+    "simulate_world",
+    "simulate_report",
+    "classify_ending",
+    "full_report",
+    "render_world_summary",
+    "render_personal_history",
+    "render_causal_trace",
+    "render_heritage_ranking",
+    "render_npc_codex",
     "__version__",
 ]
