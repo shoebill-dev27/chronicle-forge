@@ -1,1 +1,11 @@
-Seed 42: over 40 years and 3 reincarnations in Hollowfen, one soul's deeds rippled into 77 recorded events and 8 lasting legacies, and the world settled into the Theocratic Age, and Wreveth the conqueror rose and ran their course. Its greatest legacy, a thought (seed seed-0014), set 18 later events in motion. Every outcome can be traced back through event and seed to the life that began it — the player's actions continued affecting history long after death.
+Chronicle Forge is a reincarnation roguelite where you are a world's only returning soul. You live, act, and die — and the world keeps going without you. NPCs, factions, and history continue, so every new life is born into the consequences of the last.
+
+This page is one finished world, generated from seed 42 — fully reproducible, rules-only, no AI. It ran 40 years across 3 lives and ended as the Theocratic Age.
+
+The ending was not scripted; it grew out of the player's choices. The first life, a warrior, planted what became the world's greatest legacy — a thought that set 18 later events in motion. Life after life, such threads pushed the world toward faith, until they produced the Theocratic Age.
+
+Every step is traceable. Take the ending and walk it backwards — ending ← event ← seed ← the exact life that began it — until you reach the original action, decades earlier. That is the core promise made literal and inspectable: the player's actions continued affecting history long after death.
+
+Read it as a history book whose author you can interrogate: for any line, you can ask "why did this happen?", and the answer is always another line above it — a war, a school, an investment — until the trail ends at a single life's deliberate choice. Nothing here was hand-written; it was lived into being.
+
+Start with story.md to follow each life's chain, then chronicle.md for the full record and the "Why this Ending" trace.

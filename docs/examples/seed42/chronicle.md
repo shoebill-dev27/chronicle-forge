@@ -119,6 +119,6 @@
 
 The world ended as the **Theocratic Age**, set by a final dominant theme of *faith*. That tilt traces back through events to the lives that caused it:
 
-- **Theocratic Age** ⇐ y39 *faith event (seed-0067)* ⇐ `seed-0059` (faith) ⇐ Life 3 (The Priest of Hollowfen)
-- **Theocratic Age** ⇐ y39 *faith event (seed-0069)* ⇐ `seed-0059` (faith) ⇐ Life 3 (The Priest of Hollowfen)
-- **Theocratic Age** ⇐ y38 *faith event (seed-0063)* ⇐ `seed-0059` (faith) ⇐ Life 3 (The Priest of Hollowfen)
+- **Theocratic Age** ⇐ y39 *faith event (seed-0067)* ⇐ `seed-0027` (governance) ⇐ Life 2 (The Merchant of Hollowfen)
+- **Theocratic Age** ⇐ y39 *faith event (seed-0069)* ⇐ `seed-0027` (governance) ⇐ Life 2 (The Merchant of Hollowfen)
+- **Theocratic Age** ⇐ y38 *faith event (seed-0063)* ⇐ `seed-0027` (governance) ⇐ Life 2 (The Merchant of Hollowfen)

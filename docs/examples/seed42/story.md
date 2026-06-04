@@ -2,6 +2,14 @@
 
 _How each life's actions flowed into the world's history. Read top to bottom: a life acts, plants seeds, those seeds fire into events, some become lasting heritage, and together they tilt the world toward its ending — the **Theocratic Age**._
 
+## Why this world matters
+
+- This world ran **40 years** across **3 lives** and ended as the **Theocratic Age**.
+- The ending was not scripted — it grew out of the player's own choices, life after life.
+- Its greatest legacy was a **thought** (`seed-0014`) planted by **Life 1, the warrior** — it set **18 later events** in motion.
+- By **Life 3, the priest**, those threads had tilted the whole world toward *faith*, producing the Theocratic Age.
+- Everything below is traceable: each life's actions → the seeds they planted → the events those caused → the heritage that endured → the ending.
+
 ## Life 1 — The Warrior of Hollowfen
 - **Talent:** warrior | **Lived:** y0–y7 (age 23, lifespan)
 - **Activities:** commerce×2, research×3, combat×13, education×2, exploration×1, religion×1, construction×2

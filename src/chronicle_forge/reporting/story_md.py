@@ -86,6 +86,63 @@ def render_story_of_life(world: World, life_id: str) -> str:
     return "\n".join(lines)
 
 
+def _why_this_world_matters(world: World) -> str:
+    from ._data import heritage_rows, life_by_id, life_index, seed_by_id
+
+    dom = world.theme.dominant
+    idx = life_index(world)
+    lines = ["## Why this world matters", ""]
+    lines.append(
+        f"- This world ran **{world.current_year} years** across "
+        f"**{len(world.lives)} lives** and ended as the **{world.ending_class}**."
+    )
+    lines.append(
+        "- The ending was not scripted — it grew out of the player's own choices, "
+        "life after life."
+    )
+
+    rows = heritage_rows(world, top=1)
+    if rows:
+        top = rows[0]
+        seed = seed_by_id(world, top["source_seed"])
+        life = life_by_id(world, seed.planted_by_life_id) if seed else None
+        talent = life.talent.value if life and life.talent else "soul"
+        lines.append(
+            f"- Its greatest legacy was a **{top['type']}** (`{top['source_seed']}`) "
+            f"planted by **{top['origin_life']}, the {talent}** — it set "
+            f"**{top['derived_events']} later events** in motion."
+        )
+
+    # Which life pushed the final tilt the most.
+    if dom is not None:
+        from ..theme import SEED_DOMAIN_TO_THEME
+
+        best, best_n = None, 0
+        for life in world.lives:
+            n = sum(
+                1
+                for s in world.seeds
+                if s.planted_by_life_id == life.id
+                and s.fired
+                and SEED_DOMAIN_TO_THEME[s.domain] == dom
+            )
+            if n > best_n:
+                best, best_n = life, n
+        if best is not None:
+            talent = best.talent.value if best.talent else "soul"
+            lines.append(
+                f"- By **Life {idx[best.id]}, the {talent}**, those threads had "
+                f"tilted the whole world toward *{dom.value}*, producing the "
+                f"{world.ending_class}."
+            )
+
+    lines.append(
+        "- Everything below is traceable: each life's actions → the seeds they "
+        "planted → the events those caused → the heritage that endured → the ending."
+    )
+    return "\n".join(lines)
+
+
 def stories_md(world: World) -> str:
     lines = [
         f"# The Lives of {_title_place(world)} — Seed {world.seed}",
@@ -94,6 +151,8 @@ def stories_md(world: World) -> str:
         "Read top to bottom: a life acts, plants seeds, those seeds fire into "
         "events, some become lasting heritage, and together they tilt the world "
         f"toward its ending — the **{world.ending_class}**._",
+        "",
+        _why_this_world_matters(world),
         "",
     ]
     for life in world.lives:

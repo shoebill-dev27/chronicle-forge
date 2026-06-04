@@ -109,12 +109,18 @@ def test_timeline_has_a_row_per_year():
     assert len(data_rows) == len(world.theme.history)
 
 
-def test_summary_is_within_band_and_factual():
+def test_summary_is_within_word_band_and_factual():
     world = _world()
     s = summarize_world(world)
-    assert 200 <= len(s) <= 500
+    assert 200 <= len(s.split()) <= 300  # word count, first-timer friendly
     assert world.ending_class in s
     assert "long after death" in s
+
+
+def test_story_has_why_this_world_matters():
+    world = _world()
+    text = stories_md(world)
+    assert "## Why this world matters" in text
 
 
 def test_build_writes_bundle(tmp_path):

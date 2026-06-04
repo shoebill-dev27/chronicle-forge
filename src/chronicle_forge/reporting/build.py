@@ -32,30 +32,39 @@ def _folder_readme(world: World, has_png: bool) -> str:
         f"| {len(world.lives)} | {len(world.causal_nodes)} | "
         f"{len(world.heritage)} | {world.ending_class} |",
         "",
-        summarize_world(world),
-        "",
     ]
     if has_png:
         lines += [
-            "## How a past life shaped the ending",
-            "",
             "![Causal lineage from player seeds to the ending](causal.png)",
             "",
         ]
     lines += [
-        "## What to read",
+        "## How to read this (~5 minutes)",
         "",
-        "- **[story.md](story.md)** — each life traced Life → Seeds → Events → "
-        "Heritage → Ending (start here).",
-        "- [chronicle.md](chronicle.md) — the full factual report, incl. *Why this Ending*.",
-        "- [causal.dot](causal.dot) — Graphviz of the heritage lineages "
-        "(`dot -Tpng causal.dot -o causal.png`).",
-        "- [heritage.md](heritage.md) / [heritage.csv](heritage.csv) — legacy ranking.",
-        "- [timeline.md](timeline.md) — year-by-year world arc.",
-        "- [summary.md](summary.md) — one-paragraph digest.",
+        "Read in this order:",
         "",
-        f"_Generated from `simulate_world({world.seed})` — fully reproducible, "
-        "rules-only, no AI._",
+        "**1. [summary.md](summary.md) — _~1 min, read first._**  ",
+        "What this world is and what happened, for a first-time reader.",
+        "",
+        "**2. [story.md](story.md) — _~2–3 min, the heart of it._**  ",
+        "Each life traced Life → Seeds → Events → Heritage → Ending. "
+        "Look for how one early life's single seed grows into the world's ending.",
+        "",
+        "**3. [chronicle.md](chronicle.md) — _~1–2 min._**  ",
+        'The full factual report. Jump to **"Why this Ending"** to see the '
+        "`Ending ← Event ← Seed ← Life` chain spelled out.",
+        "",
+        "**Then, by interest (optional):**",
+        "",
+        "- [causal.dot](causal.dot) — _~1 min_ — the same lineages as a graph "
+        "(`dot -Tpng causal.dot -o causal.png`). Look for gold ★ player seeds "
+        "flowing down to the green `ENDING` node.",
+        "- [heritage.md](heritage.md) / [heritage.csv](heritage.csv) — _~1 min_ — "
+        "the legacy ranking: which seed, from which life, mattered most.",
+        "- [timeline.md](timeline.md) — _~1 min_ — the year-by-year arc of the world.",
+        "",
+        f"_Everything here is generated from `simulate_world({world.seed})` — fully "
+        "reproducible, rules-only, no AI._",
     ]
     return "\n".join(lines) + "\n"
 
