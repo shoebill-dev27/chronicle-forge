@@ -22,14 +22,18 @@ _AXIS_TO_ENDING: dict[ThemeAxis, str] = {
 APOCALYPSE_WARFARE_THRESHOLD = 75
 
 
-def classify_ending(world: World) -> str:
-    """Return (and store on the world) an ending classification."""
+def derive_ending_class(world: World) -> str:
+    """Pure: compute the ending class from world state without mutating it."""
     axes = world.theme.axes
     if axes.get(ThemeAxis.WARFARE, 0) >= APOCALYPSE_WARFARE_THRESHOLD:
-        world.ending_class = "Apocalyptic Age"
-        return world.ending_class
+        return "Apocalyptic Age"
     dominant = world.theme.dominant
-    world.ending_class = (
-        _AXIS_TO_ENDING.get(dominant, "Forgotten Age") if dominant else "Forgotten Age"
-    )
+    if dominant is None:
+        return "Forgotten Age"
+    return _AXIS_TO_ENDING.get(dominant, "Forgotten Age")
+
+
+def classify_ending(world: World) -> str:
+    """Return (and store on the world) an ending classification."""
+    world.ending_class = derive_ending_class(world)
     return world.ending_class

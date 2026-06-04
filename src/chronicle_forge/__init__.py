@@ -29,6 +29,13 @@ from .npc import step_npc
 from .pipeline import advance_history
 from .powers import foresight, imprint, manifest_amplify
 from .theme import compute_theme
+from .ai import (
+    EndingNarrator,
+    HistoryBookGenerator,
+    generate_history_book,
+    get_ai_client,
+    narrate_ending,
+)
 from .autoplay import simulate_report, simulate_world
 from .ending import classify_ending
 from .timeskip import compute_skip_years
@@ -88,5 +95,11 @@ __all__ = [
     "render_causal_trace",
     "render_heritage_ranking",
     "render_npc_codex",
+    # AI integration (P4)
+    "get_ai_client",
+    "generate_history_book",
+    "narrate_ending",
+    "HistoryBookGenerator",
+    "EndingNarrator",
     "__version__",
 ]

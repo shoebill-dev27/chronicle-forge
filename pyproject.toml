@@ -16,6 +16,11 @@ dev = [
     "pytest>=7.0",
     "black>=23.0",
 ]
+# Optional: enables the Anthropic-backed AI narration (P4). Without it, all
+# features still work via deterministic template fallback.
+ai = [
+    "anthropic>=0.40",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]

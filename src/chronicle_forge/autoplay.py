@@ -100,8 +100,26 @@ def simulate_world(seed: int, life_cap: int = 60) -> World:
     return world
 
 
-def simulate_report(seed: int) -> str:
-    """Run a world and render the full developer report."""
+def simulate_report(seed: int, narrate: bool = False) -> str:
+    """Run a world and render the full developer report.
+
+    With ``narrate=True``, append the AI-generated chronicle and ending epilogue
+    (deterministic template prose when no ANTHROPIC_API_KEY is set). The world
+    state itself is never affected by narration.
+    """
     from .views import full_report
 
-    return full_report(simulate_world(seed))
+    world = simulate_world(seed)
+    report = full_report(world)
+    if narrate:
+        from .ai import generate_history_book, narrate_ending
+
+        chronicle = generate_history_book(world)
+        ending_text = narrate_ending(world)
+        report += (
+            "\n\n=== CHRONICLE (narrative) ===\n"
+            + chronicle.generated_text
+            + "\n\n=== ENDING ===\n"
+            + ending_text
+        )
+    return report
