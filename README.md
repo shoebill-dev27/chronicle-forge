@@ -53,4 +53,4 @@ simulation runs rules-only without any API key.
 
 ## License
 
-TBD.
+MIT — see [LICENSE](LICENSE).
