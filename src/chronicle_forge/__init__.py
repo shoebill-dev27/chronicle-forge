@@ -14,6 +14,16 @@ from .discovery import explore_dungeon
 from .generation import fire_seeds, generate_events
 from .heritage import compute_heritage_score, promote_heritage
 from .life import begin_life, end_life, lifespan_reached
+from .macro import (
+    advance_to_next_life,
+    advance_year,
+    derive_rng,
+    fire_probabilistic_seeds,
+    step_factions,
+    step_npcs_lifecycle,
+    step_wildcards,
+    time_skip,
+)
 from .memory import form_memory
 from .npc import step_npc
 from .pipeline import advance_history
@@ -49,5 +59,14 @@ __all__ = [
     "step_npc",
     "player_fight",
     "resolve_combat",
+    # macro loop (P3)
+    "time_skip",
+    "advance_year",
+    "advance_to_next_life",
+    "fire_probabilistic_seeds",
+    "step_wildcards",
+    "step_factions",
+    "step_npcs_lifecycle",
+    "derive_rng",
     "__version__",
 ]

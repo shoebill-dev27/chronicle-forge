@@ -86,6 +86,13 @@ Dev/CI uses **world lifespan = 40 years** (completes in 2-4 lives) for fast iter
   -> Chronicle + Ending
 ```
 
+During the skip, each year runs a full world update (fire seeds -> generate
+events -> wildcard/faction/NPC steps -> theme snapshot -> heritage). Every
+stochastic step derives its RNG from `(world.seed, world.current_year)` via pure
+arithmetic, so the same world seed and the same player actions reproduce an
+identical world history (R3). This is what makes a reincarnator's mark on the
+future both real and replayable.
+
 ### 4.2 Micro loop (one life)
 ```
 reincarnation (apply inheritance, decide birthplace/age)
