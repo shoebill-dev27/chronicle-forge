@@ -53,6 +53,40 @@ _FACTION_SPECS = [
     (FactionType.ADVENTURER, "Free Lanterns", "freedom through the open road"),
 ]
 
+# archetype, primary axis, secondary axis, trajectory
+_WILDCARD_SPECS = [
+    (
+        WildCardArchetype.INVENTOR,
+        ThemeAxis.INNOVATION,
+        ThemeAxis.COMMERCE,
+        ["perfects a lost formula", "founds a workshop", "sparks a magical revolution"],
+    ),
+    (
+        WildCardArchetype.CONQUEROR,
+        ThemeAxis.WARFARE,
+        ThemeAxis.GOVERNANCE,
+        ["raises a warband", "sacks a rival", "forges a war-state"],
+    ),
+    (
+        WildCardArchetype.PROPHET,
+        ThemeAxis.FAITH,
+        ThemeAxis.CULTURE,
+        ["preaches a new creed", "gathers disciples", "founds a faith"],
+    ),
+    (
+        WildCardArchetype.MERCHANT_PRINCE,
+        ThemeAxis.COMMERCE,
+        ThemeAxis.GOVERNANCE,
+        ["corners a trade", "founds a guild", "builds a mercantile bloc"],
+    ),
+    (
+        WildCardArchetype.REFORMER,
+        ThemeAxis.GOVERNANCE,
+        ThemeAxis.CULTURE,
+        ["drafts a new law", "rallies the people", "remakes the state"],
+    ),
+]
+
 
 def _make_name(rng: DeterministicRNG) -> str:
     return rng.choice(_NAME_PREFIXES) + rng.choice(_NAME_SUFFIXES).strip()
@@ -128,23 +162,21 @@ def generate_world(seed: int, max_year: int = config.DEV_WORLD_MAX_YEARS) -> Wor
             )
         )
 
-    # --- WildCard registry (designed for N; MVP runs 1) ---
+    # --- WildCard registry: one per archetype so no single axis dominates ---
     wildcards = WildCardRegistry(
         wildcards=[
             WildCard(
                 id=ids.next("wc"),
                 name=_make_name(rng),
-                archetype=WildCardArchetype.INVENTOR,
+                archetype=archetype,
                 status=WildCardStatus.DORMANT,
-                ignition_condition="innovation_theme>=40 and merchant_power>=50",
-                trajectory=[
-                    "perfects a lost formula",
-                    "founds a workshop",
-                    "sparks a magical revolution",
-                ],
-                impact_vector={ThemeAxis.INNOVATION: 30, ThemeAxis.COMMERCE: 10},
+                ignition_condition=(
+                    f"{primary.value}_theme high and player seeds in {primary.value}"
+                ),
+                trajectory=list(trajectory),
+                impact_vector={primary: 30, secondary: 10},
             )
-            for _ in range(config.MVP_WILDCARD_COUNT)
+            for archetype, primary, secondary, trajectory in _WILDCARD_SPECS
         ]
     )
 

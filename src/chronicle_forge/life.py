@@ -14,7 +14,9 @@ from typing import Optional
 from . import config
 from .enums import DeathCause, LocationType, Talent
 from .ids import next_id
+from .inheritance import derive_inheritance
 from .models import Life, LifeSummary, World
+from .rng import DeterministicRNG
 from .theme import SEED_DOMAIN_TO_THEME, compute_theme
 
 START_AGE = 16  # the reincarnator begins each life as a young adult
@@ -49,6 +51,13 @@ def advance_time(world: World, life: Life, turns: int = 1) -> None:
 
 def lifespan_reached(life: Life) -> bool:
     return life.age >= config.LIFESPAN_CAP
+
+
+def draw_natural_span(rng: DeterministicRNG) -> int:
+    """Active world-years a life lasts before natural death (lifespan
+    distribution, P3.5). Varies the per-cycle world-time so life counts are not
+    fixed at 2."""
+    return rng.randint(config.NATURAL_SPAN_MIN, config.NATURAL_SPAN_MAX)
 
 
 def build_life_summary(world: World, life: Life) -> LifeSummary:
@@ -87,13 +96,35 @@ def build_life_summary(world: World, life: Life) -> LifeSummary:
     )
 
 
+def _merge(dst: list, src: list) -> None:
+    for item in src:
+        if item not in dst:
+            dst.append(item)
+
+
 def _apply_bequest(world: World, life: Life) -> None:
-    """Carry a title forward to the next life (Bequest power, section A-1)."""
+    """Carry title + derived knowledge/skills/traits forward (Bequest, section A-1).
+
+    Inheritance now compounds across lives and affects later actions
+    (see inheritance.py)."""
     if not world.player.powers.bequest_enabled or life.summary is None:
         return
+    inh = world.player.inherited
     title = life.summary.title
-    if title and title not in world.player.inherited.titles:
-        world.player.inherited.titles.append(title)
+    if title and title not in inh.titles:
+        inh.titles.append(title)
+
+    discovery_count = sum(
+        1
+        for d in world.discoveries
+        if any(
+            s.id == d.seed_id and s.planted_by_life_id == life.id for s in world.seeds
+        )
+    )
+    derived = derive_inheritance(life, discovery_count)
+    _merge(inh.knowledge, derived["knowledge"])
+    _merge(inh.skills, derived["skills"])
+    _merge(inh.traits, derived["traits"])
 
 
 def end_life(

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from typing import Optional
 
+from . import config
 from .causal import CausalGraph
 from .enums import (
     ActivationMode,
@@ -80,7 +81,6 @@ def fire_probabilistic_seeds(world: World, rng: DeterministicRNG) -> list[Causal
 # --- WildCard self-progression (priority 4) ----------------------------
 
 IGNITION_THEME_THRESHOLD = 40
-IGNITION_PROBABILITY = 0.5
 
 _AXIS_TO_DOMAIN: dict[ThemeAxis, SeedDomain] = {
     ThemeAxis.INNOVATION: SeedDomain.TECHNOLOGY,
@@ -124,14 +124,29 @@ def _emit_wildcard_event(
     return node
 
 
+def _player_seed_support(world: World, axis: ThemeAxis) -> int:
+    """Count fired player seeds whose domain maps to this axis."""
+    return sum(
+        1
+        for s in world.seeds
+        if s.fired
+        and s.planted_by_life_id is not None
+        and SEED_DOMAIN_TO_THEME[s.domain] == axis
+    )
+
+
 def step_wildcards(world: World, graph: CausalGraph, rng: DeterministicRNG) -> None:
     for wildcard in world.wildcards.wildcards:
         if wildcard.status == WildCardStatus.DORMANT:
             axis = _wildcard_primary_axis(wildcard)
+            # Ignition now requires BOTH a hot theme AND player contribution in
+            # that domain, at a lower base rate, so the player's focus decides
+            # which wildcard (if any) ignites (P3.5, Priority 2).
             if (
                 axis is not None
                 and world.theme.axes.get(axis, 0) >= IGNITION_THEME_THRESHOLD
-                and rng.random() < IGNITION_PROBABILITY
+                and _player_seed_support(world, axis) >= config.WILDCARD_PLAYER_SEED_REQ
+                and rng.random() < config.WILDCARD_IGNITION_PROB
             ):
                 wildcard.status = WildCardStatus.IGNITED
                 _emit_wildcard_event(
@@ -153,13 +168,56 @@ def step_wildcards(world: World, graph: CausalGraph, rng: DeterministicRNG) -> N
 # --- faction lifecycle (priority 5) ------------------------------------
 
 
-def step_factions(world: World, rng: DeterministicRNG) -> None:
-    """Faction power drifts toward the prevailing theme, with small jitter."""
+def _emit_event(
+    world: World,
+    graph: CausalGraph,
+    domain: SeedDomain,
+    title: str,
+    actors: list,
+    scale: EventScale = EventScale.MEDIUM,
+) -> CausalNode:
+    node = CausalNode(
+        id=next_id("node", world.causal_nodes),
+        scale=scale,
+        domain=domain,
+        year=world.current_year,
+        title=title,
+        actors=actors,
+    )
+    graph.add_node(node)
+    return node
+
+
+def step_factions(world: World, graph: CausalGraph, rng: DeterministicRNG) -> None:
+    """Faction power drifts toward theme + mean-reverts; rival factions may war.
+
+    Faction wars emit warfare events that move the theme (keeping history alive
+    during the skip), and the war drains both rivals (mean reversion). (P3.5)
+    """
     for faction in world.factions:
         axis = FACTION_TYPE_TO_THEME[faction.type]
         pull = (world.theme.axes.get(axis, 0) - 50) // 10
+        reversion = (config.FACTION_MEAN_REVERSION - faction.power) // 20
         jitter = rng.randint(-2, 2)
-        faction.power = max(0, min(100, faction.power + pull + jitter))
+        faction.power = max(0, min(100, faction.power + pull + reversion + jitter))
+
+    strong = sorted(world.factions, key=lambda f: -f.power)[:2]
+    if (
+        len(strong) == 2
+        and strong[1].power >= config.FACTION_WAR_POWER
+        and rng.random() < config.FACTION_WAR_PROB
+    ):
+        a, b = strong
+        _emit_event(
+            world,
+            graph,
+            SeedDomain.MILITARY,
+            f"war between {a.name} and {b.name}",
+            [a.id, b.id],
+            scale=EventScale.LARGE,
+        )
+        a.power = max(0, a.power - 12)
+        b.power = max(0, b.power - 12)
 
 
 # --- NPC lifecycle (priority 6) ----------------------------------------
@@ -169,8 +227,11 @@ NPC_DEATH_PROBABILITY = 0.3
 NPC_PROMOTION_PROBABILITY = 0.1
 
 
-def step_npcs_lifecycle(world: World, rng: DeterministicRNG) -> None:
-    """Age NPCs; resolve old-age death and ambitious promotion (kept minimal)."""
+def step_npcs_lifecycle(
+    world: World, graph: CausalGraph, rng: DeterministicRNG
+) -> None:
+    """Age NPCs; resolve old-age death and ambitious promotion. A promotion emits
+    a governance event so NPC lives feed world history (P3.5)."""
     for npc in world.npcs:
         if not npc.alive:
             continue
@@ -179,9 +240,19 @@ def step_npcs_lifecycle(world: World, rng: DeterministicRNG) -> None:
             npc.alive = False
             npc.lifecycle.death_year = world.current_year
         elif (
-            npc.personality.ambitious > 70 and rng.random() < NPC_PROMOTION_PROBABILITY
+            npc.personality.ambitious > 70
+            and npc.lifecycle.occupation != "leader"
+            and rng.random() < NPC_PROMOTION_PROBABILITY
         ):
             npc.lifecycle.occupation = "leader"
+            _emit_event(
+                world,
+                graph,
+                SeedDomain.GOVERNANCE,
+                f"{npc.name} rises to power",
+                [npc.id],
+                scale=EventScale.SMALL,
+            )
 
 
 # --- yearly world update (priority 2) ----------------------------------
@@ -202,8 +273,8 @@ def advance_year(world: World, rng: Optional[DeterministicRNG] = None) -> dict:
     nodes = generate_events(world, fired, graph)
 
     step_wildcards(world, graph, rng)
-    step_factions(world, rng)
-    step_npcs_lifecycle(world, rng)
+    step_factions(world, graph, rng)
+    step_npcs_lifecycle(world, graph, rng)
 
     theme = compute_theme(world)
     heritage = promote_heritage(world, graph)

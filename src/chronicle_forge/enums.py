@@ -132,6 +132,8 @@ class WildCardArchetype(str, Enum):
     INVENTOR = "inventor"
     CONQUEROR = "conqueror"
     ZEALOT = "zealot"
+    MERCHANT_PRINCE = "merchant_prince"
+    REFORMER = "reformer"
 
 
 class WildCardStatus(str, Enum):

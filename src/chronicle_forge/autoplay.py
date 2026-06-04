@@ -8,10 +8,17 @@ the same seed yields an identical finished world.
 
 from __future__ import annotations
 
+from . import config
 from .discovery import explore_dungeon
 from .ending import classify_ending
 from .enums import ActivityCategory, DeathCause, DiscoveryType, LocationType, Talent
-from .life import begin_life, end_life, lifespan_reached
+from .life import (
+    TURNS_PER_YEAR,
+    begin_life,
+    draw_natural_span,
+    end_life,
+    lifespan_reached,
+)
 from .macro import derive_rng, time_skip
 from .models import Life, World
 from .powers import imprint
@@ -45,10 +52,16 @@ def _live_one(world: World, rng: DeterministicRNG) -> Life:
         (loc for loc in world.locations if loc.type == LocationType.DUNGEON), None
     )
 
-    n_actions = rng.randint(8, 18)
-    for _ in range(n_actions):
-        if world.current_year >= world.max_year or lifespan_reached(life):
-            break
+    # Lifespan distribution (P3.5): each life lasts a drawn span of world-years.
+    death_year = life.birth_year + draw_natural_span(rng)
+    combat_death = False
+    per_action_combat = config.COMBAT_DEATH_PROB_PER_YEAR / TURNS_PER_YEAR
+
+    while (
+        world.current_year < world.max_year
+        and world.current_year < death_year
+        and not lifespan_reached(life)
+    ):
         roll = rng.random()
         if dungeon is not None and roll < 0.15:
             explore_dungeon(world, life, dungeon.id, rng.choice(list(DiscoveryType)))
@@ -65,13 +78,16 @@ def _live_one(world: World, rng: DeterministicRNG) -> Life:
             npc = rng.choice(world.npcs)
             if npc.alive:
                 imprint(world, life, npc.id)
+        if rng.random() < per_action_combat:
+            combat_death = True
+            break
 
-    cause = DeathCause.LIFESPAN if lifespan_reached(life) else DeathCause.CHOICE
+    cause = DeathCause.COMBAT if combat_death else DeathCause.LIFESPAN
     end_life(world, life, cause)
     return life
 
 
-def simulate_world(seed: int, life_cap: int = 40) -> World:
+def simulate_world(seed: int, life_cap: int = 60) -> World:
     """Run a world from generation to its max year and return the finished world."""
     world = generate_world(seed)
     while world.current_year < world.max_year and len(world.lives) < life_cap:

@@ -8,6 +8,7 @@ other activity. Losing a fight can end the life (DeathCause.COMBAT).
 from __future__ import annotations
 
 from .enums import DeathCause
+from .inheritance import combat_bonus
 from .life import end_life
 from .models import Life, World
 from .rng import DeterministicRNG
@@ -16,8 +17,11 @@ COMBAT_BASE_POWER = 10
 COMBAT_WIN_MILITARY_BONUS = 5
 
 
-def player_combat_power(life: Life) -> int:
-    return COMBAT_BASE_POWER + life.evaluation.military
+def player_combat_power(life: Life, world: World | None = None) -> int:
+    power = COMBAT_BASE_POWER + life.evaluation.military
+    if world is not None:
+        power += combat_bonus(world.player)
+    return power
 
 
 def resolve_combat(
@@ -34,7 +38,7 @@ def player_fight(
     world: World, life: Life, enemy_power: int, rng: DeterministicRNG
 ) -> bool:
     """Resolve a fight for the player. Returns True on win; a loss ends the life."""
-    winner = resolve_combat(player_combat_power(life), enemy_power, rng)
+    winner = resolve_combat(player_combat_power(life, world), enemy_power, rng)
     if winner == "defender":
         end_life(world, life, DeathCause.COMBAT)
         return False

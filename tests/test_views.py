@@ -58,11 +58,20 @@ def test_causal_trace_unknown_node():
 
 
 def test_heritage_ranking_renders_columns():
+    from chronicle_forge.enums import HeritageType
+    from chronicle_forge.models import HeritageNode
+
     world = generate_world(seed=4)
-    life = begin_life(world, talent=Talent.MENTOR)
-    perform_activity(world, life, ActivityCategory.EDUCATION, maturation_time=0)
-    world.current_year = 10
-    advance_history(world)  # fire + promote heritage
+    world.heritage.append(
+        HeritageNode(
+            id="her:x",
+            seed_id="seed-x",
+            type=HeritageType.SCHOOL,
+            reach=4,
+            longevity=12,
+            heritage_score=120,
+        )
+    )
     text = render_heritage_ranking(world)
     assert "HERITAGE RANKING" in text
     assert "score=" in text and "reach=" in text and "longevity=" in text

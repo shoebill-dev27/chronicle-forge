@@ -142,24 +142,60 @@ def test_time_skip_never_exceeds_max_year():
     assert skip["world_ended"] is True
 
 
-def test_wildcard_self_progresses_when_theme_favors_it():
+def test_wildcard_ignites_with_player_support_and_hot_theme():
+    from chronicle_forge.enums import EventScale
+    from chronicle_forge.models import CausalNode
+
     world = generate_world(seed=7)
-    # Several fired technology seeds push INNOVATION above the ignition threshold.
-    for i in range(6):
+    wc = world.wildcards.wildcards[0]  # inventor -> innovation
+    assert wc.archetype.value == "inventor"
+
+    # Player support: fired technology seeds in the innovation domain.
+    for i in range(3):
         world.seeds.append(
             CausalSeed(
                 id=f"tech-{i}",
                 domain=SeedDomain.TECHNOLOGY,
-                magnitude=50,
+                magnitude=80,
                 fired=True,
                 planted_by_life_id="life-x",
             )
         )
-    for _ in range(25):
+    # Keep the innovation theme hot by injecting a fresh tech event each year.
+    for y in range(30):
         world.current_year += 1
+        world.causal_nodes.append(
+            CausalNode(
+                id=f"inj-{y}",
+                scale=EventScale.LARGE,
+                domain=SeedDomain.TECHNOLOGY,
+                year=world.current_year,
+            )
+        )
         advance_year(world)
+        if wc.status != WildCardStatus.DORMANT:
+            break
 
-    wc = world.wildcards.wildcards[0]
     assert wc.status in (WildCardStatus.IGNITED, WildCardStatus.RESOLVED)
-    wc_events = [n for n in world.causal_nodes if wc.id in n.actors]
-    assert wc_events, "an ignited wildcard should emit history"
+    assert [n for n in world.causal_nodes if wc.id in n.actors]
+
+
+def test_wildcard_stays_dormant_without_player_support():
+    from chronicle_forge.enums import EventScale
+    from chronicle_forge.models import CausalNode
+
+    world = generate_world(seed=7)
+    wc = world.wildcards.wildcards[0]
+    # Hot theme but NO player seeds -> must not ignite (player drives history).
+    for y in range(20):
+        world.current_year += 1
+        world.causal_nodes.append(
+            CausalNode(
+                id=f"inj-{y}",
+                scale=EventScale.LARGE,
+                domain=SeedDomain.TECHNOLOGY,
+                year=world.current_year,
+            )
+        )
+        advance_year(world)
+    assert wc.status == WildCardStatus.DORMANT

@@ -20,6 +20,7 @@ from __future__ import annotations
 
 from typing import Optional
 
+from . import config
 from .causal import CausalGraph
 from .enums import CausalEdgeKind, HeritageType, SeedDomain
 from .models import CausalNode, HeritageNode, World
@@ -46,6 +47,16 @@ HERITAGE_TYPE_WEIGHT: dict[HeritageType, int] = {
 def compute_heritage_score(longevity: int, reach: int, weight: int = 1) -> int:
     """Composite heritage score from separated reach and longevity."""
     return round(weight * max(0, longevity) * (1 + max(0, reach)))
+
+
+def qualifies_as_heritage(reach: int, longevity: int, score: int) -> bool:
+    """Composite promotion gate (P3.5): only significant legacies promote, so
+    "heritage" stays rare and meaningful (was: every fired seed promoted)."""
+    return (
+        reach >= config.HERITAGE_MIN_REACH
+        and longevity >= config.HERITAGE_MIN_LONGEVITY
+        and score >= config.HERITAGE_MIN_SCORE
+    )
 
 
 def _triggered_node(world: World, seed_id: str) -> Optional[CausalNode]:
@@ -84,9 +95,11 @@ def promote_heritage(
         if seed.id in existing:
             h = existing[seed.id]
             h.reach, h.longevity, h.heritage_score = reach, longevity, score
+        elif not qualifies_as_heritage(reach, longevity, score):
+            continue  # not (yet) significant enough to be a legacy
         else:
             h = HeritageNode(
-                id=f"her-{len(world.heritage):04d}",
+                id=f"her:{seed.id}",  # stable id (survives capping below)
                 seed_id=seed.id,
                 type=htype,
                 reach=reach,
@@ -97,4 +110,9 @@ def promote_heritage(
             existing[seed.id] = h
         promoted.append(h)
 
-    return promoted
+    # Only the most significant legacies are remembered as heritage (P3.5 cap).
+    if len(world.heritage) > config.HERITAGE_MAX_PER_WORLD:
+        world.heritage.sort(key=lambda h: (-h.heritage_score, h.seed_id))
+        del world.heritage[config.HERITAGE_MAX_PER_WORLD :]
+
+    return [h for h in promoted if h in world.heritage]

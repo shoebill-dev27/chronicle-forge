@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from .enums import DiscoveryType, SeedDomain, ThemeAxis
 from .ids import next_id
+from .inheritance import discovery_bonus
 from .life import advance_time
 from .models import CausalSeed, Discovery, Life, World
 
@@ -36,10 +37,11 @@ def explore_dungeon(
 ) -> tuple[Discovery, CausalSeed]:
     """Make a discovery in a dungeon, planting a high-magnitude causal seed."""
     domain = DISCOVERY_SEED_DOMAIN[discovery_type]
+    magnitude = min(100, DISCOVERY_MAGNITUDE + discovery_bonus(world.player))
     seed = CausalSeed(
         id=next_id("seed", world.seeds),
         domain=domain,
-        magnitude=DISCOVERY_MAGNITUDE,
+        magnitude=magnitude,
         maturation_time=DISCOVERY_MATURATION,
         planted_year=world.current_year,
         planted_by_life_id=life.id,

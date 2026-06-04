@@ -455,3 +455,11 @@ Deliberately avoided: game engines (Unity/Unreal) over-engineer the MVP; a graph
 | P6 polish | ending classification, safety filter, balance | fictionality check, reincarnation balance | full playthrough, banned-word scan |
 
 Critical path: **P1 (causal core) is the foundation of everything** and is designed first and most heavily; if it is weak, the core of the fun (section 1) collapses.
+
+**P3.5 balance pass** (between P3 and P4): after a 25-seed playtest
+(`docs/playtest_p5.md`) found innovation over-dominant, themes frozen, heritage
+inflated, and reincarnation shallow/fixed, the dynamics were re-tuned without AI
+(`docs/playtest_p35.md`): inheritance now carries knowledge/skills/traits with
+mechanical effects; lifespan is distributed (3–6 lives); 5 wildcard archetypes
+ignite only with player contribution; heritage promotion is gated and capped; and
+the theme is a recency-weighted window fed by faction wars and NPC events.

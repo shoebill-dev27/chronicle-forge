@@ -1,19 +1,20 @@
-"""World Theme computation (section C).
+"""World Theme computation (section C) — P3.5 recent-event model.
 
-The theme is recomputed from world state (faction power, fired seed domains,
-ignited WildCard impact) on top of a baseline, then a :class:`ThemeSnapshot` is
-appended to the trajectory. The theme is an emergent indicator that player
-actions (via fired seeds) and WildCards push.
+The theme is a *moving window* of recent history, not an accumulator. Each axis
+gets a structural pull from faction power plus the recency-weighted weight of
+recent causal events in its domain, plus the impact of any ignited WildCard.
+
+Because old events leave the window, the theme mean-reverts toward baseline when
+activity calms, and it keeps moving as long as history is being made (player
+seeds firing, faction wars, NPC events, wildcards). This fixes the mid-run
+"theme freeze" found in the P5 playtest.
 """
 
 from __future__ import annotations
 
-from .enums import FactionType, SeedDomain, ThemeAxis, WildCardStatus
+from . import config
+from .enums import EventScale, FactionType, SeedDomain, ThemeAxis, WildCardStatus
 from .models import ThemeSnapshot, World, WorldTheme
-
-BASE_AXIS = 20
-SEED_PUSH = 5  # a fired seed's contribution
-PLANTED_PUSH = 2  # an as-yet-unfired player seed's smaller contribution
 
 SEED_DOMAIN_TO_THEME: dict[SeedDomain, ThemeAxis] = {
     SeedDomain.DISCOVERY: ThemeAxis.INNOVATION,
@@ -33,20 +34,31 @@ FACTION_TYPE_TO_THEME: dict[FactionType, ThemeAxis] = {
     FactionType.ADVENTURER: ThemeAxis.WARFARE,
 }
 
+_SCALE_WEIGHT = {
+    EventScale.LARGE: 6,
+    EventScale.MEDIUM: 4,
+    EventScale.SMALL: 2,
+}
+
 
 def compute_theme(world: World) -> WorldTheme:
-    """Recompute the world theme and append a snapshot for the current year."""
-    axes: dict[ThemeAxis, int] = {axis: BASE_AXIS for axis in ThemeAxis}
+    """Recompute the world theme from recent events and append a snapshot."""
+    axes: dict[ThemeAxis, int] = {axis: config.THEME_BASE_AXIS for axis in ThemeAxis}
 
+    # Structural pull: faction power.
     for faction in world.factions:
         axes[FACTION_TYPE_TO_THEME[faction.type]] += faction.power // 10
 
-    for seed in world.seeds:
-        if seed.fired:
-            axes[SEED_DOMAIN_TO_THEME[seed.domain]] += SEED_PUSH
-        elif seed.planted_by_life_id:  # player intent nudges the world (section C)
-            axes[SEED_DOMAIN_TO_THEME[seed.domain]] += PLANTED_PUSH
+    # Recent events (recency-weighted) within the window.
+    window = config.THEME_EVENT_WINDOW
+    for node in world.causal_nodes:
+        age = world.current_year - node.year
+        if 0 <= age < window:
+            recency = (window - age) / window  # 1.0 newest -> ~0 oldest
+            axis = SEED_DOMAIN_TO_THEME[node.domain]
+            axes[axis] += round(_SCALE_WEIGHT[node.scale] * recency)
 
+    # Ignited WildCards exert a persistent push while active.
     for wildcard in world.wildcards.wildcards:
         if wildcard.status == WildCardStatus.IGNITED:
             for axis, value in wildcard.impact_vector.items():

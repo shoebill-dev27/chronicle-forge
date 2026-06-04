@@ -11,6 +11,7 @@ from typing import Optional
 
 from .enums import ActivityCategory, EvaluationLens, MemoryType, SeedDomain
 from .ids import next_id
+from .inheritance import activity_bonus
 from .life import advance_time
 from .memory import form_memory
 from .models import ActivityRecord, CausalSeed, Evaluation, Life, World
@@ -53,9 +54,13 @@ def perform_activity(
     """Execute one activity action and return the causal seed it plants."""
     profile = ACTIVITY_PROFILES[category]
     talent_match = life.talent is not None and life.talent == profile.talent_affinity
+    inh_eval, inh_magnitude = activity_bonus(world.player, category)
 
     magnitude = min(
-        100, DEFAULT_MAGNITUDE + (TALENT_MAGNITUDE_BONUS if talent_match else 0)
+        100,
+        DEFAULT_MAGNITUDE
+        + (TALENT_MAGNITUDE_BONUS if talent_match else 0)
+        + inh_magnitude,
     )
     mt = (
         maturation_time
@@ -74,7 +79,7 @@ def perform_activity(
     )
     world.seeds.append(seed)
 
-    bonus = TALENT_EVAL_BONUS if talent_match else 0
+    bonus = (TALENT_EVAL_BONUS if talent_match else 0) + inh_eval
     _add_eval(life.evaluation, profile.primary_lens, ACTIVITY_BASE_EVAL + bonus)
     for lens in profile.secondary_lenses:
         _add_eval(life.evaluation, lens, (ACTIVITY_BASE_EVAL + bonus) // 2)
