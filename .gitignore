@@ -27,6 +27,7 @@ dist/
 *.sqlite3
 saves/
 generated/
+output/
 
 # Editor / tooling
 .claude/
