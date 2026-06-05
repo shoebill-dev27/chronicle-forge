@@ -39,7 +39,7 @@ def test_story_traces_life_to_heritage_and_ending():
     world = _world()
     text = stories_md(world)
     assert "Life 1" in text
-    assert "Seed → Event" in text  # "Seed → Event"
+    assert "Causal chains" in text
     assert "Heritage" in text
     assert world.ending_class in text
     # per-life helper works too
@@ -85,7 +85,7 @@ def test_heritage_table_and_csv_align():
     header = csv_text.splitlines()[0]
     assert (
         header
-        == "rank,score,longevity,reach,source_seed,domain,derived_events,origin_life"
+        == "rank,name,score,longevity,reach,source_seed,domain,derived_events,origin_life"
     )
     # at most 10 data rows, and md/csv agree on count
     csv_rows = len(csv_text.strip().splitlines()) - 1
@@ -121,6 +121,40 @@ def test_story_has_why_this_world_matters():
     world = _world()
     text = stories_md(world)
     assert "## Why this world matters" in text
+
+
+def test_labels_are_human_and_deterministic():
+    from chronicle_forge.reporting import heritage_name, seed_label
+
+    world = _world()
+    # a player seed gets a verb-phrase label, not its id
+    pseed = next(s for s in world.seeds if s.planted_by_life_id)
+    label = seed_label(world, pseed.id)
+    assert label and label != pseed.id and " " in label
+    assert seed_label(world, pseed.id) == label  # deterministic
+
+    # heritage gets a proper name distinct from its bare type
+    h = world.heritage[0]
+    name = heritage_name(h)
+    assert name and name != h.type.value
+    assert heritage_name(h) == name
+
+
+def test_story_uses_names_not_just_ids():
+    from chronicle_forge.reporting._data import heritage_rows
+
+    world = _world()
+    text = stories_md(world)
+    top_name = heritage_rows(world, top=1)[0]["name"]
+    assert top_name in text  # heritage proper name appears
+    assert '"' in text  # quoted human action labels
+
+
+def test_readme_has_one_causal_chain(tmp_path):
+    build_seed_assets(42, out_dir=str(tmp_path), png=False)
+    readme = (tmp_path / "seed42" / "README.md").read_text()
+    assert "## One causal chain" in readme
+    assert "Ending —" in readme
 
 
 def test_build_writes_bundle(tmp_path):

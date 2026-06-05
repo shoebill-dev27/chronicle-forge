@@ -16,7 +16,7 @@ from ..models import World
 from .causal_dot import causal_dot
 from .chronicle_md import chronicle_report_md
 from .heritage_table import heritage_csv, heritage_table_md
-from .story_md import stories_md
+from .story_md import one_causal_chain_md, stories_md
 from .summary_md import summarize_world
 from .timeline_md import timeline_md
 
@@ -33,6 +33,9 @@ def _folder_readme(world: World, has_png: bool) -> str:
         f"{len(world.heritage)} | {world.ending_class} |",
         "",
     ]
+    chain = one_causal_chain_md(world)
+    if chain:
+        lines += [chain, ""]
     if has_png:
         lines += [
             "![Causal lineage from player seeds to the ending](causal.png)",

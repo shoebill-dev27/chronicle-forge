@@ -14,6 +14,7 @@ from ..enums import CausalEdgeKind
 from ..models import World
 from ..theme import SEED_DOMAIN_TO_THEME
 from ._data import life_index, seed_by_id, triggered_node
+from .labels import heritage_name, seed_label
 
 
 def _esc(text: str) -> str:
@@ -25,13 +26,17 @@ def _seed_node(world: World, seed_id: str) -> str:
     idx = life_index(world)
     if s is None:
         return f'  "{seed_id}" [shape=box, label="{_esc(seed_id)}"];'
+    label = _esc(seed_label(world, seed_id))
     if s.planted_by_life_id:
         n = idx.get(s.planted_by_life_id, "?")
-        label = f"★ L{n} {s.domain.value}\\n{seed_id}"
         return (
-            f'  "{seed_id}" [shape=box, style=filled, fillcolor=gold, label="{label}"];'
+            f'  "{seed_id}" [shape=box, style=filled, fillcolor=gold, '
+            f'label="★ L{n}: {label}\\n{seed_id}"];'
         )
-    return f'  "{seed_id}" [shape=box, style=filled, fillcolor=lightgrey, label="{s.domain.value}\\n{seed_id}"];'
+    return (
+        f'  "{seed_id}" [shape=box, style=filled, fillcolor=lightgrey, '
+        f'label="{label}\\n{seed_id}"];'
+    )
 
 
 def _event_node(node) -> str:
@@ -99,7 +104,7 @@ def causal_dot(
         rendered_heritage_ids.append(hid)
         heritage_lines.append(
             f'  "{hid}" [shape=doubleoctagon, style=filled, fillcolor=palegreen, '
-            f'label="{h.type.value}\\nscore {h.heritage_score}"];'
+            f'label="{_esc(heritage_name(h))}\\n({h.type.value}, score {h.heritage_score})"];'
         )
         if founding is not None:
             promoted_edges.append((founding.id, hid))

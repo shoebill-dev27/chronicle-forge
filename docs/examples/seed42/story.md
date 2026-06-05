@@ -6,7 +6,7 @@ _How each life's actions flowed into the world's history. Read top to bottom: a 
 
 - This world ran **40 years** across **3 lives** and ended as the **Theocratic Age**.
 - The ending was not scripted — it grew out of the player's own choices, life after life.
-- Its greatest legacy was a **thought** (`seed-0014`) planted by **Life 1, the warrior** — it set **18 later events** in motion.
+- It began when **Life 1, the warrior**, chose to "spread the faith". That became **"Doctrine of the Long Dawn"** (thought) — a legacy that set **18 later events** in motion.
 - By **Life 3, the priest**, those threads had tilted the whole world toward *faith*, producing the Theocratic Age.
 - Everything below is traceable: each life's actions → the seeds they planted → the events those caused → the heritage that endured → the ending.
 
@@ -14,44 +14,44 @@ _How each life's actions flowed into the world's history. Read top to bottom: a 
 - **Talent:** warrior | **Lived:** y0–y7 (age 23, lifespan)
 - **Activities:** commerce×2, research×3, combat×13, education×2, exploration×1, religion×1, construction×2
 - **Seeds planted:** 26 (26 fired into world events)
-- **Causal chains (Seed → Event → downstream):**
-    - `seed-0014` (faith) → y8 *faith event (seed-0014)* → **18** downstream events
-    - `seed-0000` (economy) → y8 *economy event (seed-0000)* → **16** downstream events
-    - `seed-0007` (heritage) → y11 *heritage event (seed-0007)* → **15** downstream events
-    - `seed-0010` (economy) → y8 *economy event (seed-0010)* → **15** downstream events
-    - `seed-0002` (military) → y8 *military event (seed-0002)* → **14** downstream events
+- **Causal chains (action → event → downstream):**
+    - "spread the faith" (`seed-0014`) → y8 the faith takes root → **18** downstream events
+    - "open a trade route" (`seed-0000`) → y8 trade flourishes → **16** downstream events
+    - "teach the villagers" (`seed-0007`) → y11 a school takes hold → **15** downstream events
+    - "open a trade route" (`seed-0010`) → y8 trade flourishes → **15** downstream events
+    - "wage a battle" (`seed-0002`) → y8 war breaks out → **14** downstream events
 - **Heritage (lasting legacy):**
-    - thought (`seed-0014`) — score 1216, 32y, reach 18
-    - school (`seed-0007`) — score 928, 29y, reach 15
-    - school (`seed-0012`) — score 810, 27y, reach 14
-    - technology (`seed-0001`) — score 256, 32y, reach 7
-    - technology (`seed-0018`) — score 196, 28y, reach 6
+    - **"Doctrine of the Long Dawn"** (thought, `seed-0014`) — score 1216, 32y, reach 18
+    - **"Academy of the Deep Vow"** (school, `seed-0007`) — score 928, 29y, reach 15
+    - **"Academy of the Old Flame"** (school, `seed-0012`) — score 810, 27y, reach 14
+    - **"The Iron Engine"** (technology, `seed-0001`) — score 256, 32y, reach 7
+    - **"The Thorn Engine"** (technology, `seed-0018`) — score 196, 28y, reach 6
 - **Contribution to the Theocratic Age:** 1 of this life's seeds pushed the final *faith* tilt.
 
 ## Life 2 — The Merchant of Hollowfen
 - **Talent:** merchant | **Lived:** y15–y20 (age 21, lifespan)
 - **Activities:** commerce×13, research×2, exploration×1, religion×2
 - **Seeds planted:** 19 (19 fired into world events)
-- **Causal chains (Seed → Event → downstream):**
-    - `seed-0026` (economy) → y21 *economy event (seed-0026)* → **14** downstream events
-    - `seed-0027` (governance) → y23 *governance event (seed-0027)* → **14** downstream events
-    - `seed-0038` (faith) → y23 *faith event (seed-0038)* → **14** downstream events
-    - `seed-0029` (economy) → y21 *economy event (seed-0029)* → **13** downstream events
-    - `seed-0042` (faith) → y24 *faith event (seed-0042)* → **13** downstream events
+- **Causal chains (action → event → downstream):**
+    - "open a trade route" (`seed-0026`) → y21 trade flourishes → **14** downstream events
+    - "uncover ancient lore" (`seed-0027`) → y23 the order of rule shifts → **14** downstream events
+    - "spread the faith" (`seed-0038`) → y23 the faith takes root → **14** downstream events
+    - "open a trade route" (`seed-0029`) → y21 trade flourishes → **13** downstream events
+    - "spread the faith" (`seed-0042`) → y24 the faith takes root → **13** downstream events
 - **Heritage (lasting legacy):**
-    - institution (`seed-0027`) — score 510, 17y, reach 14
-    - thought (`seed-0038`) — score 510, 17y, reach 14
-    - thought (`seed-0042`) — score 448, 16y, reach 13
+    - **"Order of the Deep Vow"** (institution, `seed-0027`) — score 510, 17y, reach 14
+    - **"Doctrine of the Bright Ledger"** (thought, `seed-0038`) — score 510, 17y, reach 14
+    - **"Doctrine of the Old Flame"** (thought, `seed-0042`) — score 448, 16y, reach 13
 - **Contribution to the Theocratic Age:** 2 of this life's seeds pushed the final *faith* tilt.
 
 ## Life 3 — The Priest of Hollowfen
 - **Talent:** priest | **Lived:** y28–y35 (age 23, lifespan)
 - **Activities:** commerce×2, education×1, politics×2, religion×12, construction×2, combat×1, exploration×2
 - **Seeds planted:** 25 (24 fired into world events)
-- **Causal chains (Seed → Event → downstream):**
-    - `seed-0047` (governance) → y36 *governance event (seed-0047)* → **13** downstream events
-    - `seed-0048` (faith) → y36 *faith event (seed-0048)* → **12** downstream events
-    - `seed-0051` (faith) → y36 *faith event (seed-0051)* → **11** downstream events
-    - `seed-0052` (faith) → y36 *faith event (seed-0052)* → **10** downstream events
-    - `seed-0053` (faith) → y36 *faith event (seed-0053)* → **9** downstream events
+- **Causal chains (action → event → downstream):**
+    - "found a local council" (`seed-0047`) → y36 the order of rule shifts → **13** downstream events
+    - "spread the faith" (`seed-0048`) → y36 the faith takes root → **12** downstream events
+    - "spread the faith" (`seed-0051`) → y36 the faith takes root → **11** downstream events
+    - "spread the faith" (`seed-0052`) → y36 the faith takes root → **10** downstream events
+    - "spread the faith" (`seed-0053`) → y36 the faith takes root → **9** downstream events
 - **Contribution to the Theocratic Age:** 12 of this life's seeds pushed the final *faith* tilt.

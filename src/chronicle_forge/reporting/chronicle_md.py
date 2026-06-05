@@ -80,9 +80,9 @@ def _heritage(world: World) -> str:
         return "\n".join(lines)
     for i, r in enumerate(rows, 1):
         lines.append(
-            f"{i}. **{r['type']}** (`{r['source_seed']}`, {r['origin_life']}) — "
-            f"score {r['score']}, {r['longevity']}y, reach {r['reach']}, "
-            f"{r['derived_events']} downstream events"
+            f"{i}. **\"{r['name']}\"** ({r['type']}, `{r['source_seed']}`, "
+            f"{r['origin_life']}) — score {r['score']}, {r['longevity']}y, "
+            f"reach {r['reach']}, {r['derived_events']} downstream events"
         )
     return "\n".join(lines)
 

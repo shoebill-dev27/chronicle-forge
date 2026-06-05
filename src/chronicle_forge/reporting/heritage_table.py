@@ -14,6 +14,7 @@ from ._data import heritage_rows
 
 _COLUMNS = [
     "rank",
+    "name",
     "score",
     "longevity",
     "reach",
@@ -29,15 +30,15 @@ def heritage_table_md(world: World, top: int = 10) -> str:
     lines = [
         f"# Heritage Ranking — Seed {world.seed} (Top {top})",
         "",
-        "| Rank | Score | Longevity | Reach | Source seed | Domain | Derived events | Origin |",
-        "|---|---|---|---|---|---|---|---|",
+        "| Rank | Name | Type | Score | Longevity | Reach | Source seed | Derived events | Origin |",
+        "|---|---|---|---|---|---|---|---|---|",
     ]
     if not rows:
-        lines.append("| — | — | — | — | — | — | — | — |")
+        lines.append("| — | — | — | — | — | — | — | — | — |")
     for i, r in enumerate(rows, 1):
         lines.append(
-            f"| {i} | {r['score']} | {r['longevity']} | {r['reach']} | "
-            f"`{r['source_seed']}` | {r['domain']} | {r['derived_events']} | {r['origin_life']} |"
+            f"| {i} | **{r['name']}** | {r['type']} | {r['score']} | {r['longevity']} "
+            f"| {r['reach']} | `{r['source_seed']}` | {r['derived_events']} | {r['origin_life']} |"
         )
     return "\n".join(lines) + "\n"
 
@@ -51,6 +52,7 @@ def heritage_csv(world: World, top: int = 10) -> str:
         writer.writerow(
             [
                 i,
+                r["name"],
                 r["score"],
                 r["longevity"],
                 r["reach"],

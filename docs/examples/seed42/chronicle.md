@@ -97,11 +97,11 @@
 
 ## Legacies (heritage)
 
-1. **thought** (`seed-0014`, Life 1) — score 1216, 32y, reach 18, 18 downstream events
-2. **school** (`seed-0007`, Life 1) — score 928, 29y, reach 15, 15 downstream events
-3. **school** (`seed-0012`, Life 1) — score 810, 27y, reach 14, 14 downstream events
-4. **institution** (`seed-0027`, Life 2) — score 510, 17y, reach 14, 14 downstream events
-5. **thought** (`seed-0038`, Life 2) — score 510, 17y, reach 14, 14 downstream events
+1. **"Doctrine of the Long Dawn"** (thought, `seed-0014`, Life 1) — score 1216, 32y, reach 18, 18 downstream events
+2. **"Academy of the Deep Vow"** (school, `seed-0007`, Life 1) — score 928, 29y, reach 15, 15 downstream events
+3. **"Academy of the Old Flame"** (school, `seed-0012`, Life 1) — score 810, 27y, reach 14, 14 downstream events
+4. **"Order of the Deep Vow"** (institution, `seed-0027`, Life 2) — score 510, 17y, reach 14, 14 downstream events
+5. **"Doctrine of the Bright Ledger"** (thought, `seed-0038`, Life 2) — score 510, 17y, reach 14, 14 downstream events
 
 ## Wild Cards
 
@@ -119,6 +119,6 @@
 
 The world ended as the **Theocratic Age**, set by a final dominant theme of *faith*. That tilt traces back through events to the lives that caused it:
 
-- **Theocratic Age** ⇐ y39 *faith event (seed-0067)* ⇐ `seed-0027` (governance) ⇐ Life 2 (The Merchant of Hollowfen)
-- **Theocratic Age** ⇐ y39 *faith event (seed-0069)* ⇐ `seed-0027` (governance) ⇐ Life 2 (The Merchant of Hollowfen)
-- **Theocratic Age** ⇐ y38 *faith event (seed-0063)* ⇐ `seed-0027` (governance) ⇐ Life 2 (The Merchant of Hollowfen)
+- **Theocratic Age** ⇐ y39 *faith event (seed-0067)* ⇐ `seed-0057` (faith) ⇐ Life 3 (The Priest of Hollowfen)
+- **Theocratic Age** ⇐ y39 *faith event (seed-0069)* ⇐ `seed-0057` (faith) ⇐ Life 3 (The Priest of Hollowfen)
+- **Theocratic Age** ⇐ y38 *faith event (seed-0063)* ⇐ `seed-0053` (faith) ⇐ Life 3 (The Priest of Hollowfen)

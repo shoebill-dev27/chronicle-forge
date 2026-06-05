@@ -17,6 +17,7 @@ from ._data import (
     seeds_of_life,
     triggered_node,
 )
+from .labels import event_phrase, heritage_name, seed_label
 
 _MAX_CHAINS = 5
 
@@ -52,11 +53,11 @@ def render_story_of_life(world: World, life_id: str) -> str:
             scored.append((len(graph.descendants(ev.id)), s, ev))
     scored.sort(key=lambda r: (-r[0], r[1].id))
     if scored:
-        lines.append("- **Causal chains (Seed → Event → downstream):**")
+        lines.append("- **Causal chains (action → event → downstream):**")
         for desc, s, ev in scored[:_MAX_CHAINS]:
             lines.append(
-                f"    - `{s.id}` ({s.domain.value}) → y{ev.year} *{ev.title}* "
-                f"→ **{desc}** downstream events"
+                f'    - "{seed_label(world, s.id)}" (`{s.id}`) → y{ev.year} '
+                f"{event_phrase(ev)} → **{desc}** downstream events"
             )
 
     # Heritage promoted from this life's seeds.
@@ -66,8 +67,8 @@ def render_story_of_life(world: World, life_id: str) -> str:
         lines.append("- **Heritage (lasting legacy):**")
         for h in sorted(her, key=lambda h: -h.heritage_score):
             lines.append(
-                f"    - {h.type.value} (`{h.seed_id}`) — score {h.heritage_score}, "
-                f"{h.longevity}y, reach {h.reach}"
+                f'    - **"{heritage_name(h)}"** ({h.type.value}, `{h.seed_id}`) — '
+                f"score {h.heritage_score}, {h.longevity}y, reach {h.reach}"
             )
 
     # Contribution to the ending.
@@ -107,10 +108,11 @@ def _why_this_world_matters(world: World) -> str:
         seed = seed_by_id(world, top["source_seed"])
         life = life_by_id(world, seed.planted_by_life_id) if seed else None
         talent = life.talent.value if life and life.talent else "soul"
+        action = seed_label(world, top["source_seed"])
         lines.append(
-            f"- Its greatest legacy was a **{top['type']}** (`{top['source_seed']}`) "
-            f"planted by **{top['origin_life']}, the {talent}** — it set "
-            f"**{top['derived_events']} later events** in motion."
+            f"- It began when **{top['origin_life']}, the {talent}**, chose to "
+            f'"{action}". That became **"{top["name"]}"** ({top["type"]}) — a legacy '
+            f"that set **{top['derived_events']} later events** in motion."
         )
 
     # Which life pushed the final tilt the most.
@@ -165,3 +167,48 @@ def _title_place(world: World) -> str:
     from ._data import place
 
     return place(world)
+
+
+def one_causal_chain_md(world: World) -> str:
+    """One concrete, retellable chain: Life → Seed → Event → Heritage → Ending.
+
+    Picks the highest-scoring heritage and renders its lineage as a vertical
+    chain. Returns '' if the world produced no heritage.
+    """
+    from ._data import heritage_rows, life_by_id, life_index, seed_by_id
+
+    rows = heritage_rows(world, top=1)
+    if not rows:
+        return ""
+    top = rows[0]
+    seed = seed_by_id(world, top["source_seed"])
+    life = life_by_id(world, seed.planted_by_life_id) if seed else None
+    idx = life_index(world)
+    founding = triggered_node(world, top["source_seed"])
+
+    n = idx.get(seed.planted_by_life_id, "?") if seed else "?"
+    talent = life.talent.value if life and life.talent else "soul"
+    ev_year = founding.year if founding else "?"
+    ev_text = event_phrase(founding) if founding else "an event"
+
+    return "\n".join(
+        [
+            "## One causal chain",
+            "",
+            "_One thread, from a single choice to the world's ending — the kind of "
+            "story this game is built to let you tell:_",
+            "",
+            "```",
+            f"Life {n} — the {talent}",
+            f'   │  "{seed_label(world, top["source_seed"])}"   ({top["source_seed"]})',
+            "   ▼",
+            f"Event (year {ev_year}) — {ev_text}",
+            f"   │  endures {top['longevity']} years, {top['derived_events']} events follow",
+            "   ▼",
+            f'Heritage — "{top["name"]}"  ({top["type"]})',
+            "   │  tilts the world",
+            "   ▼",
+            f"Ending — {world.ending_class}",
+            "```",
+        ]
+    )

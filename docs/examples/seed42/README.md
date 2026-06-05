@@ -6,6 +6,23 @@
 |---|---|---|---|
 | 3 | 77 | 8 | Theocratic Age |
 
+## One causal chain
+
+_One thread, from a single choice to the world's ending — the kind of story this game is built to let you tell:_
+
+```
+Life 1 — the warrior
+   │  "spread the faith"   (seed-0014)
+   ▼
+Event (year 8) — the faith takes root
+   │  endures 32 years, 18 events follow
+   ▼
+Heritage — "Doctrine of the Long Dawn"  (thought)
+   │  tilts the world
+   ▼
+Ending — Theocratic Age
+```
+
 ## How to read this (~5 minutes)
 
 Read in this order:
