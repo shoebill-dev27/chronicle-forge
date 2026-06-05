@@ -37,13 +37,9 @@ def render_story_of_life(world: World, life_id: str) -> str:
         f"**Lived:** y{life.birth_year}–y{life.death_year} "
         f"(age {life.age_at_death}, {life.death_cause.value if life.death_cause else '—'})"
     )
-    lines.append(f"- **Activities:** {activity_counts(life)}")
 
     seeds = seeds_of_life(world, life_id)
     fired = [s for s in seeds if s.fired]
-    lines.append(
-        f"- **Seeds planted:** {len(seeds)} ({len(fired)} fired into world events)"
-    )
 
     # Causal chains: seed -> founding event -> downstream count, biggest first.
     scored = []
@@ -52,6 +48,29 @@ def render_story_of_life(world: World, life_id: str) -> str:
         if ev is not None:
             scored.append((len(graph.descendants(ev.id)), s, ev))
     scored.sort(key=lambda r: (-r[0], r[1].id))
+
+    # Key Decisions: the few most consequential choices this life made.
+    decisions = []
+    seen = set()
+    for _, s, _ in scored:
+        label = seed_label(world, s.id)
+        label = label[0].upper() + label[1:]
+        if label in seen:
+            continue
+        seen.add(label)
+        decisions.append(label)
+        if len(decisions) == 3:
+            break
+    if decisions:
+        lines.append("- **Key Decisions:**")
+        for d in decisions:
+            lines.append(f"    - {d}")
+
+    lines.append(f"- **Activities:** {activity_counts(life)}")
+    lines.append(
+        f"- **Seeds planted:** {len(seeds)} ({len(fired)} fired into world events)"
+    )
+
     if scored:
         lines.append("- **Causal chains (action → event → downstream):**")
         for desc, s, ev in scored[:_MAX_CHAINS]:
@@ -68,7 +87,8 @@ def render_story_of_life(world: World, life_id: str) -> str:
         for h in sorted(her, key=lambda h: -h.heritage_score):
             lines.append(
                 f'    - **"{heritage_name(h)}"** ({h.type.value}, `{h.seed_id}`) — '
-                f"score {h.heritage_score}, {h.longevity}y, reach {h.reach}"
+                f"score {h.heritage_score}, {h.longevity}y, reach {h.reach}  "
+                f'\n        Origin: Life {n} → "{seed_label(world, h.seed_id)}"'
             )
 
     # Contribution to the ending.
@@ -167,6 +187,43 @@ def _title_place(world: World) -> str:
     from ._data import place
 
     return place(world)
+
+
+def why_ending_chain_md(world: World) -> str:
+    """One reversed chain: Ending <- Top Heritage <- Top Event <- Player Action.
+
+    Emphasizes that the ending was caused by a player's choice, not the setting.
+    Returns '' if no heritage formed.
+    """
+    from ._data import heritage_rows, life_by_id, life_index, seed_by_id
+
+    rows = heritage_rows(world, top=1)
+    if not rows:
+        return ""
+    top = rows[0]
+    seed = seed_by_id(world, top["source_seed"])
+    life = life_by_id(world, seed.planted_by_life_id) if seed else None
+    idx = life_index(world)
+    founding = triggered_node(world, top["source_seed"])
+    n = idx.get(seed.planted_by_life_id, "?") if seed else "?"
+    talent = life.talent.value if life and life.talent else "soul"
+    ev_year = founding.year if founding else "?"
+    ev_text = event_phrase(founding) if founding else "an event"
+
+    return "\n".join(
+        [
+            "## Why this ending happened",
+            "",
+            "_The ending was not part of the setting — it was caused by a choice:_",
+            "",
+            "```",
+            f"{world.ending_class}",
+            f'   ← "{top["name"]}"   (top heritage)',
+            f"   ← {ev_text}, year {ev_year}   (top event)",
+            f'   ← Life {n} ({talent}): "{top["origin_action"]}"   (player action)',
+            "```",
+        ]
+    )
 
 
 def one_causal_chain_md(world: World) -> str:

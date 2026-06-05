@@ -77,7 +77,7 @@ def activity_counts(life: Life) -> str:
 
 def heritage_rows(world: World, top: Optional[int] = None) -> list[dict]:
     """Sorted heritage rows with derived-event counts and origin life."""
-    from .labels import heritage_name
+    from .labels import heritage_name, seed_label
 
     graph = CausalGraph.from_world(world)
     idx = life_index(world)
@@ -100,6 +100,7 @@ def heritage_rows(world: World, top: Optional[int] = None) -> list[dict]:
                 "origin_life": (
                     f"Life {idx.get(origin_life, '?')}" if origin_life else "—"
                 ),
+                "origin_action": seed_label(world, h.seed_id),
             }
         )
     rows.sort(key=lambda r: (-r["score"], r["source_seed"]))

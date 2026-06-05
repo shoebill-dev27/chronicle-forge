@@ -22,6 +22,7 @@ _COLUMNS = [
     "domain",
     "derived_events",
     "origin_life",
+    "origin_action",
 ]
 
 
@@ -36,9 +37,10 @@ def heritage_table_md(world: World, top: int = 10) -> str:
     if not rows:
         lines.append("| — | — | — | — | — | — | — | — | — |")
     for i, r in enumerate(rows, 1):
+        origin = f"{r['origin_life']} → {r['origin_action']}"
         lines.append(
             f"| {i} | **{r['name']}** | {r['type']} | {r['score']} | {r['longevity']} "
-            f"| {r['reach']} | `{r['source_seed']}` | {r['derived_events']} | {r['origin_life']} |"
+            f"| {r['reach']} | `{r['source_seed']}` | {r['derived_events']} | {origin} |"
         )
     return "\n".join(lines) + "\n"
 
@@ -60,6 +62,7 @@ def heritage_csv(world: World, top: int = 10) -> str:
                 r["domain"],
                 r["derived_events"],
                 r["origin_life"],
+                r["origin_action"],
             ]
         )
     return buf.getvalue()

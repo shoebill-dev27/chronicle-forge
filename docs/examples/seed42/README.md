@@ -6,6 +6,17 @@
 |---|---|---|---|
 | 3 | 77 | 8 | Theocratic Age |
 
+## Why this ending happened
+
+_The ending was not part of the setting — it was caused by a choice:_
+
+```
+Theocratic Age
+   ← "Doctrine of the Long Dawn"   (top heritage)
+   ← the faith takes root, year 8   (top event)
+   ← Life 1 (warrior): "spread the faith"   (player action)
+```
+
 ## One causal chain
 
 _One thread, from a single choice to the world's ending — the kind of story this game is built to let you tell:_

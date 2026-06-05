@@ -83,9 +83,9 @@ def test_heritage_table_and_csv_align():
     assert "| Rank |" in md
     csv_text = heritage_csv(world, top=10)
     header = csv_text.splitlines()[0]
-    assert (
-        header
-        == "rank,name,score,longevity,reach,source_seed,domain,derived_events,origin_life"
+    assert header == (
+        "rank,name,score,longevity,reach,source_seed,domain,derived_events,"
+        "origin_life,origin_action"
     )
     # at most 10 data rows, and md/csv agree on count
     csv_rows = len(csv_text.strip().splitlines()) - 1
@@ -155,6 +155,20 @@ def test_readme_has_one_causal_chain(tmp_path):
     readme = (tmp_path / "seed42" / "README.md").read_text()
     assert "## One causal chain" in readme
     assert "Ending —" in readme
+
+
+def test_readme_has_why_this_ending(tmp_path):
+    build_seed_assets(42, out_dir=str(tmp_path), png=False)
+    readme = (tmp_path / "seed42" / "README.md").read_text()
+    assert "## Why this ending happened" in readme
+    assert "(player action)" in readme
+
+
+def test_story_has_key_decisions_and_origin():
+    world = _world()
+    text = stories_md(world)
+    assert "**Key Decisions:**" in text
+    assert "Origin: Life" in text  # heritage origin line
 
 
 def test_build_writes_bundle(tmp_path):

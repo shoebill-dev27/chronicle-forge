@@ -13,7 +13,12 @@ from .causal_dot import causal_dot
 from .chronicle_md import chronicle_report_md, why_this_ending_md
 from .heritage_table import heritage_csv, heritage_table_md
 from .labels import heritage_name, seed_label
-from .story_md import one_causal_chain_md, render_story_of_life, stories_md
+from .story_md import (
+    one_causal_chain_md,
+    render_story_of_life,
+    stories_md,
+    why_ending_chain_md,
+)
 from .summary_md import summarize_world
 from .timeline_md import timeline_md
 
@@ -22,6 +27,7 @@ __all__ = [
     "stories_md",
     "render_story_of_life",
     "one_causal_chain_md",
+    "why_ending_chain_md",
     "seed_label",
     "heritage_name",
     "chronicle_report_md",
