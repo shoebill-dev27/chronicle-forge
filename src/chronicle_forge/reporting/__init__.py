@@ -8,8 +8,9 @@ alone conveys what makes Chronicle Forge interesting.
 
 from __future__ import annotations
 
-from .build import build_seed_assets
+from .build import build_gallery, build_seed_assets
 from .causal_dot import causal_dot
+from .gallery import GALLERY_SEEDS, gallery_md, key_ending_decision, why_phrase
 from .chronicle_md import chronicle_report_md, why_this_ending_md
 from .heritage_table import heritage_csv, heritage_table_md
 from .labels import heritage_name, seed_label
@@ -24,6 +25,11 @@ from .timeline_md import timeline_md
 
 __all__ = [
     "build_seed_assets",
+    "build_gallery",
+    "gallery_md",
+    "GALLERY_SEEDS",
+    "key_ending_decision",
+    "why_phrase",
     "stories_md",
     "render_story_of_life",
     "one_causal_chain_md",

@@ -10,11 +10,13 @@ from __future__ import annotations
 import shutil
 import subprocess
 from pathlib import Path
+from typing import Optional
 
 from ..autoplay import simulate_world
 from ..models import World
 from .causal_dot import causal_dot
 from .chronicle_md import chronicle_report_md
+from .gallery import gallery_md
 from .heritage_table import heritage_csv, heritage_table_md
 from .story_md import one_causal_chain_md, stories_md, why_ending_chain_md
 from .summary_md import summarize_world
@@ -129,3 +131,13 @@ def build_seed_assets(
     written.append(str(readme))
 
     return written
+
+
+def build_gallery(
+    out: str = "docs/examples/gallery.md", seeds: Optional[list[int]] = None
+) -> str:
+    """Generate the multi-world showcase gallery. Returns the written path."""
+    path = Path(out)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(gallery_md(seeds), encoding="utf-8")
+    return str(path)
