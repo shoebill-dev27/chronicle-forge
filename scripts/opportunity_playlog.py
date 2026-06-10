@@ -19,6 +19,7 @@ import sys
 from dataclasses import dataclass
 
 from chronicle_forge.activity import perform_activity
+from chronicle_forge.autoplay import _live_one
 from chronicle_forge.discovery import explore_dungeon
 from chronicle_forge.enums import (
     ActivityCategory,
@@ -27,7 +28,7 @@ from chronicle_forge.enums import (
     Talent,
 )
 from chronicle_forge.life import begin_life, lifespan_reached
-from chronicle_forge.macro import derive_rng
+from chronicle_forge.macro import derive_rng, time_skip
 from chronicle_forge.opportunity import (
     SALIENCE_SALT,
     W_DELTA,
@@ -117,13 +118,9 @@ class TurnRecord:
     sigma_max: object  # the highest-Sigma candidate among all scored
 
 
-def run_seed(seed: int) -> list[TurnRecord]:
-    world = generate_world(seed)
-    policy_rng = derive_rng(world, 0, salt=POLICY_SALT)
-    talent = policy_rng.choice(list(Talent))
-    life = begin_life(world, talent=talent)
+def run_observation(world, life, policy_rng) -> list[TurnRecord]:
+    """Observe the Opportunity stream for one life over the fixed window."""
     session = OpportunitySession()
-
     records: list[TurnRecord] = []
     for t in range(TURNS):
         if lifespan_reached(life):
@@ -134,7 +131,41 @@ def run_seed(seed: int) -> list[TurnRecord]:
         top_id = selected[0].target_id if selected else None
         session.commit_turn(selected, top_id)
         advance_world(world, life, policy_rng)
-    return records, talent
+    return records
+
+
+def run_seed(seed: int):
+    world = generate_world(seed)
+    policy_rng = derive_rng(world, 0, salt=POLICY_SALT)
+    talent = policy_rng.choice(list(Talent))
+    life = begin_life(world, talent=talent)
+    return run_observation(world, life, policy_rng), talent
+
+
+def warm_until_heritage(seed: int, max_lives: int = 30):
+    """Run full lives + time-skips (the existing engine) until Heritage exists,
+    so the observed life is born into a world that has legacies to surface."""
+    world = generate_world(seed)
+    lives = 0
+    while (
+        not world.heritage
+        and world.current_year < world.max_year
+        and lives < max_lives
+    ):
+        rng = derive_rng(world, len(world.lives), salt=POLICY_SALT)
+        life = _live_one(world, rng)
+        time_skip(world, life)
+        lives += 1
+    return world, lives
+
+
+def run_seed_heritage(seed: int):
+    world, warm_lives = warm_until_heritage(seed)
+    policy_rng = derive_rng(world, 777, salt=POLICY_SALT)
+    talent = policy_rng.choice(list(Talent))
+    life = begin_life(world, talent=talent)
+    records = run_observation(world, life, policy_rng)
+    return records, talent, warm_lives, list(world.heritage)
 
 
 # --- rendering ----------------------------------------------------------
@@ -286,11 +317,61 @@ def report_seed(seed: int) -> None:
     print()
 
 
+def _legacy_in(opps):
+    return [o for o in opps if o.kind is OpportunityKind.LEGACY]
+
+
+def report_seed_heritage(seed: int) -> None:
+    records, talent, warm_lives, heritage = run_seed_heritage(seed)
+
+    print("=" * 72)
+    print(f"SEED {seed}  [HERITAGE MODE]  warm-up lives: {warm_lives}, "
+          f"life talent: {talent.value}, {len(records)} obs turns")
+    print(f"Heritage present: {len(heritage)}")
+    for h in sorted(heritage, key=lambda x: -x.heritage_score):
+        print(f"  - {h.id}  type={h.type.value:<11} score={h.heritage_score:>4} "
+              f"reach={h.reach} longevity={h.longevity}")
+    print("=" * 72)
+
+    for r in records:
+        leg_scored = _legacy_in(r.scored)
+        leg_sel = _legacy_in(r.selected)
+        # Only print turns where Legacy is relevant, plus the selected line.
+        top = r.selected[0] if r.selected else None
+        tag = ""
+        if leg_sel:
+            tag = "  <-- LEGACY OFFERED: " + ", ".join(
+                f"{o.name}(Δ{o.signals.delta:.2f} T{o.tension:.2f})" for o in leg_sel)
+        elif leg_scored:
+            tag = "  (legacy gated/low: " + ", ".join(
+                f"{o.name} Δ{o.signals.delta:.2f} T{o.tension:.2f}"
+                for o in leg_scored) + ")"
+        sel_txt = f"{top.kind.value}:{top.name}" if top else "-"
+        print(f"Turn {r.turn:>2} (y{r.year}) ★ {sel_txt:<22}{tag}")
+
+    # Legacy-focused facts.
+    offered_turns = [r.turn for r in records if _legacy_in(r.selected)]
+    max_leg_in_topk = max((len(_legacy_in(r.selected)) for r in records), default=0)
+    leg_tops = sum(
+        1 for r in records if r.selected and r.selected[0].kind is OpportunityKind.LEGACY)
+    print("-" * 72)
+    print(f"  Legacy offered on turns: {offered_turns} "
+          f"({len(offered_turns)}/{len(records)})")
+    print(f"  Max legacies in any top-K: {max_leg_in_topk} (cap=1)")
+    print(f"  Turns where legacy was the TOP pick: {leg_tops}")
+    print()
+
+
 def main(argv=None) -> int:
     argv = argv if argv is not None else sys.argv[1:]
-    seeds = [int(a) for a in argv] if argv else [42, 123, 999]
+    heritage_mode = "--heritage" in argv
+    seeds = [int(a) for a in argv if not a.startswith("--")]
+    seeds = seeds or [42, 123, 999]
     for s in seeds:
-        report_seed(s)
+        if heritage_mode:
+            report_seed_heritage(s)
+        else:
+            report_seed(s)
     return 0
 
 
