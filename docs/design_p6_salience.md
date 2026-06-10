@@ -95,8 +95,11 @@ All signals use existing fields only.
 
 ### 2.2 Faction
 
-FactionType → ThemeAxis: LORD → governance, MERCHANT → commerce, RELIGIOUS → faith,
-ADVENTURER → innovation.
+FactionType → ThemeAxis (reusing `theme.FACTION_TYPE_TO_THEME`): LORD → governance,
+MERCHANT → commerce, RELIGIOUS → faith, **ADVENTURER → warfare**. A seed is matched to a
+faction by **ThemeAxis** — `SEED_DOMAIN_TO_THEME[seed.domain] == FACTION_TYPE_TO_THEME[faction.type]`
+— rather than via a new FactionType→SeedDomain table (the INNOVATION axis maps from two
+domains, so a direct domain table would be ambiguous).
 
 - `Δ = theme_aligned ? (power / 100) : 0.3 · (power / 100)` — rising on the current dominant
   theme axis reads as "on the eve of dominance."
@@ -105,27 +108,35 @@ ADVENTURER → innovation.
     than measured growth. If a time series of `power` becomes available, this can be
     **replaced with an actual growth-rate basis** in the future.
 - `Σ = power / 100`.
-- `Ω = clamp01( player seeds planted into the faction's domain in the last R turns / 2 )`.
+- `Ω = clamp01( player seeds whose axis matches the faction, planted in the last R years / 2 )`.
+  Seeds carry `planted_year` (not action-turns), so this window is measured in **world-years**.
 - `Ρ = clamp01( max(0, -min(relations.values())) / 100 )` — the strongest hostile relation is
   the kindling of conflict.
 
-### 2.3 Location
+### 2.3 Location (auxiliary category)
 
-Undevelopedness alone is a static property, not tension. We split imminence (Δ) from latent
-potential (Σ).
+Location is a **supporting** Opportunity category, **not a lead** — it varies the texture of a
+turn rather than anchoring it. Its tension is therefore driven mainly by **Δ (imminence)**;
+Stakes are a flat low baseline because the current world model carries no usable per-location
+gradient (MVP reduction, B-1).
 
-- **Δ_loc = max( frontier, convergence )**
-  - `frontier = 1.0 if (type == DUNGEON and undiscovered) else 0.0`.
+- **Δ_loc = max( frontier, convergence )** — the primary driver.
+  - `frontier = 1.0 if (type == DUNGEON and undiscovered) else 0.0`. "Undiscovered" means no
+    `Discovery` references this `location_id` — the **only authoritative source**;
+    `Location.state` is never written by the engine.
   - `convergence = 0.7 if (theme_affinity == world.theme.dominant) else 0.2`.
-  - Reads as "pressure that something will happen here" — an unexplored dungeon, or land that
-    resonates with where the world is heading.
-- **Σ_loc = clamp01( latent_potential )**, where
-  `latent_potential = undev · (theme_affinity == dominant ? 1.0 : 0.5) + heritage_concentration`.
-  - `undev = 1 - clamp01(state.get("development", 0) / 100)` (if `state` is empty, `undev = 1.0`).
-  - `heritage_concentration = clamp01( heritage-promoted causal_nodes at this location_id / 2 )`.
+- **Σ_loc = 0.2** — a flat, low baseline. `heritage_concentration` and `undev` are **removed
+  from MVP**: the world model persists no per-location development level (`Location.state` is
+  always empty) and never sets `CausalNode.location_id` (heritage cannot be traced to a place),
+  so neither yields a usable gradient. Locations are intentionally non-discriminated on Stakes.
 - `Ω = clamp01( (player seeds + discoveries at this location) / 2 )`.
 - `Ρ = (type == DUNGEON and undiscovered) ? 1.0 : 0.2` — the unexplored carries latent danger
-  (and also feeds Δ as `frontier`).
+  (also feeds Δ as `frontier`).
+- **Future extension point — `heritage_concentration`**: once `CausalNode.location_id` is
+  populated at event-firing time, restore
+  `Σ_loc = clamp01( undev · theme_alignment + heritage_concentration )`, where
+  `heritage_concentration = clamp01( heritage-promoted causal_nodes at this location_id / 2 )`.
+  Recorded here so the richer Location stakes can be reinstated without redesign.
 
 ### 2.4 WildCard (the primary tension engine)
 
@@ -234,10 +245,12 @@ E_Δ(turn) = 1 + ESCALATION_GAIN · prog              # ESCALATION_GAIN <= 0.3, 
 ## 6. Determinism guarantees
 
 1. **`T` is a pure function**: every signal depends only on world state at turn `T` (no RNG).
-2. **Jitter is derived from immutable inputs**:
-   `j = derive_rng(seed=world.seed, life.id, turn_index, SALIENCE_SALT).random() * 0.05`.
-   It must not depend on mutable world state (e.g. `len(lives)`). Implementation note: confirm
-   `macro.derive_rng` satisfies this (derive from immutable inputs only).
+2. **Jitter is derived from immutable inputs** (R5). The actual API is
+   `macro.derive_rng(world, mixer: int, salt: int)`, which depends only on `world.seed`
+   (immutable) and its integer arguments — it does not read mutable world state. Salience folds
+   its immutable keys into the single integer mixer:
+   `mixer = life_index * 1000 + turn_index` (where `life_index` is the life's position in
+   `world.lives`), then `j = derive_rng(world, mixer, salt=SALIENCE_SALT).random() * 0.05`.
 3. **Stable sort** on `(-tension, KIND_ORDER[kind], id)` gives a total order (ties resolve
    uniquely).
 4. **`E_Δ(turn)` is a pure function** and monotonic non-decreasing in `turn_index`.
@@ -326,6 +339,11 @@ E_Δ(turn) = 1 + ESCALATION_GAIN · prog              # ESCALATION_GAIN <= 0.3, 
 - **NPC Ρ**: the engine does not generate negative memories or hostile relations, so Ρ is
   derived from `Personality` as a provisional proxy, to be replaced by negative-memory /
   hostility / conflict signals when implemented.
+- **Location is an auxiliary category (MVP reduction, B-1)**: `CausalNode.location_id` is never
+  populated and `Location.state` is always empty, so heritage cannot be traced to a place and
+  there is no per-location development gradient. `Σ_loc` is therefore a flat baseline (0.2) and
+  Location tension rests on Δ (frontier / convergence). `heritage_concentration` is recorded in
+  §2.3 as the future extension point once `CausalNode.location_id` exists.
 - **NPC ↔ WildCard linkage**: no direct link exists in the model; MVP does not fold WildCard
   linkage into NPC Ρ (future hook).
 - **Early-game NPC balance (R3)**: NPCs with zero investment rely on Σ and may surface less
