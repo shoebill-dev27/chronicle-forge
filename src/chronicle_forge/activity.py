@@ -9,7 +9,13 @@ from __future__ import annotations
 
 from typing import Optional
 
-from .enums import ActivityCategory, EvaluationLens, MemoryType, SeedDomain
+from .enums import (
+    ActivityCategory,
+    EvaluationLens,
+    MemoryType,
+    PlayerInteraction,
+    SeedDomain,
+)
 from .ids import next_id
 from .inheritance import activity_bonus
 from .life import advance_time
@@ -37,6 +43,15 @@ _MEMORY_FOR: dict[ActivityCategory, MemoryType] = {
     ActivityCategory.EDUCATION: MemoryType.EDUCATED,
     ActivityCategory.RELIGION: MemoryType.EDUCATED,
     ActivityCategory.POLITICS: MemoryType.SAVED,
+}
+
+# E-1 (P6 Execution Layer): how a player's stance toward a WildCard maps to an
+# existing activity verb. Support -> back them politically; Eliminate -> move
+# against them; Exploit -> profit from them.
+_WILDCARD_INTERACTION_CATEGORY: dict[PlayerInteraction, ActivityCategory] = {
+    PlayerInteraction.SUPPORT: ActivityCategory.POLITICS,
+    PlayerInteraction.ELIMINATE: ActivityCategory.COMBAT,
+    PlayerInteraction.EXPLOIT: ActivityCategory.COMMERCE,
 }
 
 
@@ -101,4 +116,37 @@ def perform_activity(
         )
 
     advance_time(world, life, ACTIVITY_TURN_COST)
+    return seed
+
+
+def engage_wildcard(
+    world: World,
+    life: Life,
+    wc_id: str,
+    interaction: PlayerInteraction,
+) -> CausalSeed:
+    """E-1: engage a WildCard via an existing activity (thin wrapper).
+
+    Contract (binding — keeps the world-mutation funnel single-sourced; see E-1
+    in docs/design_p6_execution.md):
+
+    Allowed:
+      * one ``perform_activity`` call (the single mutation path)
+      * set ``wc.player_interaction`` (latest-wins)
+
+    Forbidden:
+      * generating its own CausalSeed / Memory / Discovery
+      * consuming its own turn (only ``perform_activity``'s single turn-advance)
+      * altering any evaluation beyond what ``perform_activity`` accrues
+
+    The wrapper adds no mechanics of its own. ``target_id=wc_id`` does not match
+    any NPC id, so ``perform_activity`` forms no memory for it (WildCard rows of
+    the S2 wiring table: seed only). It is also the future NPC<->WildCard hook.
+    """
+    category = _WILDCARD_INTERACTION_CATEGORY[interaction]
+    seed = perform_activity(world, life, category, target_id=wc_id)
+    for wc in world.wildcards.wildcards:
+        if wc.id == wc_id:
+            wc.player_interaction = interaction
+            break
     return seed
