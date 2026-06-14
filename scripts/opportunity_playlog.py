@@ -47,7 +47,11 @@ from chronicle_forge.worldgen import generate_world
 
 TURNS = 18  # fixed observation length (matches EXPECTED_TURNS)
 POLICY_SALT = 99  # same salt autoplay uses for its independent policy stream
-_TARGETED = {ActivityCategory.EDUCATION, ActivityCategory.POLITICS, ActivityCategory.RELIGION}
+_TARGETED = {
+    ActivityCategory.EDUCATION,
+    ActivityCategory.POLITICS,
+    ActivityCategory.RELIGION,
+}
 _TALENT_ACTIVITY = {p.talent_affinity: c for c, p in ACTIVITY_PROFILES.items()}
 
 
@@ -148,9 +152,7 @@ def warm_until_heritage(seed: int, max_lives: int = 30):
     world = generate_world(seed)
     lives = 0
     while (
-        not world.heritage
-        and world.current_year < world.max_year
-        and lives < max_lives
+        not world.heritage and world.current_year < world.max_year and lives < max_lives
     ):
         rng = derive_rng(world, len(world.lives), salt=POLICY_SALT)
         life = _live_one(world, rng)
@@ -270,10 +272,18 @@ def report_seed(seed: int) -> None:
     records, talent = run_seed(seed)
     records2, _ = run_seed(seed)  # M8 determinism
     same = [
-        (r.turn, [o.target_id for o in r.selected], round(r.selected[0].tension, 9) if r.selected else None)
+        (
+            r.turn,
+            [o.target_id for o in r.selected],
+            round(r.selected[0].tension, 9) if r.selected else None,
+        )
         for r in records
     ] == [
-        (r.turn, [o.target_id for o in r.selected], round(r.selected[0].tension, 9) if r.selected else None)
+        (
+            r.turn,
+            [o.target_id for o in r.selected],
+            round(r.selected[0].tension, 9) if r.selected else None,
+        )
         for r in records2
     ]
 
@@ -288,14 +298,19 @@ def report_seed(seed: int) -> None:
     print("-" * 72)
     print(f"METRICS (seed {seed})")
     a, b = m["M1_tension_not_size"]
-    print(f"  M1 tension>size : {a}/{b} selected led by Δ/Ω/Ρ "
-          f"({100*a/max(1,b):.0f}%)")
+    print(
+        f"  M1 tension>size : {a}/{b} selected led by Δ/Ω/Ρ " f"({100*a/max(1,b):.0f}%)"
+    )
     a, b = m["M2_imminence_turns"]
     print(f"  M2 imminence    : {a}/{b} turns offered a high-Δ (>=0.60) candidate")
-    print(f"  M3 mix          : {m['M3_avg_distinct_kinds']:.2f} distinct kinds/turn, "
-          f"cap violations={m['M3_cap_violations']}")
-    print(f"  M4 escalation   : meanΔ {m['M4_meanD_first']:.3f} -> {m['M4_meanD_second']:.3f} | "
-          f"meanT {m['M4_meanT_first']:.3f} -> {m['M4_meanT_second']:.3f}")
+    print(
+        f"  M3 mix          : {m['M3_avg_distinct_kinds']:.2f} distinct kinds/turn, "
+        f"cap violations={m['M3_cap_violations']}"
+    )
+    print(
+        f"  M4 escalation   : meanΔ {m['M4_meanD_first']:.3f} -> {m['M4_meanD_second']:.3f} | "
+        f"meanT {m['M4_meanT_first']:.3f} -> {m['M4_meanT_second']:.3f}"
+    )
     a, b = m["M5_consecutive_same_top"]
     print(f"  M5 repetition   : {a}/{b} consecutive turns kept the same top pick")
     print(f"  M6 legacy       : {m['M6_legacy_offered']} legacy candidates offered")
@@ -307,11 +322,13 @@ def report_seed(seed: int) -> None:
     print("-" * 72)
     if upset:
         r, sm, top = upset
-        print(f"  A. Σ-max upset @ Turn {r.turn}: "
-              f"BIG '{sm.name}' (Σ={sm.signals.sigma:.2f}, T={sm.tension:.2f}) DROPPED; "
-              f"led by '{top.name}' (T={top.tension:.2f}, by {dominant(top, r.turn)}: "
-              f"Δ{top.signals.delta:.2f} Ω{top.signals.omega:.2f} "
-              f"Ρ{top.signals.rho:.2f})")
+        print(
+            f"  A. Σ-max upset @ Turn {r.turn}: "
+            f"BIG '{sm.name}' (Σ={sm.signals.sigma:.2f}, T={sm.tension:.2f}) DROPPED; "
+            f"led by '{top.name}' (T={top.tension:.2f}, by {dominant(top, r.turn)}: "
+            f"Δ{top.signals.delta:.2f} Ω{top.signals.omega:.2f} "
+            f"Ρ{top.signals.rho:.2f})"
+        )
     else:
         print("  A. no Σ-max upset found in this run")
     print()
@@ -325,12 +342,16 @@ def report_seed_heritage(seed: int) -> None:
     records, talent, warm_lives, heritage = run_seed_heritage(seed)
 
     print("=" * 72)
-    print(f"SEED {seed}  [HERITAGE MODE]  warm-up lives: {warm_lives}, "
-          f"life talent: {talent.value}, {len(records)} obs turns")
+    print(
+        f"SEED {seed}  [HERITAGE MODE]  warm-up lives: {warm_lives}, "
+        f"life talent: {talent.value}, {len(records)} obs turns"
+    )
     print(f"Heritage present: {len(heritage)}")
     for h in sorted(heritage, key=lambda x: -x.heritage_score):
-        print(f"  - {h.id}  type={h.type.value:<11} score={h.heritage_score:>4} "
-              f"reach={h.reach} longevity={h.longevity}")
+        print(
+            f"  - {h.id}  type={h.type.value:<11} score={h.heritage_score:>4} "
+            f"reach={h.reach} longevity={h.longevity}"
+        )
     print("=" * 72)
 
     for r in records:
@@ -341,11 +362,17 @@ def report_seed_heritage(seed: int) -> None:
         tag = ""
         if leg_sel:
             tag = "  <-- LEGACY OFFERED: " + ", ".join(
-                f"{o.name}(Δ{o.signals.delta:.2f} T{o.tension:.2f})" for o in leg_sel)
+                f"{o.name}(Δ{o.signals.delta:.2f} T{o.tension:.2f})" for o in leg_sel
+            )
         elif leg_scored:
-            tag = "  (legacy gated/low: " + ", ".join(
-                f"{o.name} Δ{o.signals.delta:.2f} T{o.tension:.2f}"
-                for o in leg_scored) + ")"
+            tag = (
+                "  (legacy gated/low: "
+                + ", ".join(
+                    f"{o.name} Δ{o.signals.delta:.2f} T{o.tension:.2f}"
+                    for o in leg_scored
+                )
+                + ")"
+            )
         sel_txt = f"{top.kind.value}:{top.name}" if top else "-"
         print(f"Turn {r.turn:>2} (y{r.year}) ★ {sel_txt:<22}{tag}")
 
@@ -353,22 +380,162 @@ def report_seed_heritage(seed: int) -> None:
     offered_turns = [r.turn for r in records if _legacy_in(r.selected)]
     max_leg_in_topk = max((len(_legacy_in(r.selected)) for r in records), default=0)
     leg_tops = sum(
-        1 for r in records if r.selected and r.selected[0].kind is OpportunityKind.LEGACY)
+        1
+        for r in records
+        if r.selected and r.selected[0].kind is OpportunityKind.LEGACY
+    )
     print("-" * 72)
-    print(f"  Legacy offered on turns: {offered_turns} "
-          f"({len(offered_turns)}/{len(records)})")
+    print(
+        f"  Legacy offered on turns: {offered_turns} "
+        f"({len(offered_turns)}/{len(records)})"
+    )
     print(f"  Max legacies in any top-K: {max_leg_in_topk} (cap=1)")
     print(f"  Turns where legacy was the TOP pick: {leg_tops}")
+    print()
+
+
+# --- M9: Engagement-Loop observation (--execute, opportunities DRIVE) ----
+#
+# Unlike the read-only overlay above, this mode lets the Execution Layer convert
+# the selected opportunity into an action that actually mutates the world, so the
+# self-reinforcing loop (Opportunity -> Execute -> Seed/Memory -> Omega rises ->
+# re-selected) can be OBSERVED. Observation only -- no tension/penalty/cap tuning.
+
+from chronicle_forge.execution import (  # noqa: E402
+    EXECUTION_SALT,
+    execute_option,
+    expand_options,
+    make_auto_chooser,
+)
+from chronicle_forge.opportunity import select_opportunities  # noqa: E402
+
+EXEC_TURNS = 24  # observation window (a bit longer than EXPECTED_TURNS=18)
+
+
+@dataclass
+class ExecRecord:
+    turn: int
+    year: int
+    kind: str
+    target: object
+    omega: object
+    label: str
+
+
+def drive_life(world, rng) -> list[ExecRecord]:
+    """Drive one life through the Execution Layer; record the chosen action and
+    the selected opportunity's Omega each turn (read BEFORE executing)."""
+    talent = rng.choice(list(Talent))
+    life = begin_life(world, talent=talent)
+    session = OpportunitySession()
+    chooser = make_auto_chooser(rng)
+    records: list[ExecRecord] = []
+    for t in range(EXEC_TURNS):
+        if lifespan_reached(life) or world.current_year >= world.max_year:
+            break
+        opps = select_opportunities(world, life, session)
+        options = expand_options(opps, world, life, rng)
+        choice = options[chooser(options)]
+        opp = choice.opportunity
+        records.append(
+            ExecRecord(
+                turn=t,
+                year=world.current_year,
+                kind=opp.kind.value if opp else "fallback",
+                target=opp.target_id if opp else None,
+                omega=opp.signals.omega if opp else None,
+                label=choice.label,
+            )
+        )
+        execute_option(world, life, choice)
+        session.commit_turn(opps, opp.target_id if opp else None)
+    return records
+
+
+def m9_metrics(records: list[ExecRecord]) -> dict:
+    from collections import Counter, defaultdict
+
+    n = max(1, len(records))
+    targets = [r.target for r in records]
+
+    # 1. same-target consecutive-selection rate
+    consec = sum(1 for a, b in zip(targets, targets[1:]) if a is not None and a == b)
+    consec_rate = consec / max(1, len(records) - 1)
+
+    # 2. same-target mean re-selection interval
+    pos: dict = defaultdict(list)
+    for i, t in enumerate(targets):
+        if t is not None:
+            pos[t].append(i)
+    intervals = [b - a for ps in pos.values() for a, b in zip(ps, ps[1:])]
+    mean_interval = (sum(intervals) / len(intervals)) if intervals else None
+
+    # 3. per-kind monopoly rate
+    kinds = Counter(r.kind for r in records)
+    monopoly_kind, monopoly_n = kinds.most_common(1)[0] if kinds else ("-", 0)
+    monopoly_rate = monopoly_n / n
+
+    # 4. Omega time-series (selected target's Omega across turns)
+    omega_series = [(r.turn, r.target, r.omega) for r in records]
+
+    return {
+        "turns": len(records),
+        "consec_rate": consec_rate,
+        "mean_interval": mean_interval,
+        "monopoly_kind": monopoly_kind,
+        "monopoly_rate": monopoly_rate,
+        "kind_counts": dict(kinds),
+        "omega_series": omega_series,
+    }
+
+
+def report_seed_execute(seed: int) -> None:
+    world = generate_world(seed)
+    rng = derive_rng(world, 0, salt=EXECUTION_SALT)
+    records = drive_life(world, rng)
+
+    print("=" * 72)
+    print(f"SEED {seed}  [EXECUTE / M9]  {len(records)} driven turns")
+    print("=" * 72)
+    for r in records:
+        om = f"Ω{r.omega:.2f}" if r.omega is not None else "Ω  - "
+        tgt = r.target if r.target is not None else "(fallback)"
+        print(f"Turn {r.turn:>2} (y{r.year}) [{r.kind:<8}] {tgt:<8} {om}  {r.label}")
+
+    m = m9_metrics(records)
+    print("-" * 72)
+    print(f"M9 ENGAGEMENT-LOOP OBSERVATION (seed {seed})  -- observe-only")
+    print(f"  same-target consecutive rate : {m['consec_rate']:.2f}")
+    mi = m["mean_interval"]
+    print(
+        f"  same-target mean re-sel gap  : " f"{mi:.2f} turns"
+        if mi is not None
+        else "  same-target mean re-sel gap  : n/a (no target re-selected)"
+    )
+    print(
+        f"  per-kind monopoly rate       : {m['monopoly_rate']:.2f} "
+        f"({m['monopoly_kind']})  counts={m['kind_counts']}"
+    )
+    sel_om = [o for _, _, o in m["omega_series"] if o is not None]
+    if sel_om:
+        print(
+            f"  selected-Ω over time         : "
+            f"first={sel_om[0]:.2f} last={sel_om[-1]:.2f} "
+            f"mean={sum(sel_om)/len(sel_om):.2f} max={max(sel_om):.2f}"
+        )
     print()
 
 
 def main(argv=None) -> int:
     argv = argv if argv is not None else sys.argv[1:]
     heritage_mode = "--heritage" in argv
+    execute_mode = "--execute" in argv
     seeds = [int(a) for a in argv if not a.startswith("--")]
     seeds = seeds or [42, 123, 999]
     for s in seeds:
-        if heritage_mode:
+        if execute_mode:
+            report_seed_execute(s)
+        elif heritage_mode:
             report_seed_heritage(s)
         else:
             report_seed(s)
