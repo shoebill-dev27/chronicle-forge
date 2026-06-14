@@ -17,7 +17,7 @@ from typing import Optional
 from ..causal import CausalGraph
 from ..enums import MemoryType
 from ..models import Life, World
-from ._data import heritage_rows, seeds_of_life, triggered_node
+from ._data import heritage_rows, place, seeds_of_life, triggered_node
 from .labels import event_phrase, seed_label
 
 # How the player's strongest memory of a person reads in second person.
@@ -31,9 +31,11 @@ _MEMORY_VERB = {
 }
 
 
-def _years_lived(life: Life, world: World) -> int:
-    end = life.death_year if life.death_year is not None else world.current_year
-    return max(0, end - life.birth_year)
+def _age_at_death(life: Life) -> int:
+    """The player's age when this life ended (a human lifespan reads more
+    naturally than the active-span). Falls back to the current age for a life
+    that has not formally ended yet. Causal span is a separate future field."""
+    return life.age_at_death if life.age_at_death is not None else life.age
 
 
 def _npc_name(world: World, npc_id: str) -> Optional[str]:
@@ -95,14 +97,12 @@ def _title(world: World, life: Life) -> str:
     if life.summary and life.summary.title:
         return life.summary.title
     talent = life.talent.value if life.talent else "soul"
-    from ._data import place
-
     return f"The {talent.capitalize()} of {place(world)}"
 
 
 def dead_summary(world: World, life: Life) -> str:
     """Render the second-person death screen for one finished life. Read-only."""
-    years = _years_lived(life, world)
+    years = _age_at_death(life)
     lines = [f"─ {_title(world, life)} ─"]
     lines.append(
         "You lived a single season." if years == 0 else f"You lived {years} years."

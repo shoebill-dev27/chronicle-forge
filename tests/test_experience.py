@@ -75,8 +75,10 @@ def test_no_bare_seed_count_headline():
         assert "You planted" not in out
 
 
-def test_lifespan_line_present_for_all_lives():
+def test_lifespan_uses_age_at_death():
     world = simulate_world(SEED)
     for life in world.lives:
         out = dead_summary(world, life)
         assert "You lived" in out
+        if life.age_at_death:
+            assert f"You lived {life.age_at_death} years." in out
