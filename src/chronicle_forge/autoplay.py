@@ -87,12 +87,58 @@ def _live_one(world: World, rng: DeterministicRNG) -> Life:
     return life
 
 
-def simulate_world(seed: int, life_cap: int = 60) -> World:
-    """Run a world from generation to its max year and return the finished world."""
+def _live_one_opportunity(world: World, rng: DeterministicRNG) -> Life:
+    """P6 opportunity-driven life loop. Reproduces the legacy life mechanics
+    (lifespan draw, per-action combat-death probability) exactly; the *only*
+    changed block is action choice, which now flows through the Execution Layer
+    (Opportunity -> Action). The legacy random ``imprint`` sprinkle is dropped
+    here -- it was scripted-agent noise that would distort Omega observation.
+    """
+    from .execution import make_auto_chooser, play_turn  # local import avoids cycle
+    from .opportunity import OpportunitySession
+
+    talent = rng.choice(list(Talent))
+    life = begin_life(world, talent=talent)
+
+    death_year = life.birth_year + draw_natural_span(rng)
+    combat_death = False
+    per_action_combat = config.COMBAT_DEATH_PROB_PER_YEAR / TURNS_PER_YEAR
+
+    session = OpportunitySession()
+    chooser = make_auto_chooser(rng)
+
+    while (
+        world.current_year < world.max_year
+        and world.current_year < death_year
+        and not lifespan_reached(life)
+    ):
+        play_turn(world, life, session, chooser, rng)
+        if rng.random() < per_action_combat:
+            combat_death = True
+            break
+
+    cause = DeathCause.COMBAT if combat_death else DeathCause.LIFESPAN
+    end_life(world, life, cause)
+    return life
+
+
+def simulate_world(seed: int, life_cap: int = 60, mode: str = "legacy") -> World:
+    """Run a world from generation to its max year and return the finished world.
+
+    ``mode="legacy"`` (default) drives play with the talent policy and is
+    byte-identical to prior behavior (golden seed42 artifacts, P5 determinism).
+    ``mode="opportunity"`` drives play through the P6 Execution Layer instead.
+    """
     world = generate_world(seed)
     while world.current_year < world.max_year and len(world.lives) < life_cap:
-        rng = derive_rng(world, len(world.lives), salt=_AUTOPLAY_SALT)
-        life = _live_one(world, rng)
+        if mode == "legacy":
+            rng = derive_rng(world, len(world.lives), salt=_AUTOPLAY_SALT)
+            life = _live_one(world, rng)
+        else:
+            from .execution import EXECUTION_SALT
+
+            rng = derive_rng(world, len(world.lives), salt=EXECUTION_SALT)
+            life = _live_one_opportunity(world, rng)
         skip = time_skip(world, life)
         if skip["world_ended"]:
             break
