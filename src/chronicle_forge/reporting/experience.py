@@ -15,7 +15,7 @@ from __future__ import annotations
 from typing import Optional
 
 from ..causal import CausalGraph
-from ..enums import MemoryType
+from ..enums import HeritageType, MemoryType, Talent
 from ..models import Life, World
 from ._data import heritage_rows, place, seeds_of_life, triggered_node
 from .labels import event_phrase, seed_label
@@ -200,3 +200,81 @@ _NUMBER_WORDS = {
 
 def _cap_number(n: int) -> str:
     return _NUMBER_WORDS.get(n, str(n))
+
+
+# --- P7-2 Chronicle Generator -------------------------------------------
+#
+# Not a summary of the death screen: a *historical* retelling (third person,
+# template-based, no LLM) that translates a life's causality into history in the
+# order Count -> Event -> Consequence -> Legacy. Reuses the same per-life
+# accessors as the Dead Summary; adds no new aggregation.
+
+_ROLE = {
+    Talent.SCHOLAR: "scholar",
+    Talent.WARRIOR: "warrior",
+    Talent.MERCHANT: "merchant",
+    Talent.STATESMAN: "statesman",
+    Talent.MENTOR: "teacher",
+    Talent.EXPLORER: "wanderer",
+    Talent.PRIEST: "priest",
+    Talent.BUILDER: "builder",
+}
+
+# The noun for "what they left", by the heritage type that endured.
+_WORK_NOUN = {
+    HeritageType.SCHOOL: "teachings",
+    HeritageType.THOUGHT: "teachings",
+    HeritageType.HEIR: "line",
+    HeritageType.TECHNOLOGY: "craft",
+    HeritageType.INSTITUTION: "order",
+    HeritageType.MONUMENT: "work",
+}
+
+
+def life_chronicle(world: World, life: Life) -> str:
+    """Render a finished life as a short third-person history (3-10 lines).
+
+    Read-only and deterministic. Translates causality into history rather than
+    narrating statistics: a defining act, what it set in motion, and the legacy
+    that outlived the life (or an honest closing when none did)."""
+    role = _ROLE.get(life.talent, "wanderer")
+    dom = world.theme.dominant
+    era = f", in an age of {dom.value}" if dom is not None else ""
+    lines = [f"They lived as a {role} of {place(world)}{era}."]
+
+    thread = _longest_thread(world, life)
+    bond = _strongest_bond(world, life)
+    legacy = _top_legacy(world, life)
+
+    # The defining act -> the event it set in motion (Event).
+    if thread is not None:
+        seed, event, downstream = thread
+        lines.append(
+            f"They chose to {seed_label(world, seed.id)}, and {event_phrase(event)}."
+        )
+        if downstream >= 3:  # Consequence (softly, not a raw count)
+            lines.append(
+                "What began with them rippled on through the years that followed."
+            )
+    elif bond is not None:
+        verb, name, _ = bond
+        lines.append(f"They {verb} {name}, and were not forgotten for it.")
+
+    # Legacy (Count -> Event -> Consequence -> Legacy closes here).
+    if legacy is not None:
+        her_type = next(
+            (h.type for h in world.heritage if h.seed_id == legacy["source_seed"]),
+            None,
+        )
+        work = _WORK_NOUN.get(her_type, "work")
+        lines.append(f"Their {work} spread beyond their own lifetime.")
+        longevity = legacy["longevity"]
+        when = "Generations later" if longevity >= 20 else f"{longevity} years later"
+        lines.append(f"{when}, \"{legacy['name']}\" still bore their mark.")
+    elif bond is not None:
+        lines.append("Little of what they touched outlasted the age,")
+        lines.append("yet the world marked their passing and moved on.")
+    else:
+        lines.append("They left no lasting mark, and the age closed over them.")
+
+    return "\n".join(lines)

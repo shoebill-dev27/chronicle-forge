@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from chronicle_forge.autoplay import simulate_world
 from chronicle_forge.life import begin_life
-from chronicle_forge.reporting import dead_summary
+from chronicle_forge.reporting import dead_summary, life_chronicle
 from chronicle_forge.reporting._data import heritage_rows, seed_by_id
 from chronicle_forge.worldgen import generate_world
 
@@ -82,3 +82,50 @@ def test_lifespan_uses_age_at_death():
         assert "You lived" in out
         if life.age_at_death:
             assert f"You lived {life.age_at_death} years." in out
+
+
+# --- P7-2 Chronicle Generator -------------------------------------------
+
+
+def test_chronicle_deterministic():
+    world = simulate_world(SEED)
+    life = world.lives[0]
+    assert life_chronicle(world, life) == life_chronicle(world, life)
+
+
+def test_chronicle_read_only():
+    world = simulate_world(SEED)
+    life = world.lives[-1]
+    before = world.model_dump()
+    life_chronicle(world, life)
+    assert world.model_dump() == before
+
+
+def test_chronicle_is_third_person_history():
+    world = simulate_world(SEED)
+    for life in world.lives:
+        out = life_chronicle(world, life)
+        assert "You " not in out  # not the second-person death screen
+        assert out.startswith("They lived as")
+
+
+def test_chronicle_line_count_in_range():
+    world = simulate_world(SEED)
+    for life in world.lives:
+        n = len(life_chronicle(world, life).splitlines())
+        assert 3 <= n <= 10
+
+
+def test_chronicle_heritage_world_names_the_legacy():
+    world = simulate_world(SEED)
+    life = _life_with_heritage(world)
+    out = life_chronicle(world, life)
+    assert "still bore their mark." in out
+
+
+def test_chronicle_heritageless_life_closes_honestly():
+    world = generate_world(SEED)
+    life = begin_life(world, talent=None)
+    out = life_chronicle(world, life)
+    assert "still bore their mark." not in out
+    assert "age closed over them." in out or "marked their passing" in out
