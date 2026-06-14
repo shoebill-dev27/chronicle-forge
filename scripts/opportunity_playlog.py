@@ -574,13 +574,9 @@ class ReviewTurn:
     selected: object  # chosen opportunity (opportunity mode) / top proxy (legacy)
 
 
-def observe_legacy(seed: int) -> list[ReviewTurn]:
+def _overlay_loop(world, life, policy_rng) -> list[ReviewTurn]:
     """Read-only overlay: world driven by the talent policy; record what the
     Opportunity layer WOULD present. 'selected' proxied by the top pick."""
-    world = generate_world(seed)
-    policy_rng = derive_rng(world, 0, salt=POLICY_SALT)
-    talent = policy_rng.choice(list(Talent))
-    life = begin_life(world, talent=talent)
     session = OpportunitySession()
     out: list[ReviewTurn] = []
     for t in range(ARC_TURNS):
@@ -594,13 +590,9 @@ def observe_legacy(seed: int) -> list[ReviewTurn]:
     return out
 
 
-def observe_opportunity(seed: int) -> list[ReviewTurn]:
+def _driven_loop(world, life, rng) -> list[ReviewTurn]:
     """Execution Layer drives the world; record offered top-K + the chosen
     opportunity (None when the free-action fallback is taken)."""
-    world = generate_world(seed)
-    rng = derive_rng(world, 0, salt=EXECUTION_SALT)
-    talent = rng.choice(list(Talent))
-    life = begin_life(world, talent=talent)
     session = OpportunitySession()
     chooser = make_auto_chooser(rng)
     out: list[ReviewTurn] = []
@@ -617,6 +609,40 @@ def observe_opportunity(seed: int) -> list[ReviewTurn]:
             opps, choice.opportunity.target_id if choice.opportunity else None
         )
     return out
+
+
+def observe_legacy(seed: int) -> list[ReviewTurn]:
+    world = generate_world(seed)
+    policy_rng = derive_rng(world, 0, salt=POLICY_SALT)
+    life = begin_life(world, talent=policy_rng.choice(list(Talent)))
+    return _overlay_loop(world, life, policy_rng)
+
+
+def observe_opportunity(seed: int) -> list[ReviewTurn]:
+    world = generate_world(seed)
+    rng = derive_rng(world, 0, salt=EXECUTION_SALT)
+    life = begin_life(world, talent=rng.choice(list(Talent)))
+    return _driven_loop(world, life, rng)
+
+
+# P6.6H: same observation, but the life is born into a world WARMED until
+# Heritage exists (so Legacy can actually surface and History>0 is testable).
+# Both modes share the identical legacy-engine warm-up so the only variable is
+# the OBSERVED life's regime.
+
+
+def observe_legacy_heritage(seed: int):
+    world, warm = warm_until_heritage(seed)
+    policy_rng = derive_rng(world, 777, salt=POLICY_SALT)
+    life = begin_life(world, talent=policy_rng.choice(list(Talent)))
+    return _overlay_loop(world, life, policy_rng), warm, list(world.heritage)
+
+
+def observe_opportunity_heritage(seed: int):
+    world, warm = warm_until_heritage(seed)
+    rng = derive_rng(world, 777, salt=EXECUTION_SALT)
+    life = begin_life(world, talent=rng.choice(list(Talent)))
+    return _driven_loop(world, life, rng), warm, list(world.heritage)
 
 
 def _is_wc(o) -> bool:
@@ -831,6 +857,139 @@ def report_review(seeds) -> None:
     print()
 
 
+# --- P6.6H: Legacy-focused metrics (History vs the present temptation) ---
+
+
+def _is_legacy(o) -> bool:
+    return o is not None and o.kind is OpportunityKind.LEGACY
+
+
+def legacy_metrics(turns) -> dict:
+    """Legacy TOP/selected rates, stale re-offer cycle, and the Legacy<->WildCard
+    contest -- including the core Chronicle Forge moment where HISTORY (a Legacy)
+    beats the PRESENT TEMPTATION (a WildCard) for the top slot."""
+    n = max(1, len(turns))
+    leg_offered_turns = [r.turn for r in turns if any(_is_legacy(o) for o in r.offered)]
+    gaps = [b - a for a, b in zip(leg_offered_turns, leg_offered_turns[1:])]
+    contest = [
+        r
+        for r in turns
+        if any(_is_legacy(o) for o in r.offered) and any(_is_wc(o) for o in r.offered)
+    ]
+    legacy_beats_wc = [r.turn for r in contest if _is_legacy(r.top)]
+    wc_beats_legacy = sum(1 for r in contest if _is_wc(r.top))
+    return {
+        "leg_top_rate": sum(_is_legacy(r.top) for r in turns) / n,
+        "leg_selected_rate": sum(_is_legacy(r.selected) for r in turns) / n,
+        "leg_offered_turns": leg_offered_turns,
+        "stale_cycle": (sum(gaps) / len(gaps)) if gaps else None,
+        "contest_turns": len(contest),
+        "legacy_beats_wc_turns": legacy_beats_wc,
+        "wc_beats_legacy": wc_beats_legacy,
+    }
+
+
+def report_review_heritage_seed(seed: int) -> dict:
+    leg, warm_l, her_l = observe_legacy_heritage(seed)
+    opp, warm_o, her_o = observe_opportunity_heritage(seed)
+    m12l, m12o = m12_agency(leg), m12_agency(opp)
+    lgl, lgo = legacy_metrics(leg), legacy_metrics(opp)
+
+    print("=" * 72)
+    print(
+        f"SEED {seed}  [P6.6H HERITAGE REVIEW]  "
+        f"warm-up {warm_l}/{warm_o} lives, heritage {len(her_l)}/{len(her_o)}  "
+        f"legacy {len(leg)}t / opportunity {len(opp)}t"
+    )
+    print("=" * 72)
+    print("  M12H agency share  World / Player / History  (History>0 is the goal)")
+    print(
+        f"    legacy      W={m12l['World']:.2f} P={m12l['Player']:.2f} H={m12l['History']:.2f}"
+    )
+    print(
+        f"    opportunity W={m12o['World']:.2f} P={m12o['Player']:.2f} H={m12o['History']:.2f}"
+    )
+    print("  Legacy dynamics                     legacy  |  opportunity")
+    print(
+        f"    legacy TOP rate     {lgl['leg_top_rate']:>6.2f}  |  {lgo['leg_top_rate']:>6.2f}"
+    )
+    print(
+        f"    legacy selected rate{lgl['leg_selected_rate']:>6.2f}  |  "
+        f"{lgo['leg_selected_rate']:>6.2f}"
+    )
+    sc_l = f"{lgl['stale_cycle']:.1f}" if lgl["stale_cycle"] is not None else " n/a"
+    sc_o = f"{lgo['stale_cycle']:.1f}" if lgo["stale_cycle"] is not None else " n/a"
+    print(f"    legacy stale cycle  {sc_l:>6}  |  {sc_o:>6}  (turns between re-offers)")
+    print("  Legacy <-> WildCard contest (History vs present temptation)")
+    print(
+        f"    legacy mode: contests={lgl['contest_turns']} "
+        f"HISTORY-WINS={len(lgl['legacy_beats_wc_turns'])} "
+        f"(turns {lgl['legacy_beats_wc_turns']}) wc-wins={lgl['wc_beats_legacy']}"
+    )
+    print(
+        f"    opp   mode: contests={lgo['contest_turns']} "
+        f"HISTORY-WINS={len(lgo['legacy_beats_wc_turns'])} "
+        f"(turns {lgo['legacy_beats_wc_turns']}) wc-wins={lgo['wc_beats_legacy']}"
+    )
+    print("  M13H story arc (opportunity mode)  kind-share | agency | mean Δ/Σ/Ω/Ρ")
+    for row in m13_arc(opp):
+        ag = row["agency"]
+        print(
+            f"    {row['phase']:<5}({row['turns']}t) "
+            f"[{_fmt_share(row['kind_share'])}] "
+            f"W{ag['World']:.2f}/P{ag['Player']:.2f}/H{ag['History']:.2f} "
+            f"Δ{row['meanD']:.2f} Σ{row['meanS']:.2f} Ω{row['meanO']:.2f} Ρ{row['meanR']:.2f}"
+        )
+    print()
+    return {
+        "seed": seed,
+        "m12l": m12l,
+        "m12o": m12o,
+        "lgl": lgl,
+        "lgo": lgo,
+        "her": len(her_o),
+    }
+
+
+def report_review_heritage(seeds) -> None:
+    rows = [report_review_heritage_seed(s) for s in seeds]
+
+    def avg(getter):
+        return sum(getter(r) for r in rows) / max(1, len(rows))
+
+    hist_pos = sum(1 for r in rows if r["m12o"]["History"] > 0)
+    total_hist_wins = sum(len(r["lgo"]["legacy_beats_wc_turns"]) for r in rows)
+    seeds_with_hist_win = sum(1 for r in rows if r["lgo"]["legacy_beats_wc_turns"])
+
+    print("#" * 72)
+    print(f"AGGREGATE over {len(rows)} seeds  [HERITAGE]  (legacy -> opportunity)")
+    print("#" * 72)
+    print("  M12H agency share  World / Player / History")
+    print(
+        f"    legacy       W={avg(lambda r: r['m12l']['World']):.2f} "
+        f"P={avg(lambda r: r['m12l']['Player']):.2f} "
+        f"H={avg(lambda r: r['m12l']['History']):.2f}"
+    )
+    print(
+        f"    opportunity  W={avg(lambda r: r['m12o']['World']):.2f} "
+        f"P={avg(lambda r: r['m12o']['Player']):.2f} "
+        f"H={avg(lambda r: r['m12o']['History']):.2f}"
+    )
+    print(f"    seeds with History>0 (opportunity): {hist_pos}/{len(rows)}")
+    print("  Legacy dynamics (opportunity mode, mean)")
+    print(f"    legacy TOP rate      {avg(lambda r: r['lgo']['leg_top_rate']):.2f}")
+    print(
+        f"    legacy selected rate {avg(lambda r: r['lgo']['leg_selected_rate']):.2f}"
+    )
+    print(
+        "  HISTORY beats the present temptation (Legacy top over an offered WildCard)"
+    )
+    print(
+        f"    total HISTORY-WINS={total_hist_wins} across {seeds_with_hist_win}/{len(rows)} seeds"
+    )
+    print()
+
+
 def main(argv=None) -> int:
     argv = argv if argv is not None else sys.argv[1:]
     heritage_mode = "--heritage" in argv
@@ -838,7 +997,10 @@ def main(argv=None) -> int:
     review_mode = "--review" in argv
     seeds = [int(a) for a in argv if not a.startswith("--")]
     if review_mode:
-        report_review(seeds or REVIEW_SEEDS)
+        if heritage_mode:
+            report_review_heritage(seeds or REVIEW_SEEDS)
+        else:
+            report_review(seeds or REVIEW_SEEDS)
         return 0
     seeds = seeds or [42, 123, 999]
     for s in seeds:
