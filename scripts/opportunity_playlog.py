@@ -526,11 +526,320 @@ def report_seed_execute(seed: int) -> None:
     print()
 
 
+# --- P6.6 WildCard Dominance Review (--review, observe-only) -------------
+#
+# Question for this phase: is WildCard *too strong*, or is it *interesting*?
+# We compare two regimes per fixed seed over an identical 18-turn window:
+#   - legacy mode: the talent policy drives the world; opportunities are a
+#     READ-ONLY overlay (no engagement feedback loop). Baseline offer pressure.
+#   - opportunity mode: the Execution Layer DRIVES the world (engagement closes
+#     the Omega loop). What the loop does to the offer/selection distribution.
+# Metrics M10-M13 + M12a. No tuning -- facts only; P6.7 design review comes after.
+
+import math  # noqa: E402
+
+REVIEW_SEEDS = [42, 123, 999, 1001, 2024, 31415, 65535, 77777, 88888, 99999]
+ARC_TURNS = 18  # serial arc: early 0-5 / mid 6-11 / late 12-17
+
+# M12 signal-based agency classification (confirmed P6.6 ruleset):
+#   Legacy            -> History (heritage IS past causality)
+#   non-Legacy        -> dominant weighted signal decides:
+#                          Omega dominant -> Player (a loop the player opened)
+#                          Delta/Rho/Sigma dominant -> World (the world acted)
+#   tie-break order   : Legacy > Omega > Delta > Rho > Sigma
+#                       (value order History > Agency > Event > Scale)
+# Kind is NOT fixed: the same kind classifies differently by what drives it
+# (e.g. a WildCard the player keeps engaging becomes Omega-dominant -> Player).
+_SIGNAL_PRIORITY = {"Ω": 0, "Δ": 1, "Ρ": 2, "Σ": 3}
+
+
+def _dominant_signal(opp, turn_index) -> str:
+    """Dominant weighted contribution with the P6.6 tie-break order."""
+    c = contributions(opp, turn_index)  # weighted Δ/Σ/Ω/Ρ (incl. escalation)
+    return min(c.items(), key=lambda kv: (-kv[1], _SIGNAL_PRIORITY[kv[0]]))[0]
+
+
+def classify_agency(opp, turn_index) -> str:
+    """Return 'History' | 'Player' | 'World' for one opportunity."""
+    if opp.kind is OpportunityKind.LEGACY:
+        return "History"
+    return "Player" if _dominant_signal(opp, turn_index) == "Ω" else "World"
+
+
+@dataclass
+class ReviewTurn:
+    turn: int
+    offered: list  # the presented top-K opportunities (with signals)
+    top: object  # offered[0] or None
+    selected: object  # chosen opportunity (opportunity mode) / top proxy (legacy)
+
+
+def observe_legacy(seed: int) -> list[ReviewTurn]:
+    """Read-only overlay: world driven by the talent policy; record what the
+    Opportunity layer WOULD present. 'selected' proxied by the top pick."""
+    world = generate_world(seed)
+    policy_rng = derive_rng(world, 0, salt=POLICY_SALT)
+    talent = policy_rng.choice(list(Talent))
+    life = begin_life(world, talent=talent)
+    session = OpportunitySession()
+    out: list[ReviewTurn] = []
+    for t in range(ARC_TURNS):
+        if lifespan_reached(life) or world.current_year >= world.max_year:
+            break
+        _, selected = observe(world, life, session)  # selected == top-K
+        top = selected[0] if selected else None
+        out.append(ReviewTurn(t, selected, top, top))
+        session.commit_turn(selected, top.target_id if top else None)
+        advance_world(world, life, policy_rng)
+    return out
+
+
+def observe_opportunity(seed: int) -> list[ReviewTurn]:
+    """Execution Layer drives the world; record offered top-K + the chosen
+    opportunity (None when the free-action fallback is taken)."""
+    world = generate_world(seed)
+    rng = derive_rng(world, 0, salt=EXECUTION_SALT)
+    talent = rng.choice(list(Talent))
+    life = begin_life(world, talent=talent)
+    session = OpportunitySession()
+    chooser = make_auto_chooser(rng)
+    out: list[ReviewTurn] = []
+    for t in range(ARC_TURNS):
+        if lifespan_reached(life) or world.current_year >= world.max_year:
+            break
+        opps = select_opportunities(world, life, session)
+        options = expand_options(opps, world, life, rng)
+        choice = options[chooser(options)]
+        top = opps[0] if opps else None
+        out.append(ReviewTurn(t, opps, top, choice.opportunity))
+        execute_option(world, life, choice)
+        session.commit_turn(
+            opps, choice.opportunity.target_id if choice.opportunity else None
+        )
+    return out
+
+
+def _is_wc(o) -> bool:
+    return o is not None and o.kind is OpportunityKind.WILDCARD
+
+
+def _entropy(counts) -> float:
+    total = sum(counts)
+    if total == 0:
+        return 0.0
+    return -sum((c / total) * math.log2(c / total) for c in counts if c)
+
+
+def _gini(counts) -> float:
+    vals = sorted(counts)
+    n = len(vals)
+    s = sum(vals)
+    if n == 0 or s == 0:
+        return 0.0
+    cum = sum((i + 1) * v for i, v in enumerate(vals))
+    return (2 * cum) / (n * s) - (n + 1) / n
+
+
+def m10_dominance(turns) -> dict:
+    offered = [o for r in turns for o in r.offered]
+    n_off = max(1, len(offered))
+    n_turns = max(1, len(turns))
+    tops = [r.top for r in turns if r.top]
+    consec = sum(1 for a, b in zip(tops, tops[1:]) if _is_wc(a) and _is_wc(b))
+    return {
+        "wc_offered_rate": sum(_is_wc(o) for o in offered) / n_off,
+        "wc_top_rate": sum(_is_wc(r.top) for r in turns) / n_turns,
+        "wc_selected_rate": sum(_is_wc(r.selected) for r in turns) / n_turns,
+        "wc_consec_top_rate": consec / max(1, len(tops) - 1),
+    }
+
+
+def m11_diversity(turns) -> dict:
+    from collections import Counter
+
+    ents, dists, ginis = [], [], []
+    for r in turns:
+        counts = list(Counter(o.kind for o in r.offered).values())
+        ents.append(_entropy(counts))
+        dists.append(len(counts))
+        ginis.append(_gini(counts))
+    n = max(1, len(turns))
+    return {
+        "entropy": sum(ents) / n,
+        "distinct": sum(dists) / n,
+        "gini": sum(ginis) / n,
+    }
+
+
+def m12_agency(turns) -> dict:
+    from collections import Counter
+
+    cls = Counter()
+    wc_src = Counter()  # M12a: World-origin vs Player-origin WildCards
+    total = 0
+    for r in turns:
+        for o in r.offered:
+            c = classify_agency(o, r.turn)
+            cls[c] += 1
+            total += 1
+            if o.kind is OpportunityKind.WILDCARD:
+                wc_src["Player-origin" if c == "Player" else "World-origin"] += 1
+    total = max(1, total)
+    return {
+        "World": cls["World"] / total,
+        "Player": cls["Player"] / total,
+        "History": cls["History"] / total,
+        "wc_world_origin": wc_src["World-origin"],
+        "wc_player_origin": wc_src["Player-origin"],
+    }
+
+
+def m13_arc(turns) -> list[dict]:
+    from collections import Counter
+
+    phases = [("early", range(0, 6)), ("mid", range(6, 12)), ("late", range(12, 18))]
+    rows = []
+    for name, rng in phases:
+        sub = [r for r in turns if r.turn in rng]
+        offered = [o for r in sub for o in r.offered]
+        n = max(1, len(offered))
+        kinds = Counter(o.kind.value for o in offered)
+        agency = Counter(classify_agency(o, r.turn) for r in sub for o in r.offered)
+        rows.append(
+            {
+                "phase": name,
+                "turns": len(sub),
+                "kind_share": {k: v / n for k, v in kinds.items()},
+                "meanD": sum(o.signals.delta for o in offered) / n,
+                "meanS": sum(o.signals.sigma for o in offered) / n,
+                "meanO": sum(o.signals.omega for o in offered) / n,
+                "meanR": sum(o.signals.rho for o in offered) / n,
+                "agency": {k: agency[k] / n for k in ("World", "Player", "History")},
+            }
+        )
+    return rows
+
+
+def _fmt_share(d) -> str:
+    return " ".join(f"{k}={v:.2f}" for k, v in sorted(d.items(), key=lambda kv: -kv[1]))
+
+
+def report_review_seed(seed: int) -> dict:
+    leg = observe_legacy(seed)
+    opp = observe_opportunity(seed)
+    m10l, m10o = m10_dominance(leg), m10_dominance(opp)
+    m11l, m11o = m11_diversity(leg), m11_diversity(opp)
+    m12l, m12o = m12_agency(leg), m12_agency(opp)
+
+    print("=" * 72)
+    print(f"SEED {seed}  [P6.6 REVIEW]  legacy {len(leg)}t / opportunity {len(opp)}t")
+    print("=" * 72)
+    print("  M10 WildCard dominance        legacy  |  opportunity")
+    for k, lab in [
+        ("wc_offered_rate", "offered rate"),
+        ("wc_top_rate", "top rate    "),
+        ("wc_selected_rate", "selected rate"),
+        ("wc_consec_top_rate", "consec top  "),
+    ]:
+        print(f"    {lab:<13} {m10l[k]:>6.2f}  |  {m10o[k]:>6.2f}")
+    print("  M11 diversity (mean/turn)     legacy  |  opportunity")
+    for k, lab in [
+        ("entropy", "entropy(bit)"),
+        ("distinct", "distinct kind"),
+        ("gini", "gini"),
+    ]:
+        print(f"    {lab:<13} {m11l[k]:>6.2f}  |  {m11o[k]:>6.2f}")
+    print("  M12 agency share (World/Player/History)")
+    print(
+        f"    legacy      W={m12l['World']:.2f} P={m12l['Player']:.2f} H={m12l['History']:.2f}"
+    )
+    print(
+        f"    opportunity W={m12o['World']:.2f} P={m12o['Player']:.2f} H={m12o['History']:.2f}"
+    )
+    print(
+        f"    M12a WC source (opportunity): "
+        f"World-origin={m12o['wc_world_origin']} "
+        f"Player-origin={m12o['wc_player_origin']}"
+    )
+    print("  M13 story arc (opportunity mode)  kind-share | agency | mean Δ/Σ/Ω/Ρ")
+    for row in m13_arc(opp):
+        ag = row["agency"]
+        print(
+            f"    {row['phase']:<5}({row['turns']}t) "
+            f"[{_fmt_share(row['kind_share'])}] "
+            f"W{ag['World']:.2f}/P{ag['Player']:.2f}/H{ag['History']:.2f} "
+            f"Δ{row['meanD']:.2f} Σ{row['meanS']:.2f} Ω{row['meanO']:.2f} Ρ{row['meanR']:.2f}"
+        )
+    print()
+    return {
+        "seed": seed,
+        "m10l": m10l,
+        "m10o": m10o,
+        "m11l": m11l,
+        "m11o": m11o,
+        "m12l": m12l,
+        "m12o": m12o,
+    }
+
+
+def report_review(seeds) -> None:
+    rows = [report_review_seed(s) for s in seeds]
+
+    def avg(getter):
+        return sum(getter(r) for r in rows) / max(1, len(rows))
+
+    print("#" * 72)
+    print(f"AGGREGATE over {len(rows)} seeds  (legacy -> opportunity)")
+    print("#" * 72)
+    print("  M10 WildCard dominance")
+    for k, lab in [
+        ("wc_offered_rate", "offered rate"),
+        ("wc_top_rate", "top rate"),
+        ("wc_selected_rate", "selected rate"),
+        ("wc_consec_top_rate", "consec top"),
+    ]:
+        print(
+            f"    {lab:<14} {avg(lambda r: r['m10l'][k]):.2f} -> {avg(lambda r: r['m10o'][k]):.2f}"
+        )
+    print("  M11 diversity (mean/turn)")
+    for k, lab in [
+        ("entropy", "entropy(bit)"),
+        ("distinct", "distinct kind"),
+        ("gini", "gini"),
+    ]:
+        print(
+            f"    {lab:<14} {avg(lambda r: r['m11l'][k]):.2f} -> {avg(lambda r: r['m11o'][k]):.2f}"
+        )
+    print("  M12 agency share  World / Player / History")
+    print(
+        f"    legacy       "
+        f"W={avg(lambda r: r['m12l']['World']):.2f} "
+        f"P={avg(lambda r: r['m12l']['Player']):.2f} "
+        f"H={avg(lambda r: r['m12l']['History']):.2f}"
+    )
+    print(
+        f"    opportunity  "
+        f"W={avg(lambda r: r['m12o']['World']):.2f} "
+        f"P={avg(lambda r: r['m12o']['Player']):.2f} "
+        f"H={avg(lambda r: r['m12o']['History']):.2f}"
+    )
+    wco = sum(r["m12o"]["wc_world_origin"] for r in rows)
+    wcp = sum(r["m12o"]["wc_player_origin"] for r in rows)
+    print(
+        f"    M12a WC source (opportunity, all seeds): World-origin={wco} Player-origin={wcp}"
+    )
+    print()
+
+
 def main(argv=None) -> int:
     argv = argv if argv is not None else sys.argv[1:]
     heritage_mode = "--heritage" in argv
     execute_mode = "--execute" in argv
+    review_mode = "--review" in argv
     seeds = [int(a) for a in argv if not a.startswith("--")]
+    if review_mode:
+        report_review(seeds or REVIEW_SEEDS)
+        return 0
     seeds = seeds or [42, 123, 999]
     for s in seeds:
         if execute_mode:
