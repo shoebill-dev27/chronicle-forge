@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from chronicle_forge.autoplay import simulate_world
 from chronicle_forge.life import begin_life
-from chronicle_forge.reporting import dead_summary, life_chronicle, life_timeline
+from chronicle_forge.reporting import (
+    dead_summary,
+    legacy_view,
+    life_chronicle,
+    life_timeline,
+)
 from chronicle_forge.reporting._data import heritage_rows, seed_by_id
 from chronicle_forge.worldgen import generate_world
 
@@ -196,3 +201,45 @@ def _top_legacy_name(world, life):
     seed = seed_by_id(world, rows[0]["source_seed"])
     assert seed.planted_by_life_id == life.id
     return rows[0]["name"]
+
+
+# --- P7-4 Legacy View ---------------------------------------------------
+
+
+def test_legacy_view_deterministic():
+    world = simulate_world(SEED)
+    life = world.lives[0]
+    assert legacy_view(world, life) == legacy_view(world, life)
+
+
+def test_legacy_view_read_only():
+    world = simulate_world(SEED)
+    life = world.lives[-1]
+    before = world.model_dump()
+    legacy_view(world, life)
+    assert world.model_dump() == before
+
+
+def test_legacy_view_has_core_question_header():
+    world = simulate_world(SEED)
+    for life in world.lives:
+        out = legacy_view(world, life)
+        assert out.startswith("# What outlived you?")
+
+
+def test_legacy_view_heritage_life_names_and_describes_legacy():
+    world = simulate_world(SEED)
+    life = _life_with_heritage(world)
+    out = legacy_view(world, life)
+    top_name = _top_legacy_name(world, life)
+    assert f'"{top_name}"' in out
+    # Prose, not a bare number list: the longevity is folded into a sentence.
+    assert "endured" in out or "took root within a lifetime" in out
+
+
+def test_legacy_view_heritageless_life_is_honest():
+    world = generate_world(SEED)
+    life = begin_life(world, talent=None)
+    out = legacy_view(world, life)
+    assert out.startswith("# What outlived you?")
+    assert "Little of what you touched outlasted the age." in out

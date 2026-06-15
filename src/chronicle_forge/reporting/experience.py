@@ -459,3 +459,168 @@ def life_timeline(world: World, life: Life) -> str:
         )
 
     return "\n".join(out)
+
+
+# --- P7-4 Legacy View ---------------------------------------------------
+#
+# The catalogue of "What outlived you?" — Chronicle Forge's core question.
+# Where P7-1 summarizes and P7-3 lays out a time axis, P7-4 is the inventory of
+# the marks a single life left on the world, in the order Count -> Consequence
+# -> Continuity: the works that endured, the people and discoveries that carried
+# them, and the theme that went on shaping the world after death. Second person,
+# read-only, deterministic. heritage_rows is the primary source.
+
+# What a promoted heritage *was*, as a human noun (not a type code). THOUGHT is
+# refined by its seed domain so a faith doctrine reads as a religious tradition.
+_HERITAGE_NOUN = {
+    HeritageType.SCHOOL: "A school of learning",
+    HeritageType.THOUGHT: "A tradition of thought",
+    HeritageType.TECHNOLOGY: "A craft",
+    HeritageType.INSTITUTION: "An institution of rule",
+    HeritageType.HEIR: "A bloodline",
+    HeritageType.MONUMENT: "A monument",
+}
+
+# How a person you touched carries you forward, by the memory that bound them.
+_PEOPLE_LINE = {
+    MemoryType.EDUCATED: "{name} carried your teachings into the next age.",
+    MemoryType.SAVED: "{name} lived because of you, and never forgot it.",
+    MemoryType.RESCUED: "{name} owed you their life, and said so to others.",
+    MemoryType.BETRAYED: "{name} never forgot how you wronged them.",
+    MemoryType.BEREAVED: "{name} grieved at your side, and remembered you.",
+    MemoryType.HUMILIATED: "{name} carried the mark of your defiance.",
+}
+
+# One continuity line per discovery flavour (Count -> Consequence).
+_DISCOVERY_LINE = {
+    "tech": "Techniques you uncovered passed into common use.",
+    "relic": "Relics you brought to light outlived you.",
+    "seal": "What you unsealed could never be closed again.",
+    "lore": "Knowledge you recovered shaped what others believed.",
+}
+_DISCOVERY_FALLBACK = "Your journeys opened paths that others followed."
+
+# How an inherited world-theme reads as it goes on after a death.
+_THEME_NOUN = {
+    "faith": "Faith",
+    "warfare": "War",
+    "innovation": "Innovation",
+    "commerce": "Commerce",
+    "governance": "The rule of law",
+    "culture": "Culture",
+}
+
+
+def _heritage_sentence(row: dict) -> str:
+    """Prose for one heritage row: what it was, how long it lasted, how far it
+    reached — numbers folded into a sentence, never a bare list."""
+    her_type = next((t for t in HeritageType if t.value == row["type"]), None)
+    noun = _HERITAGE_NOUN.get(her_type, "A legacy")
+    if her_type is HeritageType.THOUGHT and row.get("domain") == "faith":
+        noun = "A religious tradition"
+    longevity = row["longevity"]
+    span = (
+        "that took root within a lifetime"
+        if longevity <= 0
+        else f"that endured for {longevity} {'year' if longevity == 1 else 'years'}"
+    )
+    reach = row["reach"] or row["derived_events"]
+    touch = (
+        ""
+        if reach <= 0
+        else f" and touched {reach} later {'event' if reach == 1 else 'events'}"
+    )
+    return f"{noun} {span}{touch}."
+
+
+def _legacy_people(world: World, life: Life) -> list:
+    """Up to three people this life marked most, strongest bond first, each as
+    (memory_type, npc_name). Deterministic."""
+    end = life.death_year if life.death_year is not None else world.current_year
+    names = {n.id: n.name for n in world.npcs}
+    mine = [
+        m
+        for m in world.memories
+        if m.actor_id == world.player.id
+        and m.subject_id in names
+        and life.birth_year <= m.timestamp <= end
+    ]
+    mine.sort(key=lambda m: (-m.intensity, m.id))
+    seen, out = set(), []
+    for m in mine:
+        if m.subject_id in seen:
+            continue
+        seen.add(m.subject_id)
+        out.append((m.type, names[m.subject_id]))
+        if len(out) >= 3:
+            break
+    return out
+
+
+def _legacy_discoveries(world: World, life: Life) -> list:
+    """Discovery types that grew from this life's seeds, earliest-id first."""
+    seed_ids = {s.id for s in seeds_of_life(world, life.id)}
+    discs = [d for d in world.discoveries if d.seed_id in seed_ids]
+    discs.sort(key=lambda d: d.id)
+    return discs
+
+
+def legacy_view(world: World, life: Life) -> str:
+    """Render the "What outlived you?" inventory for one life. Read-only.
+
+    A trace, not an achievements screen: heritages that endured, the people and
+    discoveries that carried them, and the theme that shaped the world after
+    death — Count -> Consequence -> Continuity, in second person."""
+    out = ["# What outlived you?", ""]
+
+    legacies = _life_legacies(world, life)
+    people = _legacy_people(world, life)
+    discoveries = _legacy_discoveries(world, life)
+    dom = world.theme.dominant
+
+    if not legacies and not people and not discoveries:
+        out.append(
+            "Little of what you touched outlasted the age. Yet the world "
+            "marked your passing, and went on."
+        )
+        return "\n".join(out)
+
+    # 1. Heritage — the works that endured (Count).
+    if legacies:
+        out.append("## What you built")
+        for row in legacies:
+            out.append(f'**"{row["name"]}"**')
+            out.append(_heritage_sentence(row))
+            out.append("")
+        if out[-1] == "":
+            out.pop()
+
+    # 2. People — who carried it forward (Consequence).
+    if people:
+        out.append("")
+        out.append("## Who carried it")
+        for mem_type, name in people:
+            line = _PEOPLE_LINE.get(mem_type, "{name} remembered you.")
+            out.append(f"- {line.format(name=name)}")
+
+    # 3. Discoveries — the paths you opened (Consequence).
+    if discoveries:
+        out.append("")
+        out.append("## What you opened")
+        types = []
+        for d in discoveries:
+            if d.type.value not in types:
+                types.append(d.type.value)
+        if len(types) == 1:
+            out.append(f"- {_DISCOVERY_LINE.get(types[0], _DISCOVERY_FALLBACK)}")
+        else:
+            out.append(f"- {_DISCOVERY_FALLBACK}")
+
+    # 4. Themes — the world's continuity after you (Continuity).
+    if dom is not None:
+        out.append("")
+        out.append("## What the world became")
+        noun = _THEME_NOUN.get(dom.value, dom.value.capitalize())
+        out.append(f"- {noun} continued to shape the world after your death.")
+
+    return "\n".join(out)
