@@ -92,16 +92,25 @@ def _top3(options):
     )[:3]
 
 
+def heritage_label(world, heritage_id) -> Optional[str]:
+    """The player-visible name of a heritage, or None. The recognition set is
+    keyed by this (what the player saw), not the internal id, so two heritages
+    that happen to share a generated name are recognized only once between them."""
+    her = _heritage_by_id(world, heritage_id)
+    return heritage_name(her) if her is not None else None
+
+
 def recognizable_heritage(world, options, seen) -> Optional[str]:
     """The heritage id of a former self worth recognizing this turn, or None.
 
-    Pure: reads ``seen`` (already-recognized ids), never mutates it — the caller
-    owns the per-life recognition state. Recognition is shown only the first time
-    a heritage is met, so a re-encounter reads as discovery, not notification."""
+    Pure: reads ``seen`` (already-recognized heritage *names*), never mutates it —
+    the caller owns the recognition state. Recognition is shown only the first
+    time a name is met, so a re-encounter reads as discovery, not notification."""
     for o in _top3(options):
         opp = o.opportunity
-        if opp.kind is OpportunityKind.LEGACY and opp.target_id not in seen:
-            if _heritage_by_id(world, opp.target_id) is not None:
+        if opp.kind is OpportunityKind.LEGACY:
+            her = _heritage_by_id(world, opp.target_id)
+            if her is not None and heritage_name(her) not in seen:
                 return opp.target_id
     return None
 

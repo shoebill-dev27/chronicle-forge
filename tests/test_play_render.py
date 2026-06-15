@@ -120,8 +120,8 @@ def test_recognition_is_first_time_only_and_pure():
     screen1 = render.turn_screen(world, _life(), options, REASON_HISTORY, rid)
     assert "the work of" in screen1  # recognition shown the first time
 
-    # caller (not render) records it; a re-encounter is no longer recognized
-    seen.add(rid)
+    # caller (not render) records the player-visible name; re-encounter is silent
+    seen.add(render.heritage_label(world, rid))
     assert render.recognizable_heritage(world, options, seen) is None
     screen2 = render.turn_screen(world, _life(), options, REASON_HISTORY, None)
     assert "the work of" not in screen2  # discovery, not notification

@@ -15,10 +15,12 @@ from __future__ import annotations
 
 from .gate import GateDecision, JunctureGate
 from .human import make_human_chooser, make_script_chooser
+from .session import run_human_world
 
 __all__ = [
     "JunctureGate",
     "GateDecision",
     "make_human_chooser",
     "make_script_chooser",
+    "run_human_world",
 ]
