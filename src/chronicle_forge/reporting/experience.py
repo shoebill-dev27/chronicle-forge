@@ -300,3 +300,162 @@ def life_chronicle(world: World, life: Life) -> str:
         lines.append("They left no lasting mark, and the age closed over them.")
 
     return "\n".join(lines)
+
+
+# --- P7-3 Historical Timeline -------------------------------------------
+#
+# Player-facing Markdown (a *reading*, not a developer table): one life placed
+# on a single world-year axis across three layers — the life's own acts, the
+# ripples those acts sent through the world, and the legacy that outlived them.
+# Third person, deterministic, read-only, reusing the same accessors as
+# P7-1/P7-2.
+#
+# A subtlety the raw data forces (see P7-3 review): a seed is *planted* during
+# the life but its consequence *fires* years later, often after death. So the
+# axis is world-years throughout (the only axis the three layers share — the
+# player's personal age would not align), and the layers are split by causality:
+#   - Their life          : the player's ACTS, by planted year, within lifespan.
+#   - The world around them: the resulting EVENTS (ripples), by event year.
+#   - What outlived them   : the enduring LEGACIES, which run past death on purpose.
+# Each layer is de-duplicated by phrase/name and capped, so the reading stays a
+# reading rather than an event log.
+
+_LAYER_CAP = 3  # most-consequential entries shown per layer
+
+
+def _cap(text: str) -> str:
+    """Capitalize the first letter of a verb-phrase for a sentence opening."""
+    return text[:1].upper() + text[1:] if text else text
+
+
+def _seed_records(world: World, life: Life):
+    """For each fired seed of this life: (planted_year, act_phrase, event_year,
+    ripple_phrase, downstream). The shared basis for the act and ripple layers."""
+    graph = CausalGraph.from_world(world)
+    records = []
+    for seed in seeds_of_life(world, life.id):
+        if not seed.fired:
+            continue
+        event = triggered_node(world, seed.id)
+        if event is None:
+            continue
+        records.append(
+            (
+                seed.planted_year,
+                seed_label(world, seed.id),
+                event.year,
+                event_phrase(event),
+                len(graph.descendants(event.id)),
+            )
+        )
+    return records
+
+
+def _top_by_phrase(items, year_idx: int, phrase_idx: int, weight_idx: int):
+    """De-duplicate ``items`` by their phrase (keeping the heaviest), take the
+    top ``_LAYER_CAP`` by weight, and return them sorted by year. Deterministic."""
+    best: dict = {}
+    for it in items:
+        phrase = it[phrase_idx]
+        if phrase not in best or it[weight_idx] > best[phrase][weight_idx]:
+            best[phrase] = it
+    chosen = sorted(best.values(), key=lambda it: (-it[weight_idx], it[year_idx]))
+    chosen = chosen[:_LAYER_CAP]
+    return sorted(chosen, key=lambda it: it[year_idx])
+
+
+def _life_legacies(world: World, life: Life) -> list:
+    """Heritage rows promoted from this life's seeds, de-duplicated by name and
+    capped, score-sorted (heritage_rows is already score-ordered)."""
+    seed_ids = {s.id for s in seeds_of_life(world, life.id)}
+    rows, seen = [], set()
+    for r in heritage_rows(world):
+        if r["source_seed"] in seed_ids and r["name"] not in seen:
+            seen.add(r["name"])
+            rows.append(r)
+        if len(rows) >= _LAYER_CAP:
+            break
+    return rows
+
+
+def life_timeline(world: World, life: Life) -> str:
+    """Render a finished life as a player-facing Markdown timeline. Read-only.
+
+    Three layers share one world-year axis: the life's acts, the ripples they
+    sent through the world, and the legacy that outlived them (which may extend
+    past the death year — the life ends, the history does not)."""
+    role = _ROLE.get(life.talent, "wanderer")
+    dom = world.theme.dominant
+    era = f", in an age of {dom.value}" if dom is not None else ""
+    birth = life.birth_year
+    death = life.death_year if life.death_year is not None else world.current_year
+    age = _age_at_death(life)
+
+    out = [f"# A {role} of {place(world)}", ""]
+    span = "a single season" if age == 0 else f"{age} years"
+    out.append(
+        f"> A {role} who lived {span}{era}."
+        if dom is not None
+        else f"> A {role} who lived {span}."
+    )
+    out.append("")
+
+    records = _seed_records(world, life)
+
+    # --- Their life: born -> the player's acts (planted) -> died ---
+    acts = _top_by_phrase(records, year_idx=0, phrase_idx=1, weight_idx=4)
+    out.append("## Their life")
+    personal = [(birth, 0, f"Born into {place(world)}{era}.")]
+    for planted_year, act, _ev_year, _ripple, _down in acts:
+        personal.append((planted_year, 1, f"They {act}."))
+    personal.append(
+        (
+            death,
+            2,
+            (
+                "They died young, a single season lived."
+                if age == 0
+                else "They died, their work passing out of their hands."
+            ),
+        )
+    )
+    personal.sort(key=lambda r: (r[0], r[1]))
+    for year, _, text in personal:
+        out.append(f"- **Year {year}** — {text}")
+
+    # --- The world around them: the ripples those acts sent outward ---
+    ripples = _top_by_phrase(records, year_idx=2, phrase_idx=3, weight_idx=4)
+    if ripples:
+        out.append("")
+        out.append("## The world around them")
+        for _planted, _act, ev_year, ripple, _down in ripples:
+            out.append(f"- **Year {ev_year}** — {_cap(ripple)}.")
+
+    # --- What outlived them: the legacy, allowed to run past the death year ---
+    out.append("")
+    out.append("## What outlived them")
+    legacies = _life_legacies(world, life)
+    if legacies:
+        rows = []
+        for r in legacies:
+            founding = triggered_node(world, r["source_seed"])
+            base = founding.year if founding is not None else death
+            endured_year = base + max(r["longevity"], 0)
+            rows.append((endured_year, r))
+        rows.sort(key=lambda x: (x[0], x[1]["name"]))
+        for endured_year, r in rows:
+            past = endured_year - death
+            if past > 0:
+                tail = f', {past} {"year" if past == 1 else "years"} past their death'
+            else:
+                tail = ", already taking root before they were gone"
+            out.append(
+                f'- **Year {endured_year}** — "{r["name"]}" still endured{tail}.'
+            )
+    else:
+        out.append(
+            "- Nothing they built outlasted the age — yet the world "
+            "marked their passing."
+        )
+
+    return "\n".join(out)

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from chronicle_forge.autoplay import simulate_world
 from chronicle_forge.life import begin_life
-from chronicle_forge.reporting import dead_summary, life_chronicle
+from chronicle_forge.reporting import dead_summary, life_chronicle, life_timeline
 from chronicle_forge.reporting._data import heritage_rows, seed_by_id
 from chronicle_forge.worldgen import generate_world
 
@@ -144,3 +144,55 @@ def test_chronicle_heritageless_life_closes_honestly():
     out = life_chronicle(world, life)
     assert not any(closer in out for closer in _LEGACY_CLOSERS)
     assert "age closed over them." in out or "marked their passing" in out
+
+
+# --- P7-3 Historical Timeline -------------------------------------------
+
+
+def test_timeline_deterministic():
+    world = simulate_world(SEED)
+    life = world.lives[0]
+    assert life_timeline(world, life) == life_timeline(world, life)
+
+
+def test_timeline_read_only():
+    world = simulate_world(SEED)
+    life = world.lives[-1]
+    before = world.model_dump()
+    life_timeline(world, life)
+    assert world.model_dump() == before
+
+
+def test_timeline_is_player_facing_markdown_third_person():
+    world = simulate_world(SEED)
+    for life in world.lives:
+        out = life_timeline(world, life)
+        assert out.startswith("# ")  # a player-facing reading, not a dev table
+        assert "## Their life" in out
+        assert "## What outlived them" in out
+        assert "| Year |" not in out  # not a developer table
+        assert "You " not in out  # third person, not the death screen
+
+
+def test_timeline_heritage_layer_extends_past_death():
+    world = simulate_world(SEED)
+    life = _life_with_heritage(world)
+    out = life_timeline(world, life)
+    top_name = _top_legacy_name(world, life)
+    assert f'"{top_name}"' in out
+    assert "still endured" in out
+
+
+def test_timeline_heritageless_life_has_honest_outlived_section():
+    world = generate_world(SEED)
+    life = begin_life(world, talent=None)
+    out = life_timeline(world, life)
+    assert "## What outlived them" in out
+    assert "Nothing they built outlasted the age" in out
+
+
+def _top_legacy_name(world, life):
+    rows = heritage_rows(world)
+    seed = seed_by_id(world, rows[0]["source_seed"])
+    assert seed.planted_by_life_id == life.id
+    return rows[0]["name"]

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from .build import build_gallery, build_seed_assets
 from .causal_dot import causal_dot
-from .experience import dead_summary, life_chronicle
+from .experience import dead_summary, life_chronicle, life_timeline
 from .gallery import GALLERY_SEEDS, gallery_md, key_ending_decision, why_phrase
 from .chronicle_md import chronicle_report_md, why_this_ending_md
 from .heritage_table import heritage_csv, heritage_table_md
@@ -46,4 +46,5 @@ __all__ = [
     "summarize_world",
     "dead_summary",
     "life_chronicle",
+    "life_timeline",
 ]
