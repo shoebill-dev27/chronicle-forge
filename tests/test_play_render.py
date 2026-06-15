@@ -127,6 +127,39 @@ def test_recognition_is_first_time_only_and_pure():
     assert "the work of" not in screen2  # discovery, not notification
 
 
+def test_no_internal_seed_id_in_legacy_label():
+    world = simulate_world(42, mode="opportunity")
+    opt = _legacy_option(world)
+    screen = render.turn_screen(
+        world, _life(), [opt, _fallback()], REASON_HISTORY, opt.target_id
+    )
+    assert not re.search(r"seed-\d", screen), screen  # no internal id leaks
+    assert "Tend the " in screen  # humanized legacy label (Tend the <heritage>)
+
+
+def test_verb_labels_are_title_cased():
+    options = [
+        _opt(OpportunityKind.WILDCARD, "w1", 0.95, "support Wreveth"),
+        _fallback(),
+    ]
+    screen = render.turn_screen(_world(), _life(), options, REASON_CRISIS)
+    assert "Support Wreveth" in screen
+    assert "support Wreveth" not in screen
+
+
+def test_header_uses_inward_brackets():
+    options = [_opt(OpportunityKind.NPC, "n", 0.9, "Mentor Maren"), _fallback()]
+    screen = render.turn_screen(_world(), _life(), options, REASON_CRISIS)
+    assert "❰" in screen and "❱" in screen
+    assert screen.index("❰") < screen.index("❱")  # inward-pointing
+
+
+def test_lives_ago_is_singular_for_one():
+    assert render._lives_ago(1) == "1 life ago"
+    assert render._lives_ago(2) == "2 lives ago"
+    assert render._lives_ago(3) == "3 lives ago"
+
+
 def test_turn_screen_is_read_only_on_world():
     world = simulate_world(42, mode="opportunity")
     before = world.model_dump()

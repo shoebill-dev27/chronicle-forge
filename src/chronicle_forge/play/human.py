@@ -65,6 +65,7 @@ def make_human_chooser(reader: Reader, writer: Writer, on_let_pass: LetPass):
         while True:
             writer(PROMPT)
             raw = reader()
+            writer("\n")  # terminate the prompt line (the input is not echoed here)
             if raw is None:  # EOF -> entrust to the world
                 return on_let_pass(options)
             text = raw.strip()

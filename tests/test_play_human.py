@@ -100,6 +100,14 @@ def test_zero_is_always_selectable_and_entrusts():
     assert calls["n"] == 1
 
 
+def test_eof_prompt_is_terminated_with_a_newline():
+    writes = []
+    reader = human.scripted_reader([])  # immediate EOF
+    human.make_human_chooser(reader, writes.append, human._fallback_pass)(_options())
+    # the dangling prompt must end its line so it cannot run into later output
+    assert "".join(writes) == human.PROMPT + "\n"
+
+
 # --- script chooser consumption order -----------------------------------
 
 

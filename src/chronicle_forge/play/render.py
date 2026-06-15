@@ -61,6 +61,11 @@ def _heritage_by_id(world, hid: str):
     return next((h for h in world.heritage if h.id == hid), None)
 
 
+def _lives_ago(n: int) -> str:
+    """A human count of lifetimes, correctly singular ('1 life ago')."""
+    return "1 life ago" if n == 1 else f"{n} lives ago"
+
+
 def _former_self_line(world, heritage) -> Optional[str]:
     """Recognition prose for a heritage that a *past life of the player* founded.
     Every life is the player reincarnated, so a heritage is always a former self's
@@ -71,7 +76,7 @@ def _former_self_line(world, heritage) -> Optional[str]:
     idx = life_index(world).get(seed.planted_by_life_id)
     founder = next((lf for lf in world.lives if lf.id == seed.planted_by_life_id), None)
     talent = founder.talent.value if founder and founder.talent else "soul"
-    when = f"a life you lived, {idx} lives ago" if idx else "a life you once lived"
+    when = f"a life you lived, {_lives_ago(idx)}" if idx else "a life you once lived"
     return (
         f'You come upon "{heritage_name(heritage)}" —\n'
         f"the work of {when}, when you were a {talent}."
@@ -90,6 +95,22 @@ def _top3(options):
     return sorted(
         actionable, key=lambda o: (-o.opportunity.tension, o.opportunity.target_id)
     )[:3]
+
+
+def _display_label(world, option) -> str:
+    """A player-facing action label. The Execution layer's label is for logging
+    and exposes internal ids for Legacy actions (e.g. 'Tend legacy:seed-0005');
+    the player must never see those, so a Legacy action is named by its heritage,
+    and every verb is Title-cased for a uniform reading."""
+    opp = option.opportunity
+    if opp is None:
+        return option.label
+    if opp.kind is OpportunityKind.LEGACY:
+        her = _heritage_by_id(world, opp.target_id)
+        if her is not None:
+            return f"Tend the {heritage_name(her)}"
+    label = option.label
+    return label[:1].upper() + label[1:] if label else label
 
 
 def heritage_label(world, heritage_id) -> Optional[str]:
@@ -128,7 +149,7 @@ def turn_screen(world, life, options, reason: str, recognize_id: Optional[str] =
     header = _HEADER.get(reason, "The world turns to you")
     lines = [
         f"── Year {world.current_year} · age {life.age} · {_era(world)} ──"
-        f"   ❱ {header} ❰",
+        f"   ❰ {header} ❱",
     ]
 
     fallback = next((o for o in options if o.opportunity is None), None)
@@ -145,7 +166,8 @@ def turn_screen(world, life, options, reason: str, recognize_id: Optional[str] =
     for n, o in enumerate(top3, start=1):
         opp = o.opportunity
         kind = _KIND_WORD.get(opp.kind, "Chance")
-        lines.append(f"  [{n}] {o.label}   · {kind}   ({why_now(opp.signals)})")
+        label = _display_label(world, o)
+        lines.append(f"  [{n}] {label}   · {kind}   ({why_now(opp.signals)})")
     if fallback is not None:
         lines.append("  [0] Let this season pass.")
 
