@@ -116,16 +116,31 @@ def test_chronicle_line_count_in_range():
         assert 3 <= n <= 10
 
 
+_LEGACY_CLOSERS = (
+    "still bore their mark.",
+    "still carried their name.",
+    "still remembered their work.",
+    "still echoed their choices.",
+)
+
+
 def test_chronicle_heritage_world_names_the_legacy():
     world = simulate_world(SEED)
     life = _life_with_heritage(world)
     out = life_chronicle(world, life)
-    assert "still bore their mark." in out
+    # An enduring legacy is named and closed on one of the deterministic cadences.
+    assert any(closer in out for closer in _LEGACY_CLOSERS)
+
+
+def test_chronicle_legacy_closer_is_deterministic():
+    world = simulate_world(SEED)
+    life = _life_with_heritage(world)
+    assert life_chronicle(world, life) == life_chronicle(world, life)
 
 
 def test_chronicle_heritageless_life_closes_honestly():
     world = generate_world(SEED)
     life = begin_life(world, talent=None)
     out = life_chronicle(world, life)
-    assert "still bore their mark." not in out
+    assert not any(closer in out for closer in _LEGACY_CLOSERS)
     assert "age closed over them." in out or "marked their passing" in out

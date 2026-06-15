@@ -230,6 +230,21 @@ _WORK_NOUN = {
     HeritageType.MONUMENT: "work",
 }
 
+# How the enduring-legacy line closes. Chosen deterministically from the
+# legacy's own seed id, so the same life always reads the same way while
+# different lives do not all end on the identical phrase.
+_LEGACY_CLOSERS = (
+    "still bore their mark.",
+    "still carried their name.",
+    "still remembered their work.",
+    "still echoed their choices.",
+)
+
+
+def _legacy_closer(key: str) -> str:
+    """Deterministic, hash-seed-independent pick over ``_LEGACY_CLOSERS``."""
+    return _LEGACY_CLOSERS[sum(ord(c) for c in key) % len(_LEGACY_CLOSERS)]
+
 
 def life_chronicle(world: World, life: Life) -> str:
     """Render a finished life as a short third-person history (3-10 lines).
@@ -262,15 +277,22 @@ def life_chronicle(world: World, life: Life) -> str:
 
     # Legacy (Count -> Event -> Consequence -> Legacy closes here).
     if legacy is not None:
+        legacy_seed = legacy["source_seed"]
         her_type = next(
-            (h.type for h in world.heritage if h.seed_id == legacy["source_seed"]),
+            (h.type for h in world.heritage if h.seed_id == legacy_seed),
             None,
         )
         work = _WORK_NOUN.get(her_type, "work")
+        # When the enduring legacy grew from a thread other than the defining
+        # act above, bridge the two so the history reads as one life rather
+        # than a jump between unrelated deeds.
+        if thread is not None and thread[0].id != legacy_seed:
+            lines.append("Though their path wandered elsewhere, one legacy endured.")
         lines.append(f"Their {work} spread beyond their own lifetime.")
         longevity = legacy["longevity"]
         when = "Generations later" if longevity >= 20 else f"{longevity} years later"
-        lines.append(f"{when}, \"{legacy['name']}\" still bore their mark.")
+        closer = _legacy_closer(legacy_seed)
+        lines.append(f'{when}, "{legacy["name"]}" {closer}')
     elif bond is not None:
         lines.append("Little of what they touched outlasted the age,")
         lines.append("yet the world marked their passing and moved on.")
