@@ -14,5 +14,11 @@ but never modifies.
 from __future__ import annotations
 
 from .gate import GateDecision, JunctureGate
+from .human import make_human_chooser, make_script_chooser
 
-__all__ = ["JunctureGate", "GateDecision"]
+__all__ = [
+    "JunctureGate",
+    "GateDecision",
+    "make_human_chooser",
+    "make_script_chooser",
+]
