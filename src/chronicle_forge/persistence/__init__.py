@@ -10,6 +10,7 @@ which it only reuses, never modifies.
 from __future__ import annotations
 
 from .load import load_recipe, replay_recipe
+from .replay import InvalidRecipe, replay, replay_file, replay_transcript
 from .save import build_recipe, read_recipe, save_recipe
 from .schema import EngineVersionMismatch, Recipe, UnsupportedRecipe
 from .version import ENGINE_VERSION
@@ -19,9 +20,13 @@ __all__ = [
     "Recipe",
     "EngineVersionMismatch",
     "UnsupportedRecipe",
+    "InvalidRecipe",
     "build_recipe",
     "save_recipe",
     "read_recipe",
     "load_recipe",
     "replay_recipe",
+    "replay",
+    "replay_transcript",
+    "replay_file",
 ]
