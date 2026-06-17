@@ -9,6 +9,7 @@ which it only reuses, never modifies.
 
 from __future__ import annotations
 
+from .export import ExportMetadata, export_transcript, write_export
 from .load import load_recipe, replay_recipe
 from .record import recording_reader
 from .replay import InvalidRecipe, replay, replay_file, replay_transcript
@@ -31,4 +32,7 @@ __all__ = [
     "replay_transcript",
     "replay_file",
     "recording_reader",
+    "ExportMetadata",
+    "export_transcript",
+    "write_export",
 ]
