@@ -24,6 +24,7 @@ class PlayArgs:
     debug: bool
     save_path: Optional[str]
     replay_path: Optional[str]
+    export_path: Optional[str]
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -66,6 +67,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="after the play, write the run as a replayable recipe to FILE",
     )
     parser.add_argument(
+        "--export",
+        dest="export_path",
+        default=None,
+        metavar="FILE",
+        help="write a transcript export to FILE; format inferred from .txt/.md/.json",
+    )
+    parser.add_argument(
         "--debug",
         action="store_true",
         help="emit a structured trace on stderr (stdout stays a clean transcript)",
@@ -82,4 +90,5 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> PlayArgs:
         debug=ns.debug,
         save_path=ns.save_path,
         replay_path=ns.replay_path,
+        export_path=ns.export_path,
     )

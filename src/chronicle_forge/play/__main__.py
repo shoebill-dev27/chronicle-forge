@@ -14,7 +14,7 @@ import json
 import sys
 from typing import Optional, Sequence
 
-from ..persistence import replay_file, save_recipe
+from ..persistence import read_recipe, replay_file, save_recipe, write_export
 from . import adapter
 from .cli import PlayArgs, parse_args
 
@@ -46,23 +46,27 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
 
 def _run_replay(args: PlayArgs) -> int:
-    """Replay a saved recipe, regenerating its transcript to stdout."""
+    """Replay a saved recipe, regenerating its transcript to stdout. ``--export``
+    additionally writes a transcript artifact (stdout is unchanged)."""
     if args.debug:
         _log(sys.stderr, event="replay", recipe=args.replay_path)
     replay_file(args.replay_path, writer=sys.stdout.write)
+    if args.export_path is not None:
+        write_export(read_recipe(args.replay_path), args.export_path)
     return 0
 
 
 def _run_play(args: PlayArgs) -> int:
-    """Grow a seed. Identical to the prior play path; ``--save`` additionally
-    writes the recorded recipe (the transcript is unchanged)."""
+    """Grow a seed. Identical to the prior play path; ``--save``/``--export``
+    additionally write the recorded recipe / a transcript artifact (the stdout
+    transcript is unchanged)."""
     script_lines = _read_script(args.script_path) if args.script_path else None
     mode = _mode(args)
 
     if args.debug:
         _log(sys.stderr, event="start", mode=mode, seed=args.seed)
 
-    if args.save_path is not None:
+    if args.save_path is not None or args.export_path is not None:
         world, recipe = adapter.play_and_record(
             seed=args.seed,
             auto=args.auto,
@@ -70,7 +74,10 @@ def _run_play(args: PlayArgs) -> int:
             mode=mode,
             writer=sys.stdout.write,
         )
-        save_recipe(recipe, args.save_path)
+        if args.save_path is not None:
+            save_recipe(recipe, args.save_path)
+        if args.export_path is not None:
+            write_export(recipe, args.export_path)
     else:
         world = adapter.run(
             seed=args.seed,
