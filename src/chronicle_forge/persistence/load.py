@@ -28,9 +28,12 @@ from .version import ENGINE_VERSION
 PathLike = Union[str, Path]
 
 
-def replay_recipe(recipe: Recipe) -> World:
-    """Reconstruct the world a recipe describes by re-running the engine. Gates
-    engine version and max_year first; refuses on mismatch (no fallback)."""
+def _ensure_replayable(recipe: Recipe) -> None:
+    """The two replay-time gates, shared by world reconstruction (load) and
+    transcript replay (P9-3). Refuses rather than falls back: a recipe from
+    another engine version, or one whose ``max_year`` the current engine cannot
+    honor (``run_human_world`` does not expose it), raises instead of silently
+    producing a divergent world."""
     if recipe.engine_version != ENGINE_VERSION:
         raise EngineVersionMismatch(
             f"recipe engine {recipe.engine_version!r} != current "
@@ -42,6 +45,12 @@ def replay_recipe(recipe: Recipe) -> World:
             f"(engine default {config.DEV_WORLD_MAX_YEARS}); "
             "run_human_world does not expose max_year"
         )
+
+
+def replay_recipe(recipe: Recipe) -> World:
+    """Reconstruct the world a recipe describes by re-running the engine. Gates
+    engine version and max_year first; refuses on mismatch (no fallback)."""
+    _ensure_replayable(recipe)
     return run_human_world(
         recipe.seed,
         reader=scripted_reader(recipe.inputs),

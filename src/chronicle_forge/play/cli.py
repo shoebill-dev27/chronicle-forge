@@ -1,9 +1,10 @@
 """Argument parsing for ``python -m chronicle_forge.play``.
 
 Pure mapping from argv to a typed request. It owns no game logic and writes
-nothing of its own beyond argparse's usage/error messages. The four switches
-mirror the session's only degrees of freedom: which seed to grow, and where the
-player's input comes from (live stdin, EOF-equivalent auto, or a replay script).
+nothing of its own beyond argparse's usage/error messages. A run either grows a
+seed (``--seed``, optionally recorded with ``--save``) or replays a saved recipe
+(``--replay``); the two are mutually exclusive, since a replay carries its own
+seed.
 """
 
 from __future__ import annotations
@@ -17,22 +18,34 @@ from typing import Optional, Sequence
 class PlayArgs:
     """A parsed, immutable invocation request."""
 
-    seed: int
+    seed: Optional[int]
     auto: bool
     script_path: Optional[str]
     debug: bool
+    save_path: Optional[str]
+    replay_path: Optional[str]
+    export_path: Optional[str]
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="python -m chronicle_forge.play",
-        description="Play a reincarnating Chronicle Forge world (P8).",
+        description="Play or replay a reincarnating Chronicle Forge world.",
     )
-    parser.add_argument(
+    # Exactly one source: grow a new seed, or replay a saved recipe.
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument(
         "--seed",
         type=int,
-        required=True,
+        default=None,
         help="world seed; fixes worldgen and every life's RNG stream",
+    )
+    source.add_argument(
+        "--replay",
+        dest="replay_path",
+        default=None,
+        metavar="FILE",
+        help="replay a saved recipe, regenerating its transcript (excludes --seed)",
     )
     parser.add_argument(
         "--auto",
@@ -45,6 +58,20 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         metavar="FILE",
         help="replay file: one chosen number per line, fed to the script chooser",
+    )
+    parser.add_argument(
+        "--save",
+        dest="save_path",
+        default=None,
+        metavar="FILE",
+        help="after the play, write the run as a replayable recipe to FILE",
+    )
+    parser.add_argument(
+        "--export",
+        dest="export_path",
+        default=None,
+        metavar="FILE",
+        help="write a transcript export to FILE; format inferred from .txt/.md/.json",
     )
     parser.add_argument(
         "--debug",
@@ -61,4 +88,7 @@ def parse_args(argv: Optional[Sequence[str]] = None) -> PlayArgs:
         auto=ns.auto,
         script_path=ns.script_path,
         debug=ns.debug,
+        save_path=ns.save_path,
+        replay_path=ns.replay_path,
+        export_path=ns.export_path,
     )
