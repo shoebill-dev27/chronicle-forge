@@ -19,7 +19,12 @@ PathLike = Union[str, Path]
 
 
 def build_recipe(
-    *, seed: int, max_year: int, mode: Mode, inputs: Sequence[str]
+    *,
+    seed: int,
+    max_year: int,
+    mode: Mode,
+    inputs: Sequence[str],
+    social_memory: bool = False,
 ) -> Recipe:
     """A Recipe stamped with the current engine version."""
     return Recipe(
@@ -28,6 +33,7 @@ def build_recipe(
         max_year=max_year,
         mode=mode,
         inputs=list(inputs),
+        social_memory=social_memory,
     )
 
 

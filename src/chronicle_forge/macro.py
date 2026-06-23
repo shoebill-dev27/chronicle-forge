@@ -291,12 +291,17 @@ def advance_year(world: World, rng: Optional[DeterministicRNG] = None) -> dict:
 # --- post-death time skip (priority 1) ---------------------------------
 
 
-def time_skip(world: World, deceased_life: Life) -> dict:
+def time_skip(world: World, deceased_life: Life, social_memory: bool = False) -> dict:
     """Advance world time after a death (section 5), generating history yearly.
 
     Skip length = compute_skip_years(age_at_death, sum of the deceased life's
     not-yet-fired seed maturation times), clamped so the world never exceeds its
     max year.
+
+    When ``social_memory`` is on (P11-B L2), each skip-year first decays the
+    soul's cross-life memories and relations (S1 P1/P2) so the *next* life's
+    opportunity scoring observes the faded state. Off (default), not one L2 branch
+    runs and the skip is byte-identical to today.
     """
     pending = [
         s
@@ -310,6 +315,10 @@ def time_skip(world: World, deceased_life: Life) -> dict:
     years_run = 0
     while world.current_year < target:
         world.current_year += 1
+        if social_memory:
+            from .social_memory_l2 import decay_world_one_year
+
+            decay_world_one_year(world)
         advance_year(world)
         years_run += 1
 

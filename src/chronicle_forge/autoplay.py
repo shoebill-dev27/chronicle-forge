@@ -87,7 +87,9 @@ def _live_one(world: World, rng: DeterministicRNG) -> Life:
     return life
 
 
-def _live_one_opportunity(world: World, rng: DeterministicRNG) -> Life:
+def _live_one_opportunity(
+    world: World, rng: DeterministicRNG, social_memory: bool = False
+) -> Life:
     """P6 opportunity-driven life loop. Reproduces the legacy life mechanics
     (lifespan draw, per-action combat-death probability) exactly; the *only*
     changed block is action choice, which now flows through the Execution Layer
@@ -112,7 +114,7 @@ def _live_one_opportunity(world: World, rng: DeterministicRNG) -> Life:
         and world.current_year < death_year
         and not lifespan_reached(life)
     ):
-        play_turn(world, life, session, chooser, rng)
+        play_turn(world, life, session, chooser, rng, social_memory)
         if rng.random() < per_action_combat:
             combat_death = True
             break
@@ -122,12 +124,23 @@ def _live_one_opportunity(world: World, rng: DeterministicRNG) -> Life:
     return life
 
 
-def simulate_world(seed: int, life_cap: int = 60, mode: str = "legacy") -> World:
+def simulate_world(
+    seed: int,
+    life_cap: int = 60,
+    mode: str = "legacy",
+    social_memory: bool = False,
+) -> World:
     """Run a world from generation to its max year and return the finished world.
 
     ``mode="legacy"`` (default) drives play with the talent policy and is
     byte-identical to prior behavior (golden seed42 artifacts, P5 determinism).
     ``mode="opportunity"`` drives play through the P6 Execution Layer instead.
+
+    ``social_memory`` (P11-B L2, opportunity mode only) gates the cross-life
+    pipeline: each time-skip decays the soul's memories/relations and the next
+    life's opportunity scoring is biased by the surviving bonds. Off (default),
+    not one L2 branch runs and the world is byte-identical to today. The flag is
+    a transient run argument and is never stored in ``World``.
     """
     world = generate_world(seed)
     while world.current_year < world.max_year and len(world.lives) < life_cap:
@@ -138,8 +151,8 @@ def simulate_world(seed: int, life_cap: int = 60, mode: str = "legacy") -> World
             from .execution import EXECUTION_SALT
 
             rng = derive_rng(world, len(world.lives), salt=EXECUTION_SALT)
-            life = _live_one_opportunity(world, rng)
-        skip = time_skip(world, life)
+            life = _live_one_opportunity(world, rng, social_memory)
+        skip = time_skip(world, life, social_memory)
         if skip["world_ended"]:
             break
     classify_ending(world)
