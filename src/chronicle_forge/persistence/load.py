@@ -55,6 +55,7 @@ def replay_recipe(recipe: Recipe) -> World:
         recipe.seed,
         reader=scripted_reader(recipe.inputs),
         writer=null_writer,
+        social_memory=recipe.social_memory,
     )
 
 

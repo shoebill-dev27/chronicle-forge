@@ -48,15 +48,14 @@ def _live(seed, inputs):
 
 
 def test_recipe_locked_fields():
-    r = Recipe(
-        engine_version="x", seed=42, max_year=MAX_YEAR, mode="auto", inputs=[]
-    )
+    r = Recipe(engine_version="x", seed=42, max_year=MAX_YEAR, mode="auto", inputs=[])
     assert set(r.model_dump().keys()) == {
         "engine_version",
         "seed",
         "max_year",
         "mode",
         "inputs",
+        "social_memory",
     }
 
 
@@ -67,9 +66,7 @@ def test_recipe_rejects_unknown_mode():
 
 def test_auto_mode_requires_empty_inputs():
     with pytest.raises(Exception):
-        Recipe(
-            engine_version="x", seed=1, max_year=MAX_YEAR, mode="auto", inputs=["1"]
-        )
+        Recipe(engine_version="x", seed=1, max_year=MAX_YEAR, mode="auto", inputs=["1"])
 
 
 def test_inputs_are_strings():
@@ -107,6 +104,7 @@ def test_saved_json_schema_is_fixed_and_deterministic(tmp_path):
         "max_year",
         "mode",
         "inputs",
+        "social_memory",
     }
 
 

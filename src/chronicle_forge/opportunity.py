@@ -24,8 +24,8 @@ from typing import Optional
 from .enums import LocationType, NPCTier, WildCardArchetype, WildCardStatus
 from .macro import derive_rng
 from .models import NPC, Faction, Location, Life, WildCard, World
+from .social_memory_l2 import relation_bias
 from .theme import FACTION_TYPE_TO_THEME, SEED_DOMAIN_TO_THEME
-
 
 # --- tuning constants (kept local to this volatile layer; config.py untouched) ---
 
@@ -113,7 +113,9 @@ class OpportunitySession:
     selected_prev: Optional[str] = None  # selected at turn-1
     legacy_seen: dict[str, tuple[int, int]] = field(default_factory=dict)
 
-    def commit_turn(self, offered: list[Opportunity], selected_id: Optional[str]) -> None:
+    def commit_turn(
+        self, offered: list[Opportunity], selected_id: Optional[str]
+    ) -> None:
         """Roll the history forward after a turn's opportunities were shown."""
         for opp in offered:
             if opp.kind is OpportunityKind.LEGACY:
@@ -180,7 +182,9 @@ def build_indexes(world: World) -> Indexes:
 # --- per-kind signal derivation -----------------------------------------
 
 
-def npc_signals(npc: NPC, world: World, idx: Indexes) -> Signals:
+def npc_signals(
+    npc: NPC, world: World, idx: Indexes, social_memory: bool = False
+) -> Signals:
     pending = idx.seeds_by_target.get(npc.id, [])
     ripening = 0.0
     for seed in pending:
@@ -191,12 +195,22 @@ def npc_signals(npc: NPC, world: World, idx: Indexes) -> Signals:
     active_memories = sum(
         1
         for m in idx.memories_by_subject.get(npc.id, [])
-        if m.actor_id == world.player.id and (m.intensity / 100.0) >= MEMORY_MIN_INTENSITY
+        if m.actor_id == world.player.id
+        and (m.intensity / 100.0) >= MEMORY_MIN_INTENSITY
     )
     omega = clamp01((len(pending) + active_memories) / 3.0)
 
     mortality = clamp01((npc.lifecycle.age - 50) / 30.0)
     delta = max(mortality * omega, ripening)
+
+    # P11-B L2 (Channel B): an NPC that still holds a soul-relation has its
+    # opportunity Delta nudged by how it remembers the past self (love lifts,
+    # fear suppresses), bounded by MAX_BIAS. Gated; off-path this never runs and
+    # only NPCs with a ``relations[player_id]`` entry are ever biased.
+    if social_memory:
+        relation = npc.relations.get(world.player.id)
+        if relation is not None:
+            delta = clamp01(delta + relation_bias(relation.affinity, relation.fear))
 
     faction = idx.factions_by_id.get(npc.lifecycle.faction_id or "")
     faction_power = faction.power if faction else 0
@@ -292,7 +306,11 @@ def _recency_penalty(target_id: str, session: OpportunitySession) -> float:
 
 
 def _gather(
-    world: World, idx: Indexes, session: OpportunitySession, jitter_rng
+    world: World,
+    idx: Indexes,
+    session: OpportunitySession,
+    jitter_rng,
+    social_memory: bool = False,
 ) -> list[Opportunity]:
     """Build scored candidates in a fixed, deterministic order (excludes the
     dead/resolved and applies the legacy freshness gate)."""
@@ -306,11 +324,21 @@ def _gather(
 
     for npc in world.npcs:
         if npc.alive:
-            add(OpportunityKind.NPC, npc.id, npc.name, npc_signals(npc, world, idx))
+            add(
+                OpportunityKind.NPC,
+                npc.id,
+                npc.name,
+                npc_signals(npc, world, idx, social_memory),
+            )
     for fac in world.factions:
         add(OpportunityKind.FACTION, fac.id, fac.name, faction_signals(fac, world, idx))
     for loc in world.locations:
-        add(OpportunityKind.LOCATION, loc.id, loc.name, location_signals(loc, world, idx))
+        add(
+            OpportunityKind.LOCATION,
+            loc.id,
+            loc.name,
+            location_signals(loc, world, idx),
+        )
     for wc in world.wildcards.wildcards:
         if wc.status in (WildCardStatus.RESOLVED, WildCardStatus.DEAD):
             continue
@@ -407,19 +435,21 @@ def _desc(s: str):
 
 
 def select_opportunities(
-    world: World, life: Life, session: OpportunitySession
+    world: World,
+    life: Life,
+    session: OpportunitySession,
+    social_memory: bool = False,
 ) -> list[Opportunity]:
     """Return 3-5 narrative-tension-ranked opportunities for the current turn.
 
     Read-only on ``world``; mutates only the volatile ``session`` is the caller's
     job (via :meth:`OpportunitySession.commit_turn`). Deterministic for a given
-    seed, life, and turn index.
+    seed, life, and turn index. ``social_memory`` (P11-B L2) gates the bounded
+    relation-bias on NPC signals; off-path it changes nothing.
     """
     idx = build_indexes(world)
-    life_index = next(
-        (i for i, lf in enumerate(world.lives) if lf.id == life.id), 0
-    )
+    life_index = next((i for i, lf in enumerate(world.lives) if lf.id == life.id), 0)
     mixer = life_index * 100000 + session.turn_index
     jitter_rng = derive_rng(world, mixer, salt=SALIENCE_SALT)
-    scored = _gather(world, idx, session, jitter_rng)
+    scored = _gather(world, idx, session, jitter_rng, social_memory)
     return select_top_k(scored)

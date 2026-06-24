@@ -291,10 +291,12 @@ def play_turn(
     session: OpportunitySession,
     chooser: Chooser,
     rng: DeterministicRNG,
+    social_memory: bool = False,
 ) -> ExecutionOption:
     """One opportunity-driven action-turn. Only the ``chooser`` differs between
-    the auto-player and a human UI; everything else is shared."""
-    opps = select_opportunities(world, life, session)  # untouched, order preserved
+    the auto-player and a human UI; everything else is shared. ``social_memory``
+    (P11-B L2) gates the relation-bias on opportunity scoring."""
+    opps = select_opportunities(world, life, session, social_memory)  # order kept
     options = expand_options(opps, world, life, rng)
     choice = options[chooser(options)]
     execute_option(world, life, choice)

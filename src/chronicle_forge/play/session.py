@@ -67,11 +67,13 @@ def run_human_world(
     reader: Optional[Reader] = None,
     writer: Optional[Writer] = None,
     life_cap: int = 60,
+    social_memory: bool = False,
 ):
     """Play a whole reincarnating world. Mirrors ``simulate_world``'s
     opportunity-mode outer loop exactly (derive rng per life, live, time-skip,
     classify ending), so determinism and the seed42 golden assets are preserved.
-    Returns the finished world."""
+    ``social_memory`` (P11-B L2) gates the cross-life decay/bias pipeline; off
+    (default) the run is byte-identical to today. Returns the finished world."""
     reader = reader or _stdin_reader
     writer = writer or _stdout_writer
     seen_recognitions: set = set()  # spans the run: a former self is met once
@@ -79,8 +81,8 @@ def run_human_world(
     world = generate_world(seed)
     while world.current_year < world.max_year and len(world.lives) < life_cap:
         rng = derive_rng(world, len(world.lives), salt=EXECUTION_SALT)
-        life = _live_one(world, rng, reader, writer, seen_recognitions)
-        skip = time_skip(world, life)
+        life = _live_one(world, rng, reader, writer, seen_recognitions, social_memory)
+        skip = time_skip(world, life, social_memory)
         _emit(writer, render.skip_transition(skip))
         if skip["world_ended"]:
             break
@@ -88,7 +90,9 @@ def run_human_world(
     return world
 
 
-def _live_one(world, rng, reader: Reader, writer: Writer, seen: set):
+def _live_one(
+    world, rng, reader: Reader, writer: Writer, seen: set, social_memory: bool = False
+):
     """One life: birth → juncture-gated turns → death reading. Reproduces the
     opportunity-mode life mechanics (lifespan, per-action combat death) exactly;
     the only added behaviour is asking the player at junctures. The auto-chooser
@@ -112,7 +116,7 @@ def _live_one(world, rng, reader: Reader, writer: Writer, seen: set):
         and world.current_year < death_year
         and not lifespan_reached(life)
     ):
-        opps = select_opportunities(world, life, session)
+        opps = select_opportunities(world, life, session, social_memory)
         options = expand_options(opps, world, life, rng)
 
         remaining = min(death_year, world.max_year) - world.current_year

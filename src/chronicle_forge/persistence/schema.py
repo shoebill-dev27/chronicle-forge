@@ -42,6 +42,10 @@ class Recipe(BaseModel):
     max_year: int
     mode: Mode
     inputs: list[str] = []
+    # P11-B Social Memory L2 flag. Additive and defaulted, so every recipe
+    # written before L2 (no field) loads as ``False`` and replays byte-identically
+    # under ``extra="forbid"``; ENGINE_VERSION is intentionally not bumped.
+    social_memory: bool = False
 
     @model_validator(mode="after")
     def _auto_implies_no_inputs(self) -> "Recipe":
