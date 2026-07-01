@@ -4,12 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chronicle-forge"
-version = "0.3.0"
+dynamic = ["version"]
 description = "A history-creation RPG / reincarnation roguelite / AI-assisted world simulation."
 requires-python = ">=3.10"
 dependencies = [
     "pydantic>=2.0",
 ]
+
+# The installable console command; a thin wrapper over chronicle_forge.app.
+[project.scripts]
+chronicle-forge = "chronicle_forge.cli:main"
 
 [project.optional-dependencies]
 dev = [
@@ -24,6 +28,10 @@ ai = [
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+# Single source of truth for the version: chronicle_forge.__version__.
+[tool.setuptools.dynamic]
+version = { attr = "chronicle_forge.__version__" }
 
 [tool.black]
 line-length = 88

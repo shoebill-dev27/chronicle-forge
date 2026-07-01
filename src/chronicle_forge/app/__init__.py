@@ -22,7 +22,9 @@ from .services import (
     explore,
     explore_file,
     play,
+    save_recipe_file,
     share,
+    share_file,
 )
 
 __all__ = [
@@ -38,4 +40,6 @@ __all__ = [
     "chronicle_json",
     "chronicle_markdown",
     "share",
+    "share_file",
+    "save_recipe_file",
 ]

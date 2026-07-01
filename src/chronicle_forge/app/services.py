@@ -14,7 +14,7 @@ no RNG and reads no clock — determinism lives in the seed/recipe alone.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Tuple, Union
+from typing import Optional, Tuple, Union
 
 from ..config import DEV_WORLD_MAX_YEARS
 from ..models import World
@@ -24,6 +24,7 @@ from ..persistence import (
     read_recipe,
     recording_reader,
     replay_transcript,
+    save_recipe,
     write_export,
 )
 from ..play.adapter import build_reader, play_and_record
@@ -170,3 +171,17 @@ def share(request: ShareRequest) -> ShareResult:
         export_path=request.export_path,
         reproducible_command="chronicle-forge play --replay <recipe>",
     )
+
+
+def share_file(path: PathLike, *, export_path: Optional[str] = None) -> ShareResult:
+    """``read_recipe(path)`` then :func:`share`. The path-overload that lets a caller
+    (the CLI) share a saved recipe without touching persistence itself — mirrors
+    :func:`explore_file`. Pure wiring: no new truth, same ``share`` behaviour."""
+    return share(ShareRequest(recipe=read_recipe(path), export_path=export_path))
+
+
+def save_recipe_file(recipe: Recipe, path: PathLike) -> None:
+    """Persist a recipe (the canonical save) to ``path``. The app-side wrapper over
+    ``persistence.save_recipe`` so the CLI never touches persistence directly; pure
+    wiring, no behaviour of its own."""
+    save_recipe(recipe, path)
