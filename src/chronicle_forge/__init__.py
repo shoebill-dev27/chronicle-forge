@@ -1,8 +1,10 @@
 """Chronicle Forge: a history-creation RPG / reincarnation roguelite.
 
-See docs/design.md for the design-locked specification (v0.3). This package is
-the rules-only core; AI integration (the 5 bounded call sites) and the
-presentation layer are added in later roadmap phases.
+See docs/design.md for the design-locked specification. The deterministic engine,
+the AI narration call sites (opt-in, deterministic fallback), persistence, the
+interactive play loop, and the P10–P14 read-model lenses are all in place; the P15
+Application Layer (:mod:`chronicle_forge.app`) composes them into the
+play → save → explore → share path that the ``chronicle-forge`` CLI wraps.
 """
 
 from __future__ import annotations
@@ -49,7 +51,7 @@ from .views import (
 )
 from .worldgen import generate_world
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 __all__ = [
     # world / causal core (P0/P1)
