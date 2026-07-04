@@ -87,11 +87,23 @@ def _grow(request: PlayRequest, writer) -> Tuple[World, Recipe]:
     return world, recipe
 
 
-def play(request: PlayRequest) -> PlayOutcome:
+def play(request: PlayRequest, *, writer=None) -> PlayOutcome:
     """Grow (or auto/script-drive) a world and capture its canonical Recipe, the
-    regenerated transcript, and id-free outcome facts. The ``World`` stays internal."""
+    regenerated transcript, and id-free outcome facts. The ``World`` stays internal.
+
+    ``writer``, when given, additionally receives each transcript chunk as it is
+    produced — interactive play needs prompts on screen *before* the run ends.
+    The returned outcome (recipe, transcript, facts) is identical either way."""
     buffer: list[str] = []
-    world, recipe = _grow(request, buffer.append)
+    if writer is None:
+        sink = buffer.append
+    else:
+
+        def sink(chunk: str) -> None:
+            buffer.append(chunk)
+            writer(chunk)
+
+    world, recipe = _grow(request, sink)
     return PlayOutcome(
         recipe=recipe,
         transcript="".join(buffer),

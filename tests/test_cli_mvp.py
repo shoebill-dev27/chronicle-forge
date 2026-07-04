@@ -94,17 +94,25 @@ def test_play_replay_reproduces_transcript(tmp_path, capsys):
     assert _sha(out) == GOLDEN_TRANSCRIPT_SHA
 
 
-def test_play_without_auto_or_script_is_refused(tmp_path):
-    """Interactive (live-stdin) play is deferred in P16: a bare invocation refuses
-    rather than blocking on stdin (SystemExit from argparse, or a non-zero return)."""
-    import chronicle_forge.cli as cli
+def test_play_interactive_reads_stdin_and_completes(tmp_path, capsys, monkeypatch):
+    """A bare ``play --seed N`` is interactive: choices come from live stdin and the
+    transcript streams to stdout. Immediate EOF entrusts every juncture to the world
+    (the documented EOF-equivalence with ``--auto``), so the run completes and the
+    recipe is replayable."""
+    import io
 
-    try:
-        rc = cli.main(["play", "--seed", "42"])
-    except SystemExit as exc:
-        assert exc.code != 0
-    else:
-        assert rc != 0
+    import chronicle_forge.cli as cli
+    from chronicle_forge.persistence import read_recipe, replay_transcript
+
+    monkeypatch.setattr("sys.stdin", io.StringIO(""))  # player leaves at once: EOF
+    recipe_path = tmp_path / "run.recipe"
+    rc = cli.main(["play", "--seed", "42", "--save", str(recipe_path)])
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert out  # the transcript streamed to stdout
+    assert recipe_path.exists()
+    _world, transcript = replay_transcript(read_recipe(recipe_path))
+    assert transcript == out  # the streamed transcript is the recipe's transcript
 
 
 # --- explore ------------------------------------------------------------
