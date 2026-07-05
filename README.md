@@ -11,11 +11,16 @@ you did and the history that resulted: *"my actions created this history."*
 The world lives for a fixed span (200 years in production, 40 in dev/CI). On
 reaching the limit the game produces a Chronicle and an Ending classification.
 
-## Install
+## Play now — one line, nothing to install
 
 ```bash
-pipx install chronicle-forge      # or: pip install chronicle-forge
+uvx chronicle-forge play --seed 42
 ```
+
+That's the interactive game: pick a choice each season, die, reincarnate, and watch
+the history you caused unfold. (No [uv](https://docs.astral.sh/uv/)? Then
+`pipx install chronicle-forge` or `pip install chronicle-forge`, and run
+`chronicle-forge play --seed 42`.)
 
 No API key is required — the simulation is rules-only and fully deterministic by
 default. The optional AI narration (`pip install "chronicle-forge[ai]"`) only adds
@@ -25,6 +30,7 @@ prose; it never changes world state.
 
 ```bash
 # 1) generate & witness a full world, deterministically, and save it
+#    (drop --auto to make the choices yourself)
 chronicle-forge play --seed 42 --auto --save run.recipe
 
 # 2) explore the history your world produced (the P10–P14 read-model lenses)
@@ -39,10 +45,6 @@ chronicle-forge play --replay run.recipe           # reproduces the exact transc
 The **recipe is the save**: a seed plus the ordered inputs. Because the engine is
 byte-deterministic, a recipe reconstructs its world (and transcript) exactly, on any
 machine, forever — that is the basis of both replay and sharing.
-
-> Interactive, choice-by-choice play currently runs through
-> `python -m chronicle_forge.play --seed N`; the streaming version under
-> `chronicle-forge play` is the next step on the roadmap.
 
 ## Example world (seed 42) — see it in 5 minutes
 

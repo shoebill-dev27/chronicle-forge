@@ -7,8 +7,12 @@ or reporting directly (every side effect goes through ``app``). Following the ex
 ``play/__main__`` contract, **stdout is a clean transcript/chronicle** while all human
 status ("saved …", hints, errors) goes to stderr.
 
-    chronicle-forge play  --seed N (--auto | --script FILE) [--social-memory] [--save FILE] [--export FILE]
+    chronicle-forge play  --seed N [--auto | --script FILE] [--social-memory] [--save FILE] [--export FILE]
     chronicle-forge play  --replay FILE [--export FILE]
+
+Without ``--auto``/``--script``, play is interactive: choices are read from live
+stdin and the transcript streams as it is produced (EOF entrusts the rest to the
+world, exactly as ``--auto``).
     chronicle-forge explore RECIPE [--format md|json]
     chronicle-forge share   RECIPE [--export FILE]
 """
@@ -76,23 +80,20 @@ def _cmd_play(args: argparse.Namespace) -> int:
             sys.stderr.write(f"wrote transcript to {args.export}\n")
         return 0
 
-    if not args.auto and args.script is None:
-        sys.stderr.write(
-            "interactive play is not available in this command yet; "
-            "use `python -m chronicle_forge.play --seed N`\n"
-        )
-        return 2
-
     script_lines = _read_lines(args.script) if args.script else None
-    outcome = app.play(
-        app.PlayRequest(
-            seed=args.seed,
-            auto=args.auto,
-            script_lines=script_lines,
-            social_memory=args.social_memory,
-        )
+    request = app.PlayRequest(
+        seed=args.seed,
+        auto=args.auto,
+        script_lines=script_lines,
+        social_memory=args.social_memory,
     )
-    sys.stdout.write(outcome.transcript)
+    if not args.auto and script_lines is None:
+        # Interactive play: choices come from live stdin, so the transcript must
+        # stream to the player as it is produced (EOF entrusts the rest, as --auto).
+        outcome = app.play(request, writer=sys.stdout.write)
+    else:
+        outcome = app.play(request)
+        sys.stdout.write(outcome.transcript)
     if args.save is not None:
         app.save_recipe_file(outcome.recipe, args.save)
         sys.stderr.write(f"saved recipe to {args.save}\n")

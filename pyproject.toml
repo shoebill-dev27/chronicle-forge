@@ -6,10 +6,24 @@ build-backend = "setuptools.build_meta"
 name = "chronicle-forge"
 dynamic = ["version"]
 description = "A history-creation RPG / reincarnation roguelite / AI-assisted world simulation."
+readme = "README.md"
+license = { text = "MIT" }
 requires-python = ">=3.10"
+keywords = ["roguelite", "rpg", "simulation", "history", "terminal-game"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Games/Entertainment :: Role-Playing",
+]
 dependencies = [
     "pydantic>=2.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/shoebill-dev27/chronicle-forge"
+Repository = "https://github.com/shoebill-dev27/chronicle-forge"
 
 # The installable console command; a thin wrapper over chronicle_forge.app.
 [project.scripts]
