@@ -32,6 +32,8 @@ from ..play.session import run_human_world
 from ..reporting._data import place
 from ..reporting.character import character_markdown, character_model
 from ..reporting.heritage_explorer import heritage_explorer
+from ..reporting.legacy import LegacyView, legacy_model
+from ..reporting.legacy import legacy_json as _legacy_json
 from ..reporting.narrative import narrative_markdown, narrative_model
 from ..reporting.timeline import timeline_markdown, timeline_model
 from ..reporting.world_model import world_model
@@ -165,6 +167,32 @@ def chronicle_markdown(view: ChronicleView) -> str:
     lines.append("")
     lines.append(view.heritage_markdown.rstrip())
     return "\n".join(lines).rstrip() + "\n"
+
+
+# --- legacy (P17: the Fingerprint lens, a separate golden-safe seam) ----
+
+
+def legacy(recipe: Recipe) -> LegacyView:
+    """Reconstruct the world a recipe describes (P9 version-gated replay) and project
+    its Fingerprint into an id-free ``LegacyView``. Separate from :func:`explore` so
+    ``ChronicleView`` and the frozen chronicle golden stay byte-identical. Read-only
+    and deterministic; the recipe is not mutated."""
+    world, _transcript = replay_transcript(recipe)
+    return legacy_model(world)
+
+
+def legacy_file(path: PathLike) -> LegacyView:
+    """``read_recipe(path)`` then :func:`legacy`. The path-overload mirroring
+    :func:`explore_file`, letting a caller project a saved recipe's Fingerprint
+    without touching persistence itself."""
+    return legacy(read_recipe(path))
+
+
+def legacy_json(recipe: Recipe) -> str:
+    """Canonical JSON of the ``LegacyView`` — the client contract and the basis of the
+    frozen seed42 legacy hash."""
+    world, _transcript = replay_transcript(recipe)
+    return _legacy_json(world)
 
 
 # --- share (reuse P9) ---------------------------------------------------
