@@ -11,6 +11,21 @@ This document supersedes the schedule/DAG sections of
 `v1_execution_plan.md` where they differ (language, cut list); everything
 else there remains in force.
 
+> **Design Lock: CLOSED — declared by owner 2026-07-24.** I-0 (Lock closeout)
+> is complete: ADR-001/002/003 committed; M-1 measured; D-3/D-4/D-5/D-6 drafted,
+> cross-checked (zero ADR/UX contradictions), and accepted. Exit criteria
+> EL-1..6 (see the Design Lock Review Pack) are satisfied. Gate-decision
+> dispositions carried into the build: **OD-8 (縦/横書き)** — 横書き is the
+> working default, bound to the **7/27 skeleton go/no-go** for the final call;
+> **OD-9 (Hand face)** — selected from OFL candidates evaluated on the skeleton
+> (Print face = Noto Serif JP, OFL, already de-risked). Soft owner decisions
+> (register/pronoun/reveal-grammar/name-table/etc.) are deferred as non-blocking,
+> due at I-5 copy authoring. D-5 (Q-SW-1..4) and D-6 (Q-CS-1..4) proposed rulings
+> accepted. **Post-lock, non-gating:** JP tester recruiting (release-readiness,
+> DoD-1) and D-7 wireframes. **Implementation increment I-1 (walking skeleton)
+> is now open.** No engine change; the 8 frozen goldens + chronicle/transcript
+> hashes remain the guardrail across every increment.
+
 ---
 
 ## 1. Definition of Done (v1) — objective criteria only
