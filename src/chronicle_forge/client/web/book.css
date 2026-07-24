@@ -1,0 +1,116 @@
+/* The Living Chronicle — I-1 skeleton styles.
+   Two type ROLES carry the load-bearing print/Hand contrast (UX §7, D-4):
+   Print = 明朝, upright, 墨 ink; Hand = 手書き, italic, warmer sepia, irregular.
+   Skeleton faces are system stacks (final licensed faces = OD-9 / I-5); the
+   contrast is guaranteed by style (weight/slant/colour) so it survives font
+   fallback. Palette = D-4 §5 (aged paper · 墨 · Hand sepia · 朱 accent). */
+
+:root{
+  --paper:#EFE7D6; --paper-edge:#E4DAC4;
+  --sumi:#241E17;            /* 墨 — print ink */
+  --hand-ink:#6E4A2F;        /* the Hand — warmer, wetter */
+  --muted:#8A7B63;
+  --shu:#B23A28;             /* 朱 — the single accent (still-shaping only) */
+  --rule:#D3C6AC;
+  --print:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"MS PMincho","Songti SC",serif;
+  --hand:"Yu Mincho","Hiragino Mincho ProN","STKaiti","KaiTi",cursive;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:#241f1a; color:var(--sumi);
+  font-family:var(--print);
+  display:flex; align-items:center; justify-content:center; padding:24px;
+}
+
+.book{
+  width:min(760px,100%); min-height:560px; background:var(--paper);
+  border:1px solid var(--paper-edge);
+  border-radius:4px;
+  box-shadow:0 2px 4px rgba(0,0,0,.3),0 24px 60px rgba(0,0,0,.45),
+             inset 0 0 0 1px rgba(255,255,255,.15);
+  padding:clamp(28px,5vw,56px); position:relative;
+  display:flex; flex-direction:column;
+}
+
+/* ---- type roles ---- */
+.print{font-family:var(--print); color:var(--sumi)}
+.hand{
+  font-family:var(--hand); font-style:italic; color:var(--hand-ink);
+  letter-spacing:.02em;
+}
+.muted{color:var(--muted)}
+.eyebrow{font-size:12px; letter-spacing:.28em; text-transform:uppercase; color:var(--muted); margin:0 0 14px}
+h1.print{font-size:34px; font-weight:600; margin:0 0 12px; letter-spacing:.02em}
+h2.place{font-size:26px; font-weight:600; margin:0 0 18px}
+
+/* ---- page frame ---- */
+.page{flex:1; display:flex; flex-direction:column; animation:settle .5s ease both}
+.page[hidden]{display:none}
+.page > p, .page > h1, .page > h2{max-width:34em}
+.opening #opening-line{font-size:18px; line-height:2; max-width:32em}
+
+/* ---- juncture ---- */
+.juncture-head{font-size:16px; color:var(--muted); border-bottom:1px solid var(--rule); padding-bottom:14px; margin-bottom:18px; letter-spacing:.03em}
+.hint{font-size:13px; margin:0 0 16px}
+.hint .mark{color:var(--shu); font-style:normal}
+.options{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:12px}
+.option{
+  position:relative; background:transparent; border:1px solid var(--rule);
+  border-radius:3px; padding:15px 18px 15px 20px; cursor:pointer; text-align:start;
+  font-family:var(--print); font-size:17px; color:var(--sumi);
+  transition:border-color .18s ease, background .18s ease;
+}
+.option:hover{border-color:var(--muted)}
+.option .kind{display:block; margin-top:5px; font-size:12px; color:var(--muted); letter-spacing:.04em}
+.option.selected{border-color:var(--sumi); background:rgba(36,30,23,.04)}
+.option.marked::before{
+  content:"⟜"; position:absolute; left:-6px; top:50%; transform:translate(-100%,-50%);
+  color:var(--shu); font-size:18px;
+}
+.option.holding{border-color:var(--shu)}
+.option .holdbar{
+  position:absolute; left:0; bottom:0; height:2px; width:0; background:var(--shu);
+}
+
+/* ---- reveal (S-02 stub): the Hand blooms under print ---- */
+.reveal{margin-top:22px; padding:16px 20px; border-inline-start:2px solid var(--shu); background:rgba(178,58,40,.05)}
+.reveal[hidden]{display:none}
+.reveal-print{margin:0 0 8px; font-size:15px}
+.reveal .hand{margin:0; font-size:22px; animation:bloom 1.5s ease both}
+.reveal .epithet{margin:8px 0 0; font-size:15px; opacity:.85}
+
+.outcome{margin-top:20px; padding-top:16px; border-top:1px solid var(--rule); font-size:15px; color:var(--muted)}
+.outcome[hidden]{display:none}
+
+/* ---- verbs ---- */
+.verbs{display:flex; gap:12px; margin-top:auto; padding-top:28px}
+.verb{
+  font-family:var(--print); font-size:15px; padding:11px 20px; border-radius:3px;
+  cursor:pointer; border:1px solid var(--sumi); background:transparent; color:var(--sumi);
+  transition:background .18s ease, color .18s ease, opacity .18s ease;
+}
+.verb.primary{background:var(--sumi); color:var(--paper)}
+.verb.primary:disabled{opacity:.35; cursor:default}
+.verb.ghost{border-color:var(--rule); color:var(--muted)}
+.verb:not(:disabled):hover{opacity:.85}
+
+/* ---- chrome ---- */
+.chrome{display:flex; justify-content:space-between; align-items:center; margin-top:26px; padding-top:16px; border-top:1px solid var(--rule)}
+.ribbon{font-size:12px; color:var(--muted); letter-spacing:.06em}
+.axis-toggle{font-family:var(--print); font-size:12px; background:transparent; border:1px solid var(--rule); color:var(--muted); border-radius:3px; padding:6px 10px; cursor:pointer}
+
+/* ---- vertical setting (OD-8 evaluation toggle; 横書き is the v1 default) ---- */
+[data-axis="vertical"] .page{writing-mode:vertical-rl; text-orientation:upright; max-height:460px}
+[data-axis="vertical"] .options{flex-direction:row-reverse}
+[data-axis="vertical"] .verbs{writing-mode:horizontal-tb}
+
+@keyframes settle{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
+@keyframes bloom{from{opacity:0; filter:blur(2px)} to{opacity:1; filter:none}}
+@media (prefers-reduced-motion:reduce){
+  .page,.reveal .hand{animation:none}
+  .option .holdbar,.verb,.option{transition:none}
+}
+
+:focus-visible{outline:2px solid var(--shu); outline-offset:2px}

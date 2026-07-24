@@ -39,9 +39,18 @@ dev = [
 ai = [
     "anthropic>=0.40",
 ]
+# Optional: the Living Chronicle desktop client (ADR-002). The engine, app layer,
+# and the whole test suite never import it, so it stays out of the default and CI.
+client = [
+    "pywebview>=5.0",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+# Ship the client's static frontend assets with the package.
+[tool.setuptools.package-data]
+"chronicle_forge.client" = ["web/*.html", "web/*.css", "web/*.js"]
 
 # Single source of truth for the version: chronicle_forge.__version__.
 [tool.setuptools.dynamic]

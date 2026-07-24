@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ja" data-axis="horizontal">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Living Chronicle</title>
+  <link rel="stylesheet" href="book.css">
+</head>
+<body>
+  <!-- I-1 walking skeleton: P-01 stub -> P-04 -> P-06, two typefaces, verbs
+       turn/flip/seal/hold, hold -> stub reveal. Frontend degrades to SAMPLE
+       data when the pywebview bridge is absent (standalone preview). -->
+  <main class="book" id="book">
+
+    <!-- P-01 · Shelf (stub) -->
+    <section class="page shelf" data-page="shelf" hidden>
+      <p class="eyebrow print">The shelf</p>
+      <h1 class="print">An unwritten world</h1>
+      <p class="print muted" id="shelf-invite">A book waits to be opened.</p>
+      <button class="verb primary" data-verb="turn">Open the book</button>
+    </section>
+
+    <!-- P-04 · Life opening -->
+    <section class="page opening" data-page="opening" hidden>
+      <p class="eyebrow print">A life opens</p>
+      <h2 class="print place" id="opening-place">—</h2>
+      <p class="print" id="opening-line">—</p>
+      <div class="verbs">
+        <button class="verb ghost" data-verb="flip">Flip back</button>
+        <button class="verb primary" data-verb="turn">Turn the page</button>
+      </div>
+    </section>
+
+    <!-- P-06 · Juncture -->
+    <section class="page juncture" data-page="juncture" hidden>
+      <header class="juncture-head print" id="juncture-head">—</header>
+      <p class="hint print muted">Some lines carry a mark. <span class="mark">⟜</span> — press and hold to remember.</p>
+      <ul class="options" id="options"></ul>
+
+      <div class="reveal" id="reveal" hidden>
+        <p class="print reveal-print">The margin holds a mark you did not draw.</p>
+        <p class="hand" id="reveal-hand">—</p>
+        <p class="epithet hand" id="reveal-epithet">—</p>
+      </div>
+
+      <div class="outcome print" id="outcome" hidden>—</div>
+
+      <div class="verbs">
+        <button class="verb ghost" data-verb="flip">Flip back</button>
+        <button class="verb primary" data-verb="seal" id="seal-btn" disabled>Seal this choice</button>
+      </div>
+    </section>
+
+    <footer class="chrome">
+      <span class="ribbon print" id="status">weaving…</span>
+      <button class="axis-toggle print" id="axis-toggle" title="縦書き / 横書き">縦 ⇄ 横</button>
+    </footer>
+  </main>
+
+  <script src="book.js"></script>
+</body>
+</html>
