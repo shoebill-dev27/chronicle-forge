@@ -82,11 +82,22 @@ def run_human_world(
     while world.current_year < world.max_year and len(world.lives) < life_cap:
         rng = derive_rng(world, len(world.lives), salt=EXECUTION_SALT)
         life = _live_one(world, rng, reader, writer, seen_recognitions, social_memory)
+
+        # The skip is where marks harden into heritage, so what the years did
+        # with the player's work can only be told *after* it runs — telling it at
+        # the death instead is the contradiction `render.death_passage` documents.
+        before = {h.seed_id for h in world.heritage}
         skip = time_skip(world, life, social_memory)
         _emit(writer, render.skip_transition(skip))
+        promoted = {h.seed_id for h in world.heritage} - before
+        block = render.aftermath(world, life, promoted)
+        if block is not None:
+            _emit(writer, block)
+
         if skip["world_ended"]:
             break
     classify_ending(world)
+    _emit(writer, render.closing_page(world))
     return world
 
 
@@ -152,5 +163,5 @@ def _live_one(
             break
 
     end_life(world, life, DeathCause.COMBAT if combat_death else DeathCause.LIFESPAN)
-    _emit(writer, render.death_transition(world, life))
+    _emit(writer, render.death_passage(world, life))
     return life

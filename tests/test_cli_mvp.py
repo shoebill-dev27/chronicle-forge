@@ -25,7 +25,7 @@ from chronicle_forge import config
 from chronicle_forge.persistence import build_recipe, save_recipe
 
 MAX_YEAR = config.DEV_WORLD_MAX_YEARS
-GOLDEN_TRANSCRIPT_SHA = "98bea8622c686d8e"  # `play --seed 42 --auto` stdout
+GOLDEN_TRANSCRIPT_SHA = "c9a8096f6b83795c"  # `play --seed 42 --auto` stdout
 GOLDEN_CHRONICLE_SHA = "aa4c67a416178e92"  # explore --format json (seed42)
 _ID_RE = re.compile(r"[a-z]+-\d{4}")
 

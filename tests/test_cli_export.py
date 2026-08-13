@@ -21,7 +21,7 @@ from chronicle_forge.persistence import (
 )
 
 MAX_YEAR = config.DEV_WORLD_MAX_YEARS
-GOLDEN_TRANSCRIPT_SHA = "98bea8622c686d8e"
+GOLDEN_TRANSCRIPT_SHA = "c9a8096f6b83795c"
 
 
 def _seed42_recipe():

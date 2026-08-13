@@ -154,10 +154,11 @@ def test_header_uses_inward_brackets():
     assert screen.index("❰") < screen.index("❱")  # inward-pointing
 
 
-def test_lives_ago_is_singular_for_one():
-    assert render._lives_ago(1) == "1 life ago"
-    assert render._lives_ago(2) == "2 lives ago"
-    assert render._lives_ago(3) == "3 lives ago"
+def test_ordinal_speaks_a_life_by_its_place_in_the_run():
+    assert render._ordinal(1) == "first"
+    assert render._ordinal(3) == "third"
+    assert render._ordinal(10) == "tenth"
+    assert render._ordinal(11) == "11th"  # past the spoken range, still readable
 
 
 def test_turn_screen_is_read_only_on_world():

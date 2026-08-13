@@ -69,15 +69,18 @@ def test_full_loop_delivers_the_core_experience():
     assert "[1]" in transcript and "[0] Let this season pass." in transcript
     # 3. death (the second-person death screen)
     assert "You lived" in transcript
-    # 4. read the history (P7-2 chronicle and P7-3 timeline)
-    assert "They lived as a" in transcript
-    assert "## Their life" in transcript
-    # 5. see the legacy (P7-4)
-    assert "# What outlived you?" in transcript
+    # 4. the years report what the mark did — the beat that used to be four
+    #    chained Markdown documents saying nothing had survived
+    assert "In those years the world moved on what you left:" in transcript
+    # 5. a mark hardens into a named legacy, attributed to the life that made it
+    assert "set down has taken a name:" in transcript
     # 6. a next life begins
     assert "You are born again" in transcript
     # 7. encounter a former self
     assert "the work of" in transcript and "You come upon" in transcript
+    # 8. the world closes on a page the player can read and act on
+    assert "━━ The Chronicle of" in transcript
+    assert "What you left behind:" in transcript
 
 
 def test_former_self_recognized_once_per_heritage_across_lives():
