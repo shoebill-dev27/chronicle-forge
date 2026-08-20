@@ -98,7 +98,10 @@ def run_human_world(
         # the death instead is the contradiction `render.death_passage` documents.
         before = {h.seed_id for h in world.heritage}
         skip = time_skip(world, life, social_memory)
-        _emit(writer, render.skip_transition(skip))
+        # A skip that ran no years has nothing to say; the closing page follows.
+        transition = render.skip_transition(skip)
+        if transition:
+            _emit(writer, transition)
         if observer is not None:
             observer.on_years(world, skip)
         promoted = {h.seed_id for h in world.heritage} - before
@@ -183,7 +186,24 @@ def _live_one(
             index = auto(options)
 
         choice = options[index]
+        # Read the seeds before the verb runs, so what THIS act set in motion is
+        # a measured delta rather than a guess. Only when someone is listening
+        # and only at a juncture: the turns the world takes on its own are not
+        # entries in anyone's book.
+        seeds_before = (
+            {s.id for s in world.seeds}
+            if observer is not None and decision.ask
+            else None
+        )
         execute_option(world, life, choice)
+        if seeds_before is not None:
+            observer.on_outcome(
+                world,
+                life,
+                options,
+                choice,
+                {s.id for s in world.seeds} - seeds_before,
+            )
         selected_id = choice.opportunity.target_id if choice.opportunity else None
         session.commit_turn(opps, selected_id)
 

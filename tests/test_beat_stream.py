@@ -24,6 +24,7 @@ SEEDS = (1, 7, 42, 99, 123)
 REQUIRED = {
     "rebirth": {"life", "year", "talent", "era"},
     "juncture": {"life", "year", "age", "reason", "header", "era", "options"},
+    "outcome": {"life", "year", "age", "option", "label", "kind", "planted"},
     "death": {"life", "year", "age", "talent", "title", "named", "pending"},
     "years": {"after_life", "from_year", "to_year", "span", "world_ended", "events"},
     "aftermath": {"after_life", "year", "echoes", "hardened"},
@@ -251,3 +252,77 @@ def test_every_life_has_a_death_then_years_then_aftermath(streams, seed):
     for i, kind in enumerate(kinds):
         if kind == "death":
             assert kinds[i + 1 : i + 3] == ["years", "aftermath"]
+
+
+# --------------------------------------------------------------------------
+# I-2: the act the player sealed, read off the world the moment it ran
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("seed", SEEDS)
+def test_every_answered_juncture_leaves_exactly_one_act(streams, seed):
+    """One outcome per juncture, in order, on the same life.
+
+    The client's entry pairs them by position — the act it shows for the Nth
+    seal is the Nth outcome — so a stream that ever emitted an outcome for a
+    turn nobody was asked about would make the book print an act the player
+    never took.
+    """
+    kinds = [b.KIND for b in streams[seed].beats]
+    junctures = [b for b in streams[seed].beats if b.KIND == "juncture"]
+    outcomes = [b for b in streams[seed].beats if b.KIND == "outcome"]
+    assert len(outcomes) == len(junctures)
+    for juncture, outcome in zip(junctures, outcomes):
+        assert outcome.life == juncture.life
+        assert outcome.year >= juncture.year
+    # and each one follows its own juncture immediately
+    for i, kind in enumerate(kinds[:-1]):
+        if kind == "juncture":
+            assert kinds[i + 1] == "outcome"
+
+
+@pytest.mark.parametrize("seed", SEEDS)
+def test_an_act_never_claims_more_than_the_life_planted(streams, seed):
+    """``planted`` is a measured delta, so it can never exceed the seeds the
+    life actually owns — the turns the world took on its own plant too, and
+    those are nobody's act."""
+    world = run_human_world(seed, reader=lambda: None, writer=lambda _t: None)
+    index = life_index(world)
+    owned = {}
+    for seed_obj in world.seeds:
+        ordinal = index.get(seed_obj.planted_by_life_id)
+        if ordinal:
+            owned[ordinal] = owned.get(ordinal, 0) + 1
+    claimed = {}
+    for beat in streams[seed].beats:
+        if beat.KIND == "outcome":
+            assert beat.planted >= 0
+            assert 0 <= beat.option <= 3
+            claimed[beat.life] = claimed.get(beat.life, 0) + beat.planted
+    for life, total in claimed.items():
+        assert total <= owned.get(life, 0), (life, total, owned.get(life))
+
+
+@pytest.mark.parametrize("seed", SEEDS)
+def test_the_act_records_the_option_that_was_actually_sealed(seed):
+    """A sealed number comes back as that number; a season let pass comes back
+    as 0 rather than as an act the player did not choose."""
+    for pick in ("1", "2"):
+        stream = B.stream(seed, [pick])
+        first = next(b for b in stream.beats if b.KIND == "outcome")
+        assert first.option == int(pick)
+    # the fully-entrusted run answers nothing itself
+    entrusted = next(b for b in B.stream(seed).beats if b.KIND == "outcome")
+    assert entrusted.option in (0, 1, 2, 3)
+
+
+@pytest.mark.parametrize("seed", SEEDS)
+def test_the_act_is_labelled_in_the_engines_own_words(streams, seed):
+    """The label is what the juncture displayed, never a re-worded version, and
+    never an internal id (``_display_label`` exists to keep ``legacy:seed-0005``
+    off the page)."""
+    for beat in streams[seed].beats:
+        if beat.KIND != "outcome":
+            continue
+        assert beat.label and ":" not in beat.label
+        assert beat.label == beat.label.strip()

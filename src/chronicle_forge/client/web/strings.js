@@ -47,6 +47,7 @@
       statusRemembered: "思い出した",
       statusSealed: "封じた",
       statusYears: "歳月が過ぎる……",
+      statusWriting: "書き取っている……",
 
       // --- the S-02 reveal (D-3 §7). The year is a stream field and is
       // optional: a mark whose seed carries no planted year still gets a Hand,
@@ -86,6 +87,17 @@
         `${years} years, ${lives} lives. It closed in the ${ending}.`,
       inkSets: "The ink sets.",
       shelfInvite: (place) => `A book waits: ${place}.`,
+      shelfSpine: (place, years) => `${place} · ${years} years`,
+
+      // --- P-05 the entry / P-07 the act entering it. `actLine` is the act the
+      // player sealed, in the engine's own label; `passLine` is the season let
+      // pass, which the world answered instead. `plantCue` is S-03's single
+      // permitted line (UX §P-07: no reward language, no numbers, and never
+      // what the echo will become).
+      entryEyebrow: "The entry",
+      actLine: (year, label) => `Year ${year} — ${label}.`,
+      passLine: (year) => `Year ${year} — you let the season pass.`,
+      plantCue: "This will echo.",
     },
   };
 })();

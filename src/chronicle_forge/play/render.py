@@ -305,10 +305,12 @@ def death_passage(world, life) -> str:
         if pending > 9:
             lines.append("Much of what you set in motion outlives you, unfinished.")
         else:
-            things = "thing" if pending == 1 else "things"
+            things, outlive = (
+                ("thing", "outlives") if pending == 1 else ("things", "outlive")
+            )
             lines.append(
                 f"{_cap_number(pending)} {things} you set in motion "
-                "outlive you, unfinished."
+                f"{outlive} you, unfinished."
             )
         # The last life has no years left to decide anything; the closing page
         # follows immediately and answers it instead.
@@ -468,10 +470,18 @@ def closing_page(world) -> str:
 
 
 def skip_transition(skip: dict) -> str:
-    """The years that pass between lives."""
+    """The years that pass between lives, or nothing when none do.
+
+    X-16: this used to answer "Time holds its breath; the world stands at its
+    end." when the skip ran no years — which is the last life, where the closing
+    page follows immediately and says what became of the world properly. X-1
+    added that page *after* this line instead of replacing it, so 15 of 30
+    measured worlds printed a dead end and then the ending. Saying nothing here
+    lets the closing page be the one that speaks.
+    """
     years = skip.get("years_run", 0)
     if years <= 0:
-        return "Time holds its breath; the world stands at its end."
+        return ""
     return f"… {years} {'year' if years == 1 else 'years'} pass …"
 
 

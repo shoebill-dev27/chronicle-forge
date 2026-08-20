@@ -46,7 +46,7 @@ def test_export_metadata_fields():
     assert meta.seed == 42
     assert meta.engine_version == ENGINE_VERSION
     assert meta.world_hash.startswith("e62d8f2c")  # golden world
-    assert meta.transcript_hash.startswith("c9a8096f")  # golden transcript
+    assert meta.transcript_hash.startswith("41cf1cfd")  # golden transcript
     assert len(meta.recipe_hash) == 64  # full sha256 hex
 
 

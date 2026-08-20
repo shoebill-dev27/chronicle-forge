@@ -37,7 +37,7 @@ GOLDEN_WORLD_MODEL_SHA = "5b41a692cfa3f1ce"
 GOLDEN_NARRATIVE_SHA = "a32df9e5068d054a"
 GOLDEN_CHARACTER_SHA = "36c894fbde084e57"
 GOLDEN_TIMELINE_SHA = "ae42ed5ff91f5545"
-GOLDEN_TRANSCRIPT_SHA = "c9a8096f6b83795c"  # `play --seed 42 --auto` stdout
+GOLDEN_TRANSCRIPT_SHA = "41cf1cfd843f6272"  # `play --seed 42 --auto` stdout
 
 # The one new golden: seed42 chronicle_json hash. Pinned at GREEN; the placeholder
 # keeps the golden test RED for the right reason (the in-body import fails first).

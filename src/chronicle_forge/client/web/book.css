@@ -233,8 +233,32 @@ h2.place{font-size:26px; font-weight:600; margin:0 0 18px}
 [data-axis="vertical"] .option-hand.blooming,
 [data-axis="vertical"] .option-confirm.blooming-confirm{animation-name:bloomWipeV}
 
-.outcome{margin-block-start:20px; padding-block-start:16px; border-block-start:1px solid var(--rule); font-size:15px; color:var(--muted)}
-.outcome[hidden]{display:none}
+/* ---- P-05 the entry / P-07 the act arriving --------------------------------
+   The acts of this life, in the order they were taken. The newest one arrives
+   in the Hand and settles into print: what is being written is being written
+   BY the player, and only afterwards becomes part of the record. */
+.acts{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:22px}
+.act{position:relative; max-inline-size:var(--measure)}
+.act-line{margin:0}
+.act.arriving .act-line{
+  font-family:var(--hand); color:var(--hand-ink); font-size:1.1em;
+  transform:rotate(-.35deg) skewX(-2deg);
+}
+.act.closed{color:var(--muted); font-size:15px; padding-block-start:16px; border-block-start:1px solid var(--rule)}
+/* S-03. The mark sits in the margin stage, never in the measure (D-4 M-2). */
+.act-mark{
+  position:absolute; inset-inline-start:calc(-1 * var(--margin-stage) + .9rem);
+  inset-block-start:.15em; font-size:.85em; color:var(--hand-ink);
+  transform:rotate(-4deg); pointer-events:none;
+}
+.act.arriving .act-mark{animation:markDrawn 1.1s ease .35s both}
+.plant-cue{margin:8px 0 0; font-size:.9em; color:var(--muted); letter-spacing:.02em}
+.act.arriving .plant-cue{animation:cueSettle 1.2s ease .5s both}
+@keyframes markDrawn{from{opacity:0; transform:rotate(-14deg) scale(.6)} to{opacity:1; transform:rotate(-4deg) scale(1)}}
+@keyframes cueSettle{from{opacity:0} to{opacity:1}}
+@media (prefers-reduced-motion: reduce){
+  .act.arriving .act-mark, .act.arriving .plant-cue{animation:none}
+}
 
 /* ---- verbs: quiet print on a hairline — never a filled CTA slab ---- */
 .verbs{display:flex; gap:20px; margin-top:auto; padding-top:26px}

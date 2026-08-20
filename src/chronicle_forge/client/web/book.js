@@ -28,7 +28,7 @@
 const STRINGS = window.CF_VOICE.strings;
 
 const HOLD_MS = 800;
-const PAGES = ["shelf", "opening", "juncture"];
+const PAGES = ["shelf", "opening", "juncture", "entry"];
 // The surface plays 0 -> TimeSurface.REBIRTH_END; the last stretch of the cut
 // is the real juncture page, not a picture of one.
 const SURFACE_MS = 14000;
@@ -123,6 +123,7 @@ let state = {
   sealed: false,
   revealed: new Set(),
   win: null,        // the death/years/aftermath window the surface is playing
+  entryLife: 0,     // whose entry the acts on the page belong to
   frozenT: null,    // ?t= — a frozen surface clock, for reproducible captures
 };
 
@@ -275,6 +276,94 @@ function advanceTo(life) {
   return true;
 }
 
+/* ---- P-05 the entry, P-07 the act arriving in it ---------------------------
+   One page in two moments: the acts this life has taken, and the newest one
+   entering. Everything on it is an `outcome` beat — the label is the engine's
+   own words for the act, and `planted` is a count read off the world the moment
+   the verb ran. The page composes nothing it was not handed. */
+
+/* The acts of this life the player has actually REACHED.
+
+   Sealing replays the whole world, so the stream always runs to the world's
+   end: `beatsOf("outcome")` contains acts from later in this very life that the
+   player has not come to yet, and printing them into the entry would be the
+   book writing ahead of its reader. An outcome is emitted in the same breath as
+   the juncture it answers, one for one and in order, so the acts reached are
+   exactly the first `state.cursor` of them — the same count as seals made. */
+function outcomesOf(life) {
+  return beatsOf("outcome")
+    .slice(0, state.cursor)
+    .filter((b) => b.life === life);
+}
+
+function buildAct(act, arriving) {
+  const li = document.createElement("li");
+  li.className = "act print" + (arriving ? " arriving" : "");
+  li.dataset.year = String(act.year);
+
+  const line = document.createElement("p");
+  line.className = "act-line";
+  // Option 0 is the season let pass: the world answered, and the entry says so
+  // rather than crediting the player with an act they did not choose.
+  line.textContent = act.option === 0
+    ? STRINGS.passLine(act.year)
+    : STRINGS.actLine(act.year, act.label);
+  li.appendChild(line);
+
+  // S-03. The cue is drawn only where the stream says something was planted;
+  // an act that set nothing in motion gets no promise. ⟜ is the echo mark
+  // (ADR-001 K-1) — the same glyph a past echo carries, which is the point:
+  // the promise is addressed to the self who will find it.
+  if (act.planted > 0) {
+    const mark = document.createElement("span");
+    mark.className = "act-mark";
+    mark.setAttribute("aria-hidden", "true");
+    mark.textContent = "⟜";
+    li.appendChild(mark);
+    const cue = document.createElement("p");
+    cue.className = "plant-cue print";
+    cue.textContent = STRINGS.plantCue;
+    li.appendChild(cue);
+  }
+  return li;
+}
+
+function toEntry(life) {
+  const acts = outcomesOf(life);
+  if (!acts.length) return false;
+  hideSurface();
+  state.entryLife = life;
+  state.lifeShown = life;
+  const list = $("#acts");
+  list.innerHTML = "";
+  acts.forEach((act, i) => list.appendChild(buildAct(act, i === acts.length - 1)));
+  const last = acts[acts.length - 1];
+  $("#entry-turn").hidden = false;
+  setRunningHead(`Year ${last.year} · age ${last.age}`);
+  setStatus(STRINGS.statusWriting);
+  show("entry", "forward");
+  return true;
+}
+
+/* What follows the entry: this life's next juncture if the world asks again,
+   otherwise the years. The world ending with this life is the third case — no
+   years run after it, so the ink simply sets. */
+function leaveEntry() {
+  const next = junctures()[state.cursor];
+  if (next && next.life === state.lifeShown) return toJuncture(next);
+  const win = TimeSurface.pickWindow(state.stream, state.lifeShown);
+  if (!win) {
+    const closed = document.createElement("li");
+    closed.className = "act print closed";
+    closed.textContent = STRINGS.inkSets;
+    $("#acts").appendChild(closed);
+    $("#entry-turn").hidden = true;
+    return scheduleFit();
+  }
+  state.win = win;
+  playSurface(win);
+}
+
 function toJuncture(beat) {
   const data = beat || junctures()[state.cursor];
   if (!data) return show("opening", "forward");
@@ -288,7 +377,6 @@ function toJuncture(beat) {
   state.sealed = false;
   state.revealed = new Set();
   $("#seal-btn").disabled = true;
-  $("#outcome").hidden = true;
 
   // The mark goes on the ONE line the stream says a former self made, and
   // nowhere else. In a first life there is never such a line, so there is never
@@ -560,20 +648,10 @@ async function seal() {
   state.cursor += 1;
   setStatus(STRINGS.statusSealed);
 
-  // A life can be asked more than once. The years only run when this life has
-  // no juncture left — otherwise the book simply turns to the next one.
-  const next = junctures()[state.cursor];
-  if (next && next.life === state.lifeShown) return toJuncture(next);
-
-  const win = TimeSurface.pickWindow(stream, state.lifeShown);
-  if (!win) {  // the world ended with this life: no years follow, so none are shown
-    const out = $("#outcome");
-    out.textContent = STRINGS.inkSets;
-    out.hidden = false;
-    return scheduleFit();
-  }
-  state.win = win;
-  playSurface(win);
+  // The act enters the entry (P-07) before anything else moves. What follows
+  // the entry — this life's next juncture, the years, or the ink setting — is
+  // `leaveEntry`'s decision, made on the same stream.
+  return toEntry(state.lifeShown);
 }
 
 /* ---- verbs / wiring ---- */
@@ -585,6 +663,7 @@ function turn() {
     return advanceTo(state.lifeShown + 1);
   }
   if (state.page === "shelf") return toOpening();
+  if (state.page === "entry") return leaveEntry();
   // The opening belongs to a life; what follows is that life's own page, which
   // is its juncture if it has one and its window if the world never asked it
   // anything.
@@ -592,6 +671,7 @@ function turn() {
 }
 function flip() {
   if (document.documentElement.dataset.surface === "time") return; // the years do not run backwards
+  if (state.page === "entry") return;   // the entry has no way back — see index.html
   if (state.page === "juncture") return show("opening", "back");
   if (state.page === "opening") return show("shelf", "back");
 }
@@ -639,7 +719,15 @@ async function boot() {
   if (state.live) {
     try {
       const inv = await bridge("shelf");
-      if (inv && inv.invitation) $("#shelf-invite").textContent = STRINGS.shelfInvite(inv.invitation);
+      if (inv && inv.invitation) {
+        // The spine says what the book IS before it is opened — the place and
+        // the span worldgen already fixed. Both are stream-side facts; if the
+        // bridge gives no span the invitation stands on its own rather than
+        // printing a hole.
+        $("#shelf-invite").textContent = inv.span_years
+          ? STRINGS.shelfSpine(inv.invitation, inv.span_years)
+          : STRINGS.shelfInvite(inv.invitation);
+      }
     } catch (err) {
       console.error("bridge failure: shelf", err);
     }

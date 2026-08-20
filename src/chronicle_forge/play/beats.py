@@ -21,7 +21,7 @@ WHAT IT DOES NOT DO
     Core Experience itself is made of.
 
 THE BEATS
-    rebirth · juncture · death · years · aftermath · closing
+    rebirth · juncture · outcome · death · years · aftermath · closing
 
     Recognition is not a beat of its own: it only ever occurs *at* a juncture,
     so it rides on the juncture beat and names the option that carries it. That
@@ -137,6 +137,31 @@ class Juncture:
 
 
 @dataclass(frozen=True)
+class Outcome:
+    """What the act the player sealed actually did (P-07).
+
+    The engine prints nothing at this moment — the transcript goes from one turn
+    screen straight to the next — so this beat is not a re-reading of prose; it
+    is the world read immediately after the verb ran, in the same breath as the
+    choice. ``planted`` counts the causal seeds that act set in motion, and it
+    is the only honest basis for the plant cue: a life that planted nothing must
+    not be told that it did.
+
+    Emitted only for a juncture the player was actually asked. The turns the
+    world takes on its own are the life's weather, not its entry.
+    """
+
+    KIND: ClassVar[str] = "outcome"
+    life: int
+    year: int
+    age: int
+    option: int  # the displayed number sealed; 0 when the season was let pass
+    label: str
+    kind: str
+    planted: int
+
+
+@dataclass(frozen=True)
 class Death:
     KIND: ClassVar[str] = "death"
     life: int
@@ -178,7 +203,15 @@ class Closing:
     legacies: Tuple[Legacy, ...]
 
 
-BEAT_KINDS = ("rebirth", "juncture", "death", "years", "aftermath", "closing")
+BEAT_KINDS = (
+    "rebirth",
+    "juncture",
+    "outcome",
+    "death",
+    "years",
+    "aftermath",
+    "closing",
+)
 
 
 @dataclass(frozen=True)
@@ -305,6 +338,28 @@ class BeatRecorder:
                 era=render._era(world),
                 options=tuple(rows),
                 recognition=self._recognition(world, rows, recognize_id),
+            )
+        )
+
+    def on_outcome(self, world, life, options, choice, planted_ids) -> None:
+        """The verb has run; read what it did before anything else moves.
+
+        ``choice`` is matched by identity, not equality: two options of a turn
+        can compare equal by value, and the entry must name the one that was
+        actually taken. A choice outside the displayed three is the season let
+        pass — the world answered for the player — and is recorded as option 0.
+        """
+        top3 = render._top3(options)
+        opp = choice.opportunity
+        self.beats.append(
+            Outcome(
+                life=self._life,
+                year=world.current_year,
+                age=life.age,
+                option=next((i for i, o in enumerate(top3, 1) if o is choice), 0),
+                label=render._display_label(world, choice),
+                kind=render._KIND_WORD.get(opp.kind, "Chance") if opp else "Chance",
+                planted=len(planted_ids),
             )
         )
 

@@ -256,10 +256,12 @@ register (`s{seed}-SHEET292-{register}.png`).
 
 ## 7. Still open
 
-1. **No real-hardware confirmation.** Everything above was judged in headless
-   Chrome. `pywebview`/`PyQt5` are still not installed in this branch's venv, so
-   the surface has never been seen in the actual window. Motion timing
-   (`SURFACE_MS = 14000`) is a judgement, not a measurement.
+1. ~~**No real-hardware confirmation.**~~ **Closed 2026-08-21** by the G0 gate
+   ([`v1_g0_hardware_gate.md`](v1_g0_hardware_gate.md)): the surface runs in the
+   real pywebview window on all five seeds — canvas painted and accumulating,
+   both bundled faces resolved, the handoff to the next life intact. What
+   remains open is narrower: `SURFACE_MS = 14000` is still a judgement, not a
+   measurement, and only a human at R1/R2 can settle it.
 2. **JP/EN.** The captions and the UI strings are Japanese; place names, legacy
    names, talents, event phrases and eras come from the engine in English. Every
    frame is mixed. Open since the X-1..X-4 review's question 3. The English

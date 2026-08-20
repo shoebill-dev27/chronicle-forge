@@ -44,11 +44,25 @@
         <header class="juncture-head print" id="juncture-head">—</header>
         <ul class="options" id="options"></ul>
 
-        <div class="outcome print" id="outcome" hidden></div>
-
         <div class="verbs">
           <button class="verb ghost" data-verb="flip" data-str="flipBack">Flip back</button>
           <button class="verb primary" data-verb="seal" id="seal-btn" data-str="seal" disabled>Seal this choice</button>
+        </div>
+      </section>
+
+      <!-- P-05 · Life page, in the state P-07 describes: the entry in progress,
+           with the act just sealed arriving in it. One page, two moments — a
+           book does not open a new leaf to write the next line. The acts are
+           `outcome` beats; nothing here is composed from prose. -->
+      <section class="page entry" data-page="entry" hidden>
+        <p class="eyebrow print" data-str="entryEyebrow">The entry</p>
+        <ol class="acts" id="acts"></ol>
+        <div class="verbs">
+          <!-- No flip. Flipping back to reread is a BEFORE-sealing affordance
+               (UX §P-06); once the act is in the entry the page it was made on
+               is spent, and offering it again is the one way a juncture could
+               be answered twice. -->
+          <button class="verb primary" data-verb="turn" id="entry-turn" data-str="turnPage">Turn the page</button>
         </div>
       </section>
 

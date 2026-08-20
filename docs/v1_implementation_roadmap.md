@@ -150,6 +150,32 @@ shown at life 1 year 0, where the engine can produce no recognition; it is
 deleted, not re-skinned, and `test_the_frontend_carries_no_world_copy_of_its_own`
 keeps it deleted.
 
+### 2c. G0 and I-2 (2026-08-21)
+
+**G0 — the real-hardware gate. PASSED**, seeds 1/7/42/99/123, 0 failures. Every
+judgement from I-1 to I-1b had been taken in headless Chrome; the client had
+never run in the pywebview window it ships in. It does — canvas, both bundled
+faces, the 1180×880 viewport and the whole loop. Re-runnable:
+[`v1_g0_hardware_gate.md`](v1_g0_hardware_gate.md). The gate immediately earned
+itself by catching a page that read ahead of its player (gate doc §4).
+
+**I-2 — Life Loop. Implemented**, see
+[`design_v1_i2_life_loop.md`](design_v1_i2_life_loop.md). One new beat
+(`outcome`: what the sealed act did, with a measured count of what it planted)
+and one new page: P-05 and P-07 ship as a single leaf — the acts of this life,
+with the newest arriving in the Hand — carrying S-03's cue and its ⟜. The shelf
+stops being a stub. X-16 and X-17 ride the same transcript-golden move
+(`c9a8096f6b83795c` → `41cf1cfd843f6272`; the world golden does not move).
+
+Two items the roadmap should carry forward from it: the plant cue's condition is
+**always true** in the current engine (every act plants exactly one guaranteed
+seed — an engine-content finding, not a client one), and the leaf is mostly
+empty because a life is 1–3 acts and nothing else. Both point at the same
+content floor W-1 names.
+
+Not done here and unchanged: I-3 (the rebirth digest, where D-5's SP-1 puts the
+guaranteed first recognition), P-11, I-4 (needs the P18 lens), I-5, I-6, I-7.
+
 Playtests interleave: **R0 table read** (JP page cards) as soon as I-0's JP
 golden-path copy exists; **R1** on I-5's build; fix cycle; **R2** on the RC.
 

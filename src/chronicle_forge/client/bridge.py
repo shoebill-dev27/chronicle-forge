@@ -37,9 +37,25 @@ class BookBridge:
         self._seed = seed
 
     def shelf(self) -> Dict:
-        """P-01 (stub): an empty slot plus the real world name it opens into."""
+        """P-01: the shelf, as far as this build can honestly fill it.
+
+        The book that the empty slot opens into is described by the world it
+        will really be — its place and the span of years it runs to, both read
+        from ``generate_world`` and neither of them a spoiler: worldgen fixes
+        them before a single life is lived. ``books`` is empty and stays empty
+        until there is somewhere to keep a finished one; a shelf of resumable
+        and finished books needs the discovery-state store, which is I-6, and
+        inventing spines for books that cannot be reopened would be a worse
+        stub than an empty shelf.
+        """
         world = generate_world(self._seed)
-        return {"empty_slot": True, "books": [], "invitation": place(world)}
+        return {
+            "empty_slot": True,
+            "books": [],
+            "invitation": place(world),
+            "seed": self._seed,
+            "span_years": world.max_year,
+        }
 
     def play(
         self, seed: Optional[int] = None, choices: Optional[Sequence] = None

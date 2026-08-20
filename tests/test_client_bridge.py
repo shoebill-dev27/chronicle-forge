@@ -257,6 +257,8 @@ def test_the_page_composes_no_copy_outside_the_string_inventory():
         "It closed in ",
         "The ink sets.",
         "A book waits: ",
+        "This will echo.",
+        "you let the season pass.",
     ):
         assert sentence in inventory, f"{sentence!r} is not in the inventory"
         for name in ("book.js", "time.js"):
@@ -287,3 +289,69 @@ def test_no_caption_or_reveal_prints_a_missing_year(tmp_path, seed):
     assert "null" not in probe["captions"]["sealedWithoutYear"]
     assert "\u5e74" not in probe["captions"]["sealedWithoutYear"]
     assert "\u5e74" not in probe["reveal"]["bloomWithoutYear"]
+
+
+# --------------------------------------------------------------------------
+# I-2: the entry (P-05) and the act arriving in it (P-07)
+# --------------------------------------------------------------------------
+
+
+def test_the_entry_never_writes_ahead_of_its_reader():
+    """Sealing replays the WHOLE world, so the stream always runs to the end.
+    The entry therefore has to be cut to the acts the player has actually
+    sealed; without the cut, a life asked twice showed its second act on the
+    page for its first (measured on seeds 7 and 123, in the real window).
+    """
+    js = _source("book.js")
+    assert "slice(0, state.cursor)" in js
+    # and the acts it does show are filtered to the life whose page this is
+    assert "b.life === life" in js
+
+
+def test_the_entry_offers_no_way_to_answer_a_juncture_twice():
+    """UX §P-06: flipping back to reread is a BEFORE-sealing affordance, and
+    §P-07 shows exactly one verb. An entry that offered `flip` would put an
+    already-answered juncture back on the page with its seal re-armed."""
+    html = (_WEB_DIR / "index.html").read_text(encoding="utf-8")
+    entry = html.split('data-page="entry"', 1)[1].split("</section>", 1)[0]
+    assert 'data-verb="turn"' in entry
+    assert 'data-verb="flip"' not in entry
+    assert 'data-verb="seal"' not in entry
+    # and the seal itself refuses a second run
+    assert "if (state.selected == null || state.sealed) return;" in _source("book.js")
+
+
+def test_the_plant_cue_fires_on_the_data_and_not_on_the_page():
+    """S-03 is a promise; a promise the world did not make is a lie. The cue is
+    drawn only where the stream counted something planted."""
+    js = _source("book.js")
+    assert "act.planted > 0" in js
+    # exactly two marks exist in this design (ADR-001 K-1): the echo and the
+    # legacy. The plant cue reuses the echo — it must not coin a third.
+    marks = {ch for ch in js if ch in "\u27dc\u2767"}
+    assert marks <= {"\u27dc"}, f"the page draws a mark outside ADR-001: {marks}"
+
+
+def test_the_shelf_names_the_real_book_it_opens():
+    """P-01 was a stub that returned `books: []` and a bare place name. It now
+    describes the book the empty slot opens into with facts worldgen has
+    already fixed — and still refuses to invent spines for books that cannot be
+    reopened (that needs the discovery-state store, I-6)."""
+    from chronicle_forge.worldgen import generate_world
+
+    shelf = BookBridge(seed=7).shelf()
+    world = generate_world(7)
+    assert shelf["seed"] == 7
+    assert shelf["span_years"] == world.max_year
+    assert shelf["invitation"]
+    assert shelf["books"] == [] and shelf["empty_slot"] is True
+    json.dumps(shelf)
+
+
+def test_the_act_the_page_shows_is_the_act_the_stream_recorded():
+    """The entry prints `outcome.label` and nothing else: no re-wording, and no
+    reconstruction from the option list (which would drift the moment the
+    engine's labels changed — the whole reason the regex seam died)."""
+    js = _source("book.js")
+    assert "STRINGS.actLine(act.year, act.label)" in js
+    assert "act.option === 0" in js  # a season let pass is said, not credited
