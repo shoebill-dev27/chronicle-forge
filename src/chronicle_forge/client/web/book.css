@@ -1,116 +1,308 @@
 /* The Living Chronicle — I-1 skeleton styles.
    Two type ROLES carry the load-bearing print/Hand contrast (UX §7, D-4):
-   Print = 明朝, upright, 墨 ink; Hand = 手書き, italic, warmer sepia, irregular.
-   Skeleton faces are system stacks (final licensed faces = OD-9 / I-5); the
-   contrast is guaranteed by style (weight/slant/colour) so it survives font
-   fallback. Palette = D-4 §5 (aged paper · 墨 · Hand sepia · 朱 accent). */
+   Print = 明朝, upright, 墨 ink; Hand = 楷書/行書-ish, slanted, warmer sepia,
+   irregular. Skeleton faces are system stacks (final licensed faces = OD-9 /
+   I-5); the contrast is guaranteed by style (weight/slant/colour/size) so it
+   survives font fallback. Palette = D-4 §5 (aged paper · 墨 · Hand sepia ·
+   朱 accent). Every element is book furniture (a leaf, a rule, a margin, a
+   folio) — never application chrome (no cards, no rounded corners, no filled
+   buttons, no progress bars, no glow). Ink is the only animation language
+   (UX §7, D-4 §9) — page turns, ink bloom/dry/fill; prefers-reduced-motion
+   is honoured throughout. */
+
+/* ---- bundled faces (OD-9, ADR-002 "all fonts bundled, no CDN") ----
+   Print = Noto Serif JP (明朝, variable weight) · Hand = Yuji Syuku (筆書き楷書).
+   Both SIL OFL 1.1; the licences ship beside the files in web/fonts/. Subset to
+   Latin + kana + CJK + the two mark glyphs. `font-display:block` because the
+   two voices ARE the device (UX §7): a first paint in the wrong face would show
+   the player a book that does not exist. T3 U-7 recorded why this had to stop
+   being a system-font stack: no 楷書/行書 face exists on a clean Linux target or
+   in the Windows font set, so the Hand always collapsed into the print face. */
+@font-face{
+  font-family:"Chronicle Print";
+  src:url("fonts/NotoSerifJP-subset.woff2") format("woff2");
+  font-weight:200 900; font-style:normal; font-display:block;
+}
+@font-face{
+  font-family:"Chronicle Hand";
+  src:url("fonts/YujiSyuku-subset.woff2") format("woff2");
+  font-weight:400; font-style:normal; font-display:block;
+}
 
 :root{
   --paper:#EFE7D6; --paper-edge:#E4DAC4;
   --sumi:#241E17;            /* 墨 — print ink */
-  --hand-ink:#6E4A2F;        /* the Hand — warmer, wetter */
+  --hand-ink:#6E4A2F;        /* the Hand — warmer, wetter ink */
   --muted:#8A7B63;
-  --shu:#B23A28;             /* 朱 — the single accent (still-shaping only) */
+  /* 朱 — reserved. D-4 §5 rule P-1: 朱 means "still-shaping the world"
+     content ONLY (P-12's single rubricated highlight). That content does not
+     exist in this I-1 skeleton, so 朱 is defined but UNUSED here — marks,
+     the hold-fill, the reveal and the focus ring all moved to the ink
+     family below. Do not reach for --shu until a still-shaping surface
+     actually ships. */
+  --shu:#B23A28;
   --rule:#D3C6AC;
-  --print:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"MS PMincho","Songti SC",serif;
-  --hand:"Yu Mincho","Hiragino Mincho ProN","STKaiti","KaiTi",cursive;
+  /* Bundled face first; the system stacks stay only as a last resort if the
+     packaged file is ever missing — the style-level contrast below (colour,
+     size, slant) is what guarantees the voices stay separable even then. */
+  --print:"Chronicle Print","Hiragino Mincho ProN","Yu Mincho",YuMincho,"MS PMincho",serif;
+  --hand:"Chronicle Hand","Kaiti SC","STKaiti","KaiTi","Yu Mincho",cursive;
+  --measure:30em;            /* D-4 M-1: 28–32 全角/line */
+  --margin-stage:4.5rem;     /* D-4 M-2 / UX §7: the stage for time and marks */
+}
+
+@media (max-width:640px){
+  /* S1: the margin stage collapses gracefully — marks move inline-start of
+     the line, still never inside the option box. */
+  :root{ --margin-stage:1.15rem; }
 }
 
 *{box-sizing:border-box}
 html,body{height:100%}
+
+/* ---- the desk (body): dark, holds the leaf and the evaluation instruments ---- */
 body{
-  margin:0; background:#241f1a; color:var(--sumi);
+  margin:0; min-height:100%; background:#241f1a; color:var(--sumi);
   font-family:var(--print);
-  display:flex; align-items:center; justify-content:center; padding:24px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:14px; padding:24px;
+  overflow:hidden; /* the desk never scrolls — a book is not a scroll (B-2) */
 }
 
-.book{
-  width:min(760px,100%); min-height:560px; background:var(--paper);
-  border:1px solid var(--paper-edge);
-  border-radius:4px;
-  box-shadow:0 2px 4px rgba(0,0,0,.3),0 24px 60px rgba(0,0,0,.45),
-             inset 0 0 0 1px rgba(255,255,255,.15);
-  padding:clamp(28px,5vw,56px); position:relative;
-  display:flex; flex-direction:column;
+.desk-tools{ display:flex; align-items:center; gap:14px; opacity:.55 }
+.desk-tools .ribbon{ font-size:11px; letter-spacing:.06em; color:#d8cfbc }
+
+/* SAMPLE mode: a proof-sheet stamp in the leaf's outer margin. Ink family
+   (朱 stays reserved, D-4 P-1) and deliberately not decorative — its whole job
+   is that a fixture can never be misread as a generated world (B-1). */
+.specimen{
+  position:absolute; inset-block-start:clamp(28px,5vw,56px); inset-inline-end:14px;
+  font-size:12px; letter-spacing:.4em; text-indent:.4em; color:var(--muted);
+  border:1px solid var(--rule); padding:5px 8px; transform:rotate(3deg);
+  opacity:.75; pointer-events:none;
+}
+.specimen[hidden]{display:none}
+
+/* ---- the leaf: square corners, aged paper, CSS-only grain, gutter + deckle ---- */
+.leaf{
+  width:min(760px,100%); min-height:520px; background-color:var(--paper);
+  border:1px solid var(--paper-edge); border-radius:0;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(36,30,23,.018) 0px, rgba(36,30,23,.018) 1px, transparent 1px, transparent 3px),
+    radial-gradient(ellipse at 28% 18%, rgba(36,30,23,.035), transparent 60%),
+    radial-gradient(ellipse at 82% 88%, rgba(36,30,23,.03), transparent 55%);
+  /* gutter shadow at the spine (inline-start) + a faint deckle line at the
+     outer edge — no images, ink/paper only. */
+  box-shadow:
+    inset 10px 0 16px -12px rgba(0,0,0,.4),
+    inset -1px 0 0 rgba(36,30,23,.12),
+    0 2px 4px rgba(0,0,0,.3), 0 24px 60px rgba(0,0,0,.45);
+  padding:clamp(28px,5vw,56px);
+  display:flex; flex-direction:column; position:relative;
+  /* B-2: the leaf may shrink to the window but never lets its content escape
+     onto the desk. `fitPage()` then sets the type a step tighter so nothing is
+     actually clipped — clipping here is the last-resort guarantee, not the
+     mechanism. */
+  /* The leaf is a SHEET, not a box that hugs its text: it fills the desk's
+     free height so its inner box is a definite size. That is what makes
+     fitPage() monotonic — if the leaf shrank with its content, shrinking the
+     type would shrink the page too and the ratio would never improve. */
+  flex:1 1 auto; max-height:100%; min-height:min(520px,100%); overflow:hidden;
 }
 
 /* ---- type roles ---- */
-.print{font-family:var(--print); color:var(--sumi)}
+.print{font-family:var(--print); color:var(--sumi); font-feature-settings:"palt" 1; line-height:2}
+.eyebrow,.running-head,.folio,.kind,.juncture-head{line-height:1.4}
 .hand{
-  font-family:var(--hand); font-style:italic; color:var(--hand-ink);
-  letter-spacing:.02em;
+  font-family:var(--hand); font-style:normal; color:var(--hand-ink);
+  letter-spacing:.05em; font-size:1.05em; line-height:1.9;
+  /* The bundled brush face now carries the "different hand" itself, so the
+     synthetic italic is gone — slanting a brush face only smears it. A small
+     skew remains so colour+size+slant still separate the voices if the
+     packaged font is ever missing. */
+  transform:skewX(-2deg);
 }
 .muted{color:var(--muted)}
 .eyebrow{font-size:12px; letter-spacing:.28em; text-transform:uppercase; color:var(--muted); margin:0 0 14px}
 h1.print{font-size:34px; font-weight:600; margin:0 0 12px; letter-spacing:.02em}
 h2.place{font-size:26px; font-weight:600; margin:0 0 18px}
 
-/* ---- page frame ---- */
-.page{flex:1; display:flex; flex-direction:column; animation:settle .5s ease both}
+/* ---- running head / folio: book furniture, never interactive ---- */
+.running-head{
+  font-size:11px; letter-spacing:.26em; text-transform:uppercase; color:var(--muted);
+  text-align:center; min-height:1em; padding-bottom:10px; margin-bottom:22px;
+  border-bottom:1px solid var(--rule);
+}
+.folio{
+  font-size:11px; letter-spacing:.06em; color:var(--muted);
+  text-align:end; padding-top:12px; margin-top:14px;
+}
+
+/* ---- the text column: everything lives inside the measure; the margin
+   stage is the reserved space to its inline-start, for marks only ---- */
+.text-column{
+  flex:1; display:flex; flex-direction:column; position:relative;
+  margin-inline-start:var(--margin-stage);
+  max-inline-size:var(--measure); /* logical: the measure is the LINE length in both axes */
+  min-height:0; overflow:hidden;  /* bounds the box fitPage() measures against */
+}
+.page{flex:1; display:flex; flex-direction:column}
 .page[hidden]{display:none}
-.page > p, .page > h1, .page > h2{max-width:34em}
-.opening #opening-line{font-size:18px; line-height:2; max-width:32em}
+.page > p, .page > h1, .page > h2{max-inline-size:var(--measure)}
+.opening #opening-line{font-size:18px}
+
+/* ---- direction-aware page turn (S8) — short, physical, ink-family only ---- */
+@keyframes turnForwardH{from{opacity:0; transform:rotate(-2.5deg) translateX(16px)} to{opacity:1; transform:none}}
+@keyframes turnBackH{from{opacity:0; transform:rotate(2.5deg) translateX(-16px)} to{opacity:1; transform:none}}
+@keyframes turnForwardV{from{opacity:0; transform:rotate(-2.5deg) translateY(16px)} to{opacity:1; transform:none}}
+@keyframes turnBackV{from{opacity:0; transform:rotate(2.5deg) translateY(-16px)} to{opacity:1; transform:none}}
+.page.turn-forward{animation:turnForwardH .26s ease-out both; transform-origin:left center}
+.page.turn-back{animation:turnBackH .26s ease-out both; transform-origin:left center}
 
 /* ---- juncture ---- */
-.juncture-head{font-size:16px; color:var(--muted); border-bottom:1px solid var(--rule); padding-bottom:14px; margin-bottom:18px; letter-spacing:.03em}
-.hint{font-size:13px; margin:0 0 16px}
-.hint .mark{color:var(--shu); font-style:normal}
-.options{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:12px}
+/* The page's one focal print line (M-2). The era/year half of the engine's
+   header lives in the running head, so this line never repeats it. */
+.juncture-head{
+  font-size:19px; color:var(--sumi); letter-spacing:.03em;
+  border-block-end:1px solid var(--rule);
+  padding-block-end:14px; margin-block-end:20px;
+}
+.options{list-style:none; margin:0; padding:0; display:flex; flex-direction:column}
+
+/* Marks render in the margin stage (S3), baseline-aligned to the option's
+   first line — never glued to, or inside, the option box. Ink family only,
+   never 朱; hint = faint, confirmed = full ink, permanent after a reveal. */
 .option{
-  position:relative; background:transparent; border:1px solid var(--rule);
-  border-radius:3px; padding:15px 18px 15px 20px; cursor:pointer; text-align:start;
+  position:relative; background:none; border:none; margin:0;
+  border-block-end:1px solid var(--rule); text-align:start; cursor:pointer;
   font-family:var(--print); font-size:17px; color:var(--sumi);
-  transition:border-color .18s ease, background .18s ease;
+  padding:14px 4px; min-block-size:44px; /* H-1: ≥44px in the hold axis, both settings */
+  transition:border-color .18s ease, color .6s ease, opacity .6s ease;
 }
+.option-label{display:block; max-inline-size:var(--measure)}
+.option .kind{display:block; margin-block-start:6px; font-size:12px; color:var(--muted); letter-spacing:.04em}
 .option:hover{border-color:var(--muted)}
-.option .kind{display:block; margin-top:5px; font-size:12px; color:var(--muted); letter-spacing:.04em}
-.option.selected{border-color:var(--sumi); background:rgba(36,30,23,.04)}
-.option.marked::before{
-  content:"⟜"; position:absolute; left:-6px; top:50%; transform:translate(-100%,-50%);
-  color:var(--shu); font-size:18px;
-}
-.option.holding{border-color:var(--shu)}
-.option .holdbar{
-  position:absolute; left:0; bottom:0; height:2px; width:0; background:var(--shu);
-}
+.option.selected{border-block-end-color:var(--sumi); border-block-end-width:2px}
+.option.set{border-block-end-color:var(--sumi); border-block-end-width:2px; color:var(--sumi)}
+.option.receded{opacity:.4}
 
-/* ---- reveal (S-02 stub): the Hand blooms under print ---- */
-.reveal{margin-top:22px; padding:16px 20px; border-inline-start:2px solid var(--shu); background:rgba(178,58,40,.05)}
-.reveal[hidden]{display:none}
-.reveal-print{margin:0 0 8px; font-size:15px}
-.reveal .hand{margin:0; font-size:22px; animation:bloom 1.5s ease both}
-.reveal .epithet{margin:8px 0 0; font-size:15px; opacity:.85}
+.mark{
+  position:absolute; inset-inline-start:calc(-1 * var(--margin-stage) + .9rem);
+  inset-block-start:.15em; font-size:.85em; font-style:normal; color:var(--hand-ink);
+  transform:rotate(-4deg); pointer-events:none;
+}
+.mark.hint{opacity:.35}
+.mark.confirmed{opacity:1; transition:opacity .5s ease, color .5s ease}
 
-.outcome{margin-top:20px; padding-top:16px; border-top:1px solid var(--rule); font-size:15px; color:var(--muted)}
+/* Hold-to-remember (I-05): the whole line is the hit area; progress is ink
+   wetting along the writing direction (inline-size — rotates with 縦書き
+   per H-3), not a progress bar, never 朱. */
+.holdbar{
+  position:absolute; inset-inline-start:0; inset-block-end:0;
+  block-size:3px; inline-size:0; background:var(--hand-ink); opacity:.55;
+}
+.option.holding .holdbar{opacity:.8}
+
+/* Reveal (S-02, S4): in place, on the marked line. The print label stays
+   exactly where it is; the Hand blooms underneath it; a confirm line names
+   the origin. Ink family only. Permanent once earned — restoring an
+   already-revealed state never adds the .blooming/.blooming-confirm classes,
+   so re-showing the page cannot replay the animation. */
+.option-hand{
+  margin-block-start:10px; border-inline-start:2px solid var(--hand-ink);
+  padding-inline-start:.75em;
+  transform:none; /* container: the slant belongs to the ink, not to the rule */
+}
+.option-hand[hidden]{display:none}
+.option-hand .hand-bloom{margin:0; font-size:1.15em; transform:rotate(-.4deg) skewX(-2deg)}
+.option-confirm{margin:6px 0 0; font-size:.95em; opacity:.9; transform:rotate(.3deg) skewX(-2deg)}
+.option-confirm[hidden]{display:none}
+
+@keyframes bloomWipeH{
+  from{opacity:0; filter:blur(2px); clip-path:inset(0 100% 0 0)}
+  60%{opacity:1; filter:blur(.5px)}
+  to{opacity:1; filter:none; clip-path:inset(0 0 0 0)}
+}
+@keyframes bloomWipeV{
+  from{opacity:0; filter:blur(2px); clip-path:inset(100% 0 0 0)}
+  60%{opacity:1; filter:blur(.5px)}
+  to{opacity:1; filter:none; clip-path:inset(0 0 0 0)}
+}
+.option-hand.blooming{animation:bloomWipeH 1.5s ease both}
+.option-confirm.blooming-confirm{animation:bloomWipeH 1.5s ease .3s both}
+[data-axis="vertical"] .option-hand.blooming,
+[data-axis="vertical"] .option-confirm.blooming-confirm{animation-name:bloomWipeV}
+
+.outcome{margin-block-start:20px; padding-block-start:16px; border-block-start:1px solid var(--rule); font-size:15px; color:var(--muted)}
 .outcome[hidden]{display:none}
 
-/* ---- verbs ---- */
-.verbs{display:flex; gap:12px; margin-top:auto; padding-top:28px}
+/* ---- verbs: quiet print on a hairline — never a filled CTA slab ---- */
+.verbs{display:flex; gap:20px; margin-top:auto; padding-top:26px}
 .verb{
-  font-family:var(--print); font-size:15px; padding:11px 20px; border-radius:3px;
-  cursor:pointer; border:1px solid var(--sumi); background:transparent; color:var(--sumi);
-  transition:background .18s ease, color .18s ease, opacity .18s ease;
+  font-family:var(--print); font-size:15px; padding:6px 2px; margin:0;
+  cursor:pointer; border:none; border-bottom:1px solid var(--rule);
+  background:transparent; color:var(--sumi);
+  transition:opacity .18s ease, border-color .18s ease, color .18s ease;
 }
-.verb.primary{background:var(--sumi); color:var(--paper)}
+.verb.primary{font-weight:700; border-bottom-color:var(--sumi); border-bottom-width:2px}
 .verb.primary:disabled{opacity:.35; cursor:default}
-.verb.ghost{border-color:var(--rule); color:var(--muted)}
-.verb:not(:disabled):hover{opacity:.85}
+.verb.ghost{color:var(--muted)}
+.verb:not(:disabled):hover{opacity:.7}
 
-/* ---- chrome ---- */
-.chrome{display:flex; justify-content:space-between; align-items:center; margin-top:26px; padding-top:16px; border-top:1px solid var(--rule)}
-.ribbon{font-size:12px; color:var(--muted); letter-spacing:.06em}
-.axis-toggle{font-family:var(--print); font-size:12px; background:transparent; border:1px solid var(--rule); color:var(--muted); border-radius:3px; padding:6px 10px; cursor:pointer}
+/* ---- vertical setting (OD-8 evaluation toggle; 横書き is the v1 default).
+   writing-mode is inherited, so setting it once on .text-column rotates the
+   margin stage, marks, hold-fill (logical inline-size) and page turn
+   together; the leaf sizes from content (no max-height hack). ---- */
+[data-axis="vertical"] .leaf{min-height:min(78vh,620px)} /* vertical lines need block room */
+[data-axis="vertical"] .text-column{writing-mode:vertical-rl; text-orientation:upright}
+/* flex-direction:column already tracks the block axis, so the option stack
+   turns right-to-left on its own — no physical override belongs here. */
+[data-axis="vertical"] .verbs{writing-mode:horizontal-tb; margin-top:0; margin-right:auto}
+[data-axis="vertical"] .page.turn-forward{animation-name:turnForwardV; transform-origin:top center}
+[data-axis="vertical"] .page.turn-back{animation-name:turnBackV; transform-origin:top center}
 
-/* ---- vertical setting (OD-8 evaluation toggle; 横書き is the v1 default) ---- */
-[data-axis="vertical"] .page{writing-mode:vertical-rl; text-orientation:upright; max-height:460px}
-[data-axis="vertical"] .options{flex-direction:row-reverse}
-[data-axis="vertical"] .verbs{writing-mode:horizontal-tb}
-
-@keyframes settle{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:none}}
-@keyframes bloom{from{opacity:0; filter:blur(2px)} to{opacity:1; filter:none}}
 @media (prefers-reduced-motion:reduce){
-  .page,.reveal .hand{animation:none}
-  .option .holdbar,.verb,.option{transition:none}
+  .page.turn-forward,.page.turn-back,
+  .option-hand.blooming,.option-confirm.blooming-confirm{animation:none !important}
+  .holdbar,.verb,.option,.mark{transition:none !important}
 }
 
-:focus-visible{outline:2px solid var(--shu); outline-offset:2px}
+:focus-visible{outline:2px solid var(--sumi); outline-offset:2px}
+
+/* ---- the Time Surface (B2 / B3 / B4) -------------------------------------
+   The years are not a page the book prints — they are the dark the book is read
+   in, so the surface covers the leaf instead of sitting inside the measure. The
+   spike that chose this over five rivals measured the reason: at a 292px store
+   thumbnail every pale-ground frame died, and the frame is won by how much of it
+   the 朱 seal occupies. Paper cannot do that; a single light source in the dark
+   can. Nothing here is decoration — the canvas draws the beat stream and only
+   the beat stream (docs/design_v1_time_surface.md). */
+.page-surface{
+  position:absolute; inset:0; z-index:2;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:18px; padding:22px; background:#110e0c;
+}
+.page-surface[hidden]{display:none}
+.page-surface canvas{
+  inline-size:100%; max-inline-size:680px; block-size:auto; aspect-ratio:680/420;
+  display:block;
+}
+/* The book's furniture belongs to the leaf, not to the dark; while the years
+   run there is no running head and no folio to read. */
+:root[data-surface="time"] .running-head,
+:root[data-surface="time"] .folio,
+:root[data-surface="time"] .specimen{visibility:hidden}
+
+.surface-rebirth{
+  margin:0; max-inline-size:34em; text-align:center;
+  font-size:17px; line-height:1.9; color:#e3d6bb;
+  transition:opacity .6s ease-out;
+}
+@media (prefers-reduced-motion:reduce){ .surface-rebirth{transition:none} }
+
+/* `.verbs` normally pushes itself to the foot of a leaf (`margin-top:auto`).
+   On the surface the canvas, the rebirth line and the verb are one centred
+   group — the dark has no foot to sit at. */
+.surface-verbs{ margin-block-start:0; padding-block-start:0 }
+.surface-verbs .verb{ color:#cdbf9f; border-color:#4a4238 }
+.surface-verbs .verb:hover{ color:#efdcb6; border-color:#8a7862 }

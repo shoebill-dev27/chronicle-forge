@@ -68,12 +68,20 @@ def run_human_world(
     writer: Optional[Writer] = None,
     life_cap: int = 60,
     social_memory: bool = False,
+    observer=None,
 ):
     """Play a whole reincarnating world. Mirrors ``simulate_world``'s
     opportunity-mode outer loop exactly (derive rng per life, live, time-skip,
     classify ending), so determinism and the seed42 golden assets are preserved.
     ``social_memory`` (P11-B L2) gates the cross-life decay/bias pipeline; off
-    (default) the run is byte-identical to today. Returns the finished world."""
+    (default) the run is byte-identical to today. Returns the finished world.
+
+    ``observer`` (I-1b) is an optional listener that is handed the *data* behind
+    each beat at the moment the beat is spoken — see :mod:`play.beats`. It is
+    told, never asked: it cannot choose, cannot write, and cannot change what is
+    rendered, so with no observer (the default) the run is byte-identical and the
+    goldens are untouched. It exists because the client used to recover this data
+    by regex-parsing the transcript, which could carry one beat out of five."""
     reader = reader or _stdin_reader
     writer = writer or _stdout_writer
     seen_recognitions: set = set()  # spans the run: a former self is met once
@@ -81,7 +89,9 @@ def run_human_world(
     world = generate_world(seed)
     while world.current_year < world.max_year and len(world.lives) < life_cap:
         rng = derive_rng(world, len(world.lives), salt=EXECUTION_SALT)
-        life = _live_one(world, rng, reader, writer, seen_recognitions, social_memory)
+        life = _live_one(
+            world, rng, reader, writer, seen_recognitions, social_memory, observer
+        )
 
         # The skip is where marks harden into heritage, so what the years did
         # with the player's work can only be told *after* it runs — telling it at
@@ -89,20 +99,35 @@ def run_human_world(
         before = {h.seed_id for h in world.heritage}
         skip = time_skip(world, life, social_memory)
         _emit(writer, render.skip_transition(skip))
+        if observer is not None:
+            observer.on_years(world, skip)
         promoted = {h.seed_id for h in world.heritage} - before
         block = render.aftermath(world, life, promoted)
         if block is not None:
             _emit(writer, block)
+        if observer is not None:
+            # Told even when the prose says nothing: an aftermath that names no
+            # mark is the majority case (73 of 117 measured), and the surface
+            # has to render that silence rather than skip the beat.
+            observer.on_aftermath(world, life, promoted)
 
         if skip["world_ended"]:
             break
     classify_ending(world)
     _emit(writer, render.closing_page(world))
+    if observer is not None:
+        observer.on_closing(world)
     return world
 
 
 def _live_one(
-    world, rng, reader: Reader, writer: Writer, seen: set, social_memory: bool = False
+    world,
+    rng,
+    reader: Reader,
+    writer: Writer,
+    seen: set,
+    social_memory: bool = False,
+    observer=None,
 ):
     """One life: birth → juncture-gated turns → death reading. Reproduces the
     opportunity-mode life mechanics (lifespan, per-action combat death) exactly;
@@ -112,6 +137,8 @@ def _live_one(
     talent = rng.choice(list(Talent))
     life = begin_life(world, talent=talent)
     _emit(writer, render.rebirth_intro(world, life))
+    if observer is not None:
+        observer.on_rebirth(world, life)
 
     death_year = life.birth_year + draw_natural_span(rng)
     per_action_combat = config.COMBAT_DEATH_PROB_PER_YEAR / TURNS_PER_YEAR
@@ -145,6 +172,8 @@ def _live_one(
                 writer,
                 render.turn_screen(world, life, options, decision.reason, recognize),
             )
+            if observer is not None:
+                observer.on_juncture(world, life, options, decision.reason, recognize)
             if recognize is not None:
                 # The session owns recognition state, keyed by the player-visible
                 # name so a former self is recognized once across the whole run.
@@ -164,4 +193,6 @@ def _live_one(
 
     end_life(world, life, DeathCause.COMBAT if combat_death else DeathCause.LIFESPAN)
     _emit(writer, render.death_passage(world, life))
+    if observer is not None:
+        observer.on_death(world, life)
     return life

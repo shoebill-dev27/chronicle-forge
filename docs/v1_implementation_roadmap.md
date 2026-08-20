@@ -103,6 +103,53 @@ always lead-reviewed).
 | I-6 | Standard worlds & state | Curated seed shelf per D-5; discovery-state store + save/resume per D-6; epithets | DoD-4/DoD-5/DoD-6 tests green | Opus (state store) + Sonnet |
 | I-7 | Hardening & release | JP audit lane wired to CI; packaging (PyInstaller, per-OS); cross-machine determinism script; a11y floor (scaling, reduced-motion, rubric) | DoD-2/7/8/9 green on RC | Sonnet + Haiku (chores), Ornith (repetitive fixes), lead sign-off |
 
+### 2b. Amendment after X-1..X-4 (2026-08-17)
+
+The first-loop review ([`review_x1_x4_first_loop.md`](review_x1_x4_first_loop.md))
+adds one **prerequisite to I-2**, ahead of any page work:
+
+> **I-1b — structured beat stream.** Replace `client/bridge.py`'s
+> `capture_first_juncture` + `_OPTION_RE` (a regex over `play/render.turn_screen`'s
+> printed text) with a generator of typed beats — `juncture | death | years |
+> aftermath | rebirth | recognition | closing` — carrying data, not rendered text.
+> **Exit test:** the client advances a world past its first juncture without
+> parsing any prose, and `remember()` returns `None` when the engine has no
+> recognition to give.
+
+Why it moves first: `eca81f1` rewrote 299 lines of `turn_screen`/`death_passage`
+and the regex seam survived only by luck; I-2, I-3 and I-4 each add beats that
+seam cannot express; and every UI direction under consideration depends on it.
+It is also the only item in the prototype scope that is real engineering rather
+than a view.
+
+**Implemented 2026-08-18** — see [`design_v1_i1b_beat_stream.md`](design_v1_i1b_beat_stream.md).
+`play/beats.py` (typed stream) + one optional `observer` on `run_human_world`
+(transcript byte-identical for all five seeds, so no golden, no `ENGINE_VERSION`
+and no replay gate is in play). `client/bridge.py` no longer imports `re`;
+`book.js` reads fields. The shipped beat set is **six**, not seven: recognition
+is not a beat of its own — it only ever happens at a juncture, so it rides on the
+juncture beat and names the option that carries it, which is what stops the page
+marking a line no former self ever touched. Both exit tests pass: the client
+advances past its first juncture without parsing prose, and there is no
+`remember()` left to return a stub — recognition is `None` in every life-1
+juncture of every measured seed, and the page draws no mark there. The Time
+Surface (C1 strata) ships with it as `client/web/time.js`.
+
+**Prototyped 2026-08-18.** The I-1b shape was first validated against real seeds by
+`docs/mocks/v1_time/beats.py`, which taps the real call sites without touching
+the engine (transcript and beat-stream hashes verified identical). The beat set
+below is the one that survived: `rebirth | juncture | death | years | aftermath
+| recognition | closing`. The B3/B4 visual direction it fed is decided in
+[`design_v1_time_surface.md`](design_v1_time_surface.md) (C1 "strata").
+
+Two further notes for I-3, **both now closed by the I-1b implementation**: the
+years beat used to render as a single line (`… 8 years pass …`), the narrowest
+point in an otherwise closed loop — it is now the Time Surface, and the skip's
+events are its content. And the client's Hand reveal was a hard-coded string
+shown at life 1 year 0, where the engine can produce no recognition; it is
+deleted, not re-skinned, and `test_the_frontend_carries_no_world_copy_of_its_own`
+keeps it deleted.
+
 Playtests interleave: **R0 table read** (JP page cards) as soon as I-0's JP
 golden-path copy exists; **R1** on I-5's build; fix cycle; **R2** on the RC.
 

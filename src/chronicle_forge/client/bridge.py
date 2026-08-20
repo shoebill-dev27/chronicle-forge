@@ -1,78 +1,29 @@
-"""I-1 walking-skeleton bridge — the Python side of the Living Chronicle client.
+"""The Python side of the Living Chronicle client (ADR-002).
 
-ADR-002: the client renders app/engine data through a pywebview bridge and owns
-only presentation + discovery state. This module is the ``js_api`` object exposed
-to the frontend; every method returns plain JSON-serialisable dicts. It imports
-NO GUI toolkit (``webview`` is touched only by ``shell.py``), so it is unit-
-testable without a display and cannot affect the frozen engine goldens.
+This is the ``js_api`` object exposed to the frontend; every method returns
+plain JSON-serialisable dicts. It imports NO GUI toolkit (``webview`` is touched
+only by ``shell.py``), so it is unit-testable without a display and cannot
+affect the frozen engine goldens.
 
-Scope note (I-1): ``open_juncture`` extracts a *real* first juncture from the
-engine (parsing our own ``render.turn_screen`` output), proving the whole
-play -> bridge -> page path. Sealing that advances a live world, and true
-attribution for ``remember``, are the Life Loop (I-2) and Client State (D-6);
-here ``seal``/``remember`` return clearly-marked stubs — the I-1 DoD asks only
-that a hold *fires a stub reveal*.
+I-1b: the bridge no longer reads the game by parsing prose. It used to run the
+engine and regex the printed ``turn_screen`` block back into fields, which could
+recover exactly one of the loop's five beats and re-broke every time the
+renderer changed wording. It now hands the frontend the typed beat stream
+(:mod:`play.beats`) whole, so death / the years / the aftermath / the next life
+are as available to the page as the juncture is.
+
+What the client may draw is therefore bounded by what the engine produced: an
+aftermath with no hardened mark carries no mark, and a juncture with no
+recognition carries no ``recognition`` — the page has nothing to invent from.
 """
 
 from __future__ import annotations
 
-import re
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence
 
-from ..play.session import run_human_world
+from ..play import beats as beat_stream
 from ..reporting._data import place
 from ..worldgen import generate_world
-
-# `  [1] Some label   · Kind   (why now)`  — the turn_screen option grammar.
-_OPTION_RE = re.compile(r"^\s*\[(\d+)\]\s+(.*?)\s+·\s+(\S+)\s+\((.+?)\)\s*$")
-
-
-class _FirstJuncture(Exception):
-    """Raised by the capture reader to halt the world at its first ask."""
-
-
-def capture_first_juncture(seed: int, *, life_cap: int = 60) -> Dict:
-    """Run the real interactive engine only as far as its first juncture and
-    return that juncture's structured content. Deterministic in ``seed``; never
-    completes a world, so no engine golden is touched."""
-    blocks: List[str] = []
-
-    def writer(text: str) -> None:
-        blocks.append(text)
-
-    def reader() -> Optional[str]:  # called at the first human ask -> halt
-        raise _FirstJuncture
-
-    try:
-        run_human_world(seed, reader=reader, writer=writer, life_cap=life_cap)
-    except _FirstJuncture:
-        pass
-
-    # The prompt "▸ " is emitted after the juncture, so scan back for the block
-    # that actually carries option lines.
-    juncture = ""
-    for block in reversed(blocks):
-        if any(_OPTION_RE.match(line) for line in block.splitlines()):
-            juncture = block
-            break
-
-    header: List[str] = []
-    options: List[Dict] = []
-    for line in juncture.splitlines():
-        m = _OPTION_RE.match(line)
-        if m:
-            options.append(
-                {
-                    "index": int(m.group(1)),
-                    "label": m.group(2).strip(),
-                    "kind": m.group(3).strip(),
-                    "why": m.group(4).strip(),
-                }
-            )
-        elif line.strip():
-            header.append(line.strip())
-
-    return {"header": header, "options": options}
 
 
 class BookBridge:
@@ -90,40 +41,18 @@ class BookBridge:
         world = generate_world(self._seed)
         return {"empty_slot": True, "books": [], "invitation": place(world)}
 
-    def open_juncture(self, seed: Optional[int] = None) -> Dict:
-        """P-04 opening + P-06 juncture, from real engine data."""
+    def play(
+        self, seed: Optional[int] = None, choices: Optional[Sequence] = None
+    ) -> Dict:
+        """Play a whole world under ``choices`` and return its beat stream.
+
+        ``choices`` are the displayed numbers the player sealed, in order; every
+        juncture past the end of that list is entrusted to the world. Pure in
+        ``(seed, choices)`` — calling it twice returns the same stream, and
+        calling it with the empty list returns the run whose *first* juncture is
+        the one the player is about to answer (the options at a juncture are
+        drawn before the choice, so they do not depend on it).
+        """
         seed = self._seed if seed is None else int(seed)
-        world = generate_world(seed)
-        where = place(world)
-        jn = capture_first_juncture(seed)
-        options = jn["options"]
-        # Skeleton hold demo: mark the first option (D-02 permits a mark on a
-        # decision option) so the hold verb has a real target.
-        marked_index = options[0]["index"] if options else None
-        return {
-            "seed": seed,
-            "place": where,
-            "opening": f"A life opens in {where}.",
-            "header": jn["header"],
-            "options": options,
-            "marked_index": marked_index,
-            "has_juncture": bool(options),
-        }
-
-    def seal(self, index: int) -> Dict:
-        """I-1 stub. Real sealing advances a live world and appends to the recipe
-        (Life Loop I-2 / Client State D-6)."""
-        return {
-            "sealed_index": int(index),
-            "outcome": "The ink sets.  (skeleton — the outcome passage is I-2.)",
-            "stub": True,
-        }
-
-    def remember(self, ref: Optional[str] = None) -> Dict:
-        """I-1 stub reveal — the hold verb's payload. The real attribution and
-        the Hand reveal grammar are D-3 / D-6 / I-2."""
-        return {
-            "hand": "……この手は、前にもこれを選んだ。",
-            "epithet": "前世のあなた",
-            "stub": True,
-        }
+        picks: List[str] = [str(c) for c in (choices or [])]
+        return beat_stream.to_dict(beat_stream.stream(seed, picks))

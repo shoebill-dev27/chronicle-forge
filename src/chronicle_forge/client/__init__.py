@@ -5,7 +5,7 @@ imports ``webview`` lazily) to open the window, or use :class:`BookBridge`
 directly for headless/unit use.
 """
 
-from .bridge import BookBridge, capture_first_juncture
+from .bridge import BookBridge
 from .shell import launch
 
-__all__ = ["BookBridge", "capture_first_juncture", "launch"]
+__all__ = ["BookBridge", "launch"]

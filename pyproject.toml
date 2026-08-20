@@ -50,7 +50,14 @@ where = ["src"]
 
 # Ship the client's static frontend assets with the package.
 [tool.setuptools.package-data]
-"chronicle_forge.client" = ["web/*.html", "web/*.css", "web/*.js"]
+"chronicle_forge.client" = [
+    "web/*.html",
+    "web/*.css",
+    "web/*.js",
+    # Bundled OFL faces + their licences (ADR-002: all fonts bundled, no CDN).
+    "web/fonts/*.woff2",
+    "web/fonts/*.txt",
+]
 
 # Single source of truth for the version: chronicle_forge.__version__.
 [tool.setuptools.dynamic]

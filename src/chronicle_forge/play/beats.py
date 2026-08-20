@@ -1,0 +1,476 @@
+"""I-1b — the typed beat stream: the client's seam onto a played world.
+
+WHY THIS EXISTS
+    The I-1 client obtained its one juncture by regex-parsing ``play.render``'s
+    printed prose (``client/bridge.py:_OPTION_RE``). That seam could express
+    exactly one of the loop's five beats, and it broke in spirit the moment
+    X-1..X-4 rewrote the renderer underneath it. This module replaces it with a
+    typed stream of what actually happened, read off the world.
+
+WHAT IT DOES NOT DO
+    It adds no truth. Every field below is read from the world the engine already
+    built, using the same helpers ``play.render`` uses to *speak* them, so the
+    surface and the transcript can never disagree. It draws no RNG, holds no
+    clock, and mutates nothing. ``run_human_world`` takes an observer that
+    defaults to ``None``; with no observer the run is byte-identical to today's,
+    which is what keeps the goldens and ENGINE_VERSION untouched.
+
+    Deliberately absent: a spatial axis. ``CausalNode.location_id`` is ``None``
+    on 100% of nodes across seeds 1/7/42/99/123, so there is nothing to place;
+    the stream carries time and authorship, which is also the pair of axes the
+    Core Experience itself is made of.
+
+THE BEATS
+    rebirth · juncture · death · years · aftermath · closing
+
+    Recognition is not a beat of its own: it only ever occurs *at* a juncture,
+    so it rides on the juncture beat and names the option that carries it. That
+    is what stops the client marking a line no former self ever touched.
+"""
+
+from __future__ import annotations
+
+from dataclasses import asdict, dataclass, field
+from typing import ClassVar, Dict, List, Optional, Sequence, Tuple
+
+from ..reporting._data import (
+    heritage_rows,
+    life_index,
+    place,
+    seed_by_id,
+    seeds_of_life,
+)
+from ..reporting.labels import event_phrase, heritage_name
+from . import render
+from .human import null_writer, scripted_reader
+
+# --------------------------------------------------------------------------
+# value objects
+# --------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class Event:
+    """One thing the world did, and whose earlier choice it descends from."""
+
+    year: int
+    scale: str
+    phrase: str
+    owners: Tuple[int, ...]  # life ordinals whose own seeds directly caused it
+
+
+@dataclass(frozen=True)
+class Option:
+    """One offered action, exactly as ``render.turn_screen`` would print it."""
+
+    n: int  # the displayed number (1..3)
+    label: str
+    kind: str
+    why: str
+    heritage_id: Optional[str] = None  # set only for a Legacy action
+
+
+@dataclass(frozen=True)
+class Recognition:
+    """A former self met at this juncture. Present only when the engine says so."""
+
+    option: int  # which displayed option carries it — never invented
+    name: str
+    founder_life: int
+    founder_talent: str
+    planted_year: Optional[int]
+    reach: int
+
+
+@dataclass(frozen=True)
+class Mark:
+    """A seed that gained a name during the skip that just ran."""
+
+    name: str
+    founder_life: int
+    planted_year: Optional[int]
+    reach: int
+    longevity: int
+
+
+@dataclass(frozen=True)
+class Legacy:
+    name: str
+    founder_life: str
+    action: str
+    living: bool
+
+
+@dataclass(frozen=True)
+class Life:
+    ordinal: int
+    talent: str
+    birth_year: int
+    death_year: int
+
+
+# --------------------------------------------------------------------------
+# beats
+# --------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class Rebirth:
+    KIND: ClassVar[str] = "rebirth"
+    life: int
+    year: int
+    talent: str
+    era: str
+
+
+@dataclass(frozen=True)
+class Juncture:
+    KIND: ClassVar[str] = "juncture"
+    life: int
+    year: int
+    age: int
+    reason: str
+    header: str  # the framing phrase ("A crisis gathers") — engine's own words
+    era: str
+    options: Tuple[Option, ...]
+    recognition: Optional[Recognition] = None
+
+
+@dataclass(frozen=True)
+class Death:
+    KIND: ClassVar[str] = "death"
+    life: int
+    year: int
+    age: int
+    talent: str
+    title: str
+    named: Tuple[str, ...]  # marks of this life that already bear a name
+    pending: int  # things set in motion that do not yet
+    seed_years: Tuple[int, ...]
+
+
+@dataclass(frozen=True)
+class Years:
+    KIND: ClassVar[str] = "years"
+    after_life: int
+    from_year: int
+    to_year: int
+    span: int
+    world_ended: bool
+    events: Tuple[Event, ...]
+
+
+@dataclass(frozen=True)
+class Aftermath:
+    KIND: ClassVar[str] = "aftermath"
+    after_life: int
+    year: int
+    echoes: Tuple[Event, ...]
+    hardened: Tuple[Mark, ...]
+
+
+@dataclass(frozen=True)
+class Closing:
+    KIND: ClassVar[str] = "closing"
+    year: int
+    lives: int
+    ending: str
+    legacies: Tuple[Legacy, ...]
+
+
+BEAT_KINDS = ("rebirth", "juncture", "death", "years", "aftermath", "closing")
+
+
+@dataclass(frozen=True)
+class WorldBeats:
+    """One played world, as beats."""
+
+    seed: int
+    place: str
+    max_year: int
+    end_year: int
+    ending: str
+    lives: Tuple[Life, ...]
+    beats: Tuple[object, ...] = field(default=())
+
+
+def beat_dict(beat) -> Dict:
+    """One beat as plain JSON, discriminated by ``t``."""
+    out = asdict(beat)
+    out["t"] = beat.KIND
+    return out
+
+
+def to_dict(world_beats: WorldBeats) -> Dict:
+    """The whole stream as plain JSON — what the bridge hands the frontend."""
+    return {
+        "seed": world_beats.seed,
+        "place": world_beats.place,
+        "max_year": world_beats.max_year,
+        "end_year": world_beats.end_year,
+        "ending": world_beats.ending,
+        "lives": [asdict(life) for life in world_beats.lives],
+        "beats": [beat_dict(b) for b in world_beats.beats],
+    }
+
+
+# --------------------------------------------------------------------------
+# the recorder
+# --------------------------------------------------------------------------
+
+
+def _ordinal_of(world, life_id) -> Optional[int]:
+    return life_index(world).get(life_id)
+
+
+def _owners(world, node) -> Tuple[int, ...]:
+    """Life ordinals whose own seeds directly caused this event.
+
+    Direct ``caused_by`` edges only — the same rule :func:`render._echoes` uses,
+    so the surface attributes an event exactly the way the text does. Sorted
+    explicitly: the graph's ancestor sets are unordered, and an unsorted read
+    would make the stream differ between runs of the same seed.
+    """
+    out = set()
+    for edge in node.caused_by:
+        seed = seed_by_id(world, edge.from_id)
+        if seed is None or seed.planted_by_life_id is None:
+            continue
+        ordinal = _ordinal_of(world, seed.planted_by_life_id)
+        if ordinal:
+            out.add(ordinal)
+    return tuple(sorted(out))
+
+
+def _event(world, node) -> Event:
+    return Event(
+        year=node.year,
+        scale=str(node.scale).rsplit(".", 1)[-1].lower(),
+        phrase=event_phrase(node),
+        owners=_owners(world, node),
+    )
+
+
+def _planted_year(world, heritage) -> Optional[int]:
+    seed = seed_by_id(world, heritage.seed_id)
+    return seed.planted_year if seed is not None else None
+
+
+class BeatRecorder:
+    """The observer ``run_human_world`` calls. Read-only on every argument."""
+
+    def __init__(self) -> None:
+        self.beats: List[object] = []
+        self._life = 0
+        self._death_year = 0
+
+    # -- hooks (called by play.session; each mirrors one render call site) --
+
+    def on_rebirth(self, world, life) -> None:
+        self._life = _ordinal_of(world, life.id) or (self._life + 1)
+        self.beats.append(
+            Rebirth(
+                life=self._life,
+                year=life.birth_year,
+                talent=life.talent.value if life.talent else "soul",
+                era=render._era(world),
+            )
+        )
+
+    def on_juncture(self, world, life, options, reason, recognize_id) -> None:
+        top3 = render._top3(options)
+        rows = []
+        for n, option in enumerate(top3, start=1):
+            opp = option.opportunity
+            rows.append(
+                Option(
+                    n=n,
+                    label=render._display_label(world, option),
+                    kind=render._KIND_WORD.get(opp.kind, "Chance"),
+                    why=render.why_now(opp.signals),
+                    heritage_id=(
+                        opp.target_id
+                        if opp.kind.name == "LEGACY"  # the only kind that names one
+                        else None
+                    ),
+                )
+            )
+        self.beats.append(
+            Juncture(
+                life=self._life,
+                year=world.current_year,
+                age=life.age,
+                reason=reason,
+                header=render._HEADER.get(reason, "The world turns to you"),
+                era=render._era(world),
+                options=tuple(rows),
+                recognition=self._recognition(world, rows, recognize_id),
+            )
+        )
+
+    def on_death(self, world, life) -> None:
+        mine = {s.id for s in seeds_of_life(world, life.id)}
+        named = [h for h in world.heritage if h.seed_id in mine]
+        self._death_year = (
+            life.death_year if life.death_year is not None else world.current_year
+        )
+        planted = sorted(
+            {
+                seed.planted_year
+                for seed in (seed_by_id(world, sid) for sid in mine)
+                if seed is not None
+            }
+        )
+        self.beats.append(
+            Death(
+                life=self._life,
+                year=self._death_year,
+                age=render._age_at_death(life),
+                talent=life.talent.value if life.talent else "soul",
+                title=render._title(world, life),
+                named=tuple(heritage_name(h) for h in named),
+                pending=len(mine) - len(named),
+                seed_years=tuple(planted),
+            )
+        )
+
+    def on_years(self, world, skip) -> None:
+        span = skip.get("years_run", 0)
+        start = self._death_year
+        end = start + span
+        self.beats.append(
+            Years(
+                after_life=self._life,
+                from_year=start,
+                to_year=end,
+                span=span,
+                world_ended=bool(skip.get("world_ended")),
+                # The skip is where the world is loudest — measured over seeds
+                # 1/7/42/99/123, nearly every event of a skip descends from the
+                # life that just died. This list is that, and only that.
+                events=tuple(
+                    _event(world, node)
+                    for node in sorted(world.causal_nodes, key=lambda n: (n.year, n.id))
+                    if start < node.year <= end
+                ),
+            )
+        )
+
+    def on_aftermath(self, world, life, promoted_seed_ids) -> None:
+        hardened: List[Mark] = []
+        for ordinal, marks in render._hardened(world, promoted_seed_ids):
+            hardened.extend(
+                Mark(
+                    name=heritage_name(h),
+                    founder_life=ordinal,
+                    planted_year=_planted_year(world, h),
+                    reach=h.reach,
+                    longevity=h.longevity,
+                )
+                for h in marks
+            )
+        self.beats.append(
+            Aftermath(
+                after_life=self._life,
+                year=world.current_year,
+                echoes=tuple(_event(world, n) for n in render._echoes(world, life)),
+                hardened=tuple(hardened),
+            )
+        )
+
+    def on_closing(self, world) -> None:
+        self.beats.append(
+            Closing(
+                year=world.current_year,
+                lives=len(world.lives),
+                ending=world.ending_class,
+                legacies=tuple(
+                    Legacy(
+                        name=row["name"],
+                        founder_life=render._founder_ordinal(row),
+                        action=row["origin_action"],
+                        living=render._is_living(world, row),
+                    )
+                    for row in heritage_rows(world)
+                ),
+            )
+        )
+
+    # -- internals --
+
+    def _recognition(self, world, rows, recognize_id) -> Optional[Recognition]:
+        """The former self this juncture actually offers, or ``None``.
+
+        ``None`` is the common case and must stay legible as such: a client that
+        marks a line anyway is claiming a past the world does not have.
+        """
+        if recognize_id is None:
+            return None
+        her = render._heritage_by_id(world, recognize_id)
+        if her is None:
+            return None
+        seed = seed_by_id(world, her.seed_id)
+        founder = _ordinal_of(world, seed.planted_by_life_id) if seed else None
+        if founder is None:
+            return None
+        carrier = next((r.n for r in rows if r.heritage_id == recognize_id), None)
+        if carrier is None:
+            return None
+        life = next(
+            (x for x in world.lives if seed and x.id == seed.planted_by_life_id), None
+        )
+        return Recognition(
+            option=carrier,
+            name=heritage_name(her),
+            founder_life=founder,
+            founder_talent=(life.talent.value if life and life.talent else "soul"),
+            planted_year=seed.planted_year if seed else None,
+            reach=her.reach,
+        )
+
+
+# --------------------------------------------------------------------------
+# the public entry point
+# --------------------------------------------------------------------------
+
+
+def stream(
+    seed: int, choices: Sequence[object] = (), *, life_cap: int = 60
+) -> WorldBeats:
+    """Play a whole world under ``choices`` and return it as beats.
+
+    ``choices`` are displayed numbers, one per juncture, in order; once they run
+    out every remaining juncture is entrusted to the world (the EOF path), so
+    ``stream(seed)`` is the fully-entrusted run. Deterministic in
+    ``(seed, choices)``: no clock, no RNG of its own, and the transcript it
+    discards is the same one the CLI would print.
+    """
+    from .session import run_human_world  # local: session imports render, not us
+
+    recorder = BeatRecorder()
+    world = run_human_world(
+        seed,
+        reader=scripted_reader(choices),
+        writer=null_writer,
+        life_cap=life_cap,
+        observer=recorder,
+    )
+    return WorldBeats(
+        seed=seed,
+        place=place(world),
+        max_year=world.max_year,
+        end_year=world.current_year,
+        ending=world.ending_class,
+        lives=tuple(
+            Life(
+                ordinal=i,
+                talent=lf.talent.value if lf.talent else "soul",
+                birth_year=lf.birth_year,
+                death_year=(
+                    lf.death_year if lf.death_year is not None else world.current_year
+                ),
+            )
+            for i, lf in enumerate(world.lives, start=1)
+        ),
+        beats=tuple(recorder.beats),
+    )

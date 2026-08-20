@@ -26,8 +26,14 @@ def launch(seed: int = 1) -> None:
         "Chronicle Forge — The Living Chronicle",
         url=_index_html(),
         js_api=api,
-        width=1024,
-        height=720,
+        # The supported viewport. A leaf has to hold the longest in-spec page
+        # (a five-option juncture plus a reveal) at a readable size without
+        # scrolling; at the old 1024x720 that page only fitted by shrinking the
+        # type to the legibility floor. `min_size` keeps the guarantee when the
+        # window is resized.
+        width=1180,
+        height=880,
+        min_size=(940, 760),
         text_select=False,
     )
     webview.start()

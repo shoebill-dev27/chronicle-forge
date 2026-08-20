@@ -7,56 +7,83 @@
   <link rel="stylesheet" href="book.css">
 </head>
 <body>
-  <!-- I-1 walking skeleton: P-01 stub -> P-04 -> P-06, two typefaces, verbs
-       turn/flip/seal/hold, hold -> stub reveal. Frontend degrades to SAMPLE
-       data when the pywebview bridge is absent (standalone preview). -->
-  <main class="book" id="book">
+  <!-- P-01 stub -> P-04 -> P-06 -> the Time Surface -> the next juncture, two
+       typefaces, verbs turn/flip/seal/hold. Frontend degrades to SAMPLE
+       data when the pywebview bridge is absent (standalone preview). The
+       body is the "desk": the leaf (the book) sits on it; the ribbon/axis
+       toggle are evaluation instruments left on the desk, never inside the
+       leaf (UX §7 / D-4 — book furniture, not app chrome). -->
+  <main class="leaf" id="book" data-life="1">
 
-    <!-- P-01 · Shelf (stub) -->
-    <section class="page shelf" data-page="shelf" hidden>
-      <p class="eyebrow print">The shelf</p>
-      <h1 class="print">An unwritten world</h1>
-      <p class="print muted" id="shelf-invite">A book waits to be opened.</p>
-      <button class="verb primary" data-verb="turn">Open the book</button>
-    </section>
+    <!-- Running head: era/year line, real bridge data only, updated per page. -->
+    <header class="running-head print" id="running-head"></header>
 
-    <!-- P-04 · Life opening -->
-    <section class="page opening" data-page="opening" hidden>
-      <p class="eyebrow print">A life opens</p>
-      <h2 class="print place" id="opening-place">—</h2>
-      <p class="print" id="opening-line">—</p>
-      <div class="verbs">
-        <button class="verb ghost" data-verb="flip">Flip back</button>
-        <button class="verb primary" data-verb="turn">Turn the page</button>
+    <div class="text-column">
+
+      <!-- P-01 · Shelf (stub) -->
+      <section class="page shelf" data-page="shelf" hidden>
+        <p class="eyebrow print" data-str="shelfEyebrow">The shelf</p>
+        <h1 class="print" data-str="shelfTitle">An unwritten world</h1>
+        <p class="print muted" id="shelf-invite">A book waits to be opened.</p>
+        <button class="verb primary" data-verb="turn" data-str="newBook">Open the book</button>
+      </section>
+
+      <!-- P-04 · Life opening -->
+      <section class="page opening" data-page="opening" hidden>
+        <p class="eyebrow print" data-str="openingEyebrow">A life opens</p>
+        <h2 class="print place" id="opening-place">—</h2>
+        <p class="print" id="opening-line">—</p>
+        <div class="verbs">
+          <button class="verb ghost" data-verb="flip" data-str="flipBack">Flip back</button>
+          <button class="verb primary" data-verb="turn" data-str="turnPage">Turn the page</button>
+        </div>
+      </section>
+
+      <!-- P-06 · Juncture -->
+      <section class="page juncture" data-page="juncture" hidden>
+        <header class="juncture-head print" id="juncture-head">—</header>
+        <ul class="options" id="options"></ul>
+
+        <div class="outcome print" id="outcome" hidden></div>
+
+        <div class="verbs">
+          <button class="verb ghost" data-verb="flip" data-str="flipBack">Flip back</button>
+          <button class="verb primary" data-verb="seal" id="seal-btn" data-str="seal" disabled>Seal this choice</button>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- The Time Surface (B2 死 / B3 時間経過 / B4 余波・次の生). Not a leaf page:
+         the years are not something the book prints, they are the dark the book
+         is read in, so the surface covers the whole leaf rather than sitting
+         inside the measure. Everything drawn on it comes from the typed beat
+         stream — see time.js. -->
+    <section class="page-surface" id="time-surface" hidden aria-hidden="true">
+      <canvas id="surface" width="1360" height="840" aria-label="the years that passed"></canvas>
+      <p class="surface-rebirth print" id="surface-rebirth" hidden></p>
+      <div class="verbs surface-verbs">
+        <button class="verb primary" data-verb="turn" id="surface-turn" data-str="turnPage" hidden>Turn the page</button>
       </div>
     </section>
 
-    <!-- P-06 · Juncture -->
-    <section class="page juncture" data-page="juncture" hidden>
-      <header class="juncture-head print" id="juncture-head">—</header>
-      <p class="hint print muted">Some lines carry a mark. <span class="mark">⟜</span> — press and hold to remember.</p>
-      <ul class="options" id="options"></ul>
+    <!-- Folio: the page's ordinal in the entry (furniture, not world truth). -->
+    <footer class="folio print muted" id="folio"></footer>
 
-      <div class="reveal" id="reveal" hidden>
-        <p class="print reveal-print">The margin holds a mark you did not draw.</p>
-        <p class="hand" id="reveal-hand">—</p>
-        <p class="epithet hand" id="reveal-epithet">—</p>
-      </div>
-
-      <div class="outcome print" id="outcome" hidden>—</div>
-
-      <div class="verbs">
-        <button class="verb ghost" data-verb="flip">Flip back</button>
-        <button class="verb primary" data-verb="seal" id="seal-btn" disabled>Seal this choice</button>
-      </div>
-    </section>
-
-    <footer class="chrome">
-      <span class="ribbon print" id="status">weaving…</span>
-      <button class="axis-toggle print" id="axis-toggle" title="縦書き / 横書き">縦 ⇄ 横</button>
-    </footer>
+    <!-- SAMPLE mode only: a specimen stamp, so fixture content can never be
+         mistaken for a generated world (T3 B-1). Hidden whenever the bridge
+         is live. -->
+    <div class="specimen print" id="specimen" data-str="specimen" hidden>見本</div>
   </main>
 
+  <div class="desk-tools">
+    <span class="ribbon print" id="status">紡いでいる……</span>
+  </div>
+
+  <!-- strings.js first: it is the one inventory of the page's own words, and
+       both time.js and book.js read it. -->
+  <script src="strings.js"></script>
+  <script src="time.js"></script>
   <script src="book.js"></script>
 </body>
 </html>
