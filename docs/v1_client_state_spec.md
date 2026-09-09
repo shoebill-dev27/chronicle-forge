@@ -18,6 +18,20 @@ This doc does **not** cover: engine truth (frozen), the recipe/replay contract
 (inherited, see below), page layout or copy (UX spec / voice guide), or the
 standard-world shelf (D-5).
 
+> **2026-09-08 baseline ratification.** The Astra UI/UX review's change ledger is
+> **adopted** as [`design_v1_uiux_baseline.md`](design_v1_uiux_baseline.md).
+> Binding here:
+> - **UX-R8** — a **minimum** of this spec (atomic `{sealed inputs, reveal set,
+>   cursor}` + exact resume + the canonical-hash trust gate) moves *forward* into
+>   the Discovery Vertical Slice; it is no longer deferred to I-6. Read-only past
+>   is available **during play**, and navigation is separate state from commitment.
+> - **UX-R2** — inspection is an overlay state that never selects or commits.
+> - **UX-R3** — the reveal `surface` tag must also cover the C1 time surface, so
+>   audits can assert D-03/D-04 there. Checks run against the reached prefix.
+> - **UX-R6** — a confirmed reveal must carry enough to re-render the origin's
+>   **exact sealed-act wording** (C-2) after resume.
+> - **ADR-005** — P-11 map state is removed.
+
 ---
 
 ## 1. The two-canon separation (why there are two stores)
@@ -201,7 +215,7 @@ faithful witness of "which world these reveals belong to" at all times.
 ```
 reveals.add(key)      idempotent; first add is the only observable transition
 reveals.has(key)      drives render: Hand shown vs. withheld
-reveals.count()       feeds nothing canonical; UI-only (e.g. map density P-11)
+reveals.count()       feeds nothing canonical; UI-only (ADR-005 removed the map)
 ```
 
 **Invariant CS-3 (monotone).** The reveal set only grows within a book's
@@ -236,12 +250,14 @@ first-class below.
 | P-03 Front Matter | — | Re-enter front matter |
 | P-04 Life Opening | `life_ordinal` | Re-open the life's opening |
 | P-05 Life Page | `life_ordinal`, `reading_offset` | Return to the wet ink at the read position |
+| **Flipped-back (read-only past)** | `under: Cursor` (the unresolved state), `archive_offset` | **Baseline UX-R8.** Reading an earlier entry is *navigation only*: past options are inert, nothing re-executes, and reading earns no reveal (D-04). Resume restores the **underlying** unresolved cursor — `U-nowpage`「今の頁へ」 is always available and returns page + selected-not-sealed option + focus + scroll exactly |
+| Inspection open (overlay) | `under: Cursor`, `inspect_target` | **Baseline UX-R2, non-persistent.** Inspection never selects and never commits, so it is *not* written through; on resume the underlying cursor re-opens with the overlay closed |
 | **P-06 Juncture** | `life_ordinal`, `juncture_index`, `selected_option?` | **Mid-juncture:** a *selected-not-sealed* option (I-03) is restored faintly-previewed in the Hand, **unsealed**. Nothing is committed to the recipe until I-04 Seal. |
 | P-07 Outcome Passage | `life_ordinal`, `juncture_index` | Re-show the sealed outcome |
 | P-08 Death Page | `life_ordinal` | — |
 | P-09 Passage of Years | `from_life_ordinal` | Non-resumable target: on resume, snap to the P-10 that follows (P-09 is a transition, has no ribbon, UX I-08/I-09 exclusions) |
 | P-10 Rebirth Spread | `life_ordinal` (the newborn) | Re-show the delivered digest; its reveals are already in the set (added when first shown) |
-| P-11 Map Spread | `focused_mark?` | Re-open map with the same mark focused |
+| ~~P-11 Map Spread~~ | — | **Removed — ADR-005.** No map state exists in v1 |
 | P-12 Final Chronicle | — | Re-enter; the single D-06 seeded confirm is already in the reveal set |
 | P-13 Chronicle Reading | `reading_offset` | Return to reading position |
 | **P-14 Trace** | `origin_event_key`, `steps_revealed` | **Mid-trace:** the chain is re-drawn with exactly `steps_revealed` links shown (each I-07 step is one revealed link, D-05); the next "what came before?" continues from there. Each already-revealed origin card is in the reveal set. |

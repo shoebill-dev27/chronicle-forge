@@ -46,9 +46,12 @@ generation envelope.
    the North Star's "through my own reasoning" — if full removal was intended,
    that is a critical conflict and must be re-raised, not silently applied.
 4. **v1 scope is Must-only.** Cut: Threads spread (P-16), world sharing, sound
-   system, portrait plates/illustrations beyond the minimum (map + two glyphs
+   system, portrait plates/illustrations beyond the minimum (~~map +~~ two glyphs
    + typography), "remembers you" tags. Nothing returns without a green
    schedule checkpoint (2026-08-07).
+   *Amended by ADR-005 (2026-09-08):* the geographic **map** is struck from the
+   v1 illustration minimum — the engine emits no spatial axis; deferred until
+   W-1. The v1 minimum is two glyphs (⟜/❧) + typography.
 
 ## Consequences
 

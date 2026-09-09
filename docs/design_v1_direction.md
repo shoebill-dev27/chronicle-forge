@@ -7,6 +7,11 @@ Inputs reviewed: [`discovery_loop.md`](discovery_loop.md),
 **Chronicle Forge v1 Design Definition** (2026-07-17, session document; superseded by §3
 of this review). All are treated as *input*, not immutable truth.
 
+> **2026-09-08 baseline ratification.** The Astra UI/UX review's change ledger is
+> **adopted** as [`design_v1_uiux_baseline.md`](design_v1_uiux_baseline.md) and
+> is binding on this document. Applicable items: **UX-R1 / ADR-005** — the geographic Map spread is struck from the v1 Must Have set (§4), from the §7 concept, from §9 deliverable 7, and from §10 R-D; the engine emits no spatial axis. **UX-R4/UX-R5** — one temporal encoding (year = horizontal position, strata depth = historical order) and 朱 = a confirmed past-life connection.
+
+
 North Star under which every judgment below is made:
 
 > **"The player discovers, by themselves, that the history they are reading was
@@ -206,9 +211,11 @@ it maps to what the player must feel.
      with the player's marks named in it.
 - **The Living Chronicle presentation core** (§7): life pages, juncture pages, the
   death page, the rebirth spread, and the ending (the closed book).
-- **The Map spread** — an illustrated world map that visibly changes between lives.
-  Minimum bar: the player can *see* on the map at least one change their past life
-  caused.
+- ~~**The Map spread**~~ — **deferred past v1 (ADR-005).** `location_id` is
+  `None` on every causal node, so a v1 map would be invented geography. The
+  minimum bar — *the player can see at least one change their past life caused* —
+  **remains a Must** and is met by the P-10 rebirth digest plus the C1 time
+  surface.
 - **Trace-one-event investigation** — from any major event in the finished
   chronicle, the player can follow it back to the life (and choice) that seeded it.
   Minimum bar: one thread followed by hand, not a full board.
@@ -505,9 +512,8 @@ Ordered; 1–3 are the critical path, the rest may trail.
 6. **Visual style guide.** Paper, ink, palette, typography, plate style, and the
    motion language (page turns, ink drying, margin time-flicker). One page of
    references, one page of rules.
-7. **Map spread spec.** What the map shows, what may change on it between lives,
-   how a player-caused change is marked, and what the map deliberately does *not*
-   do (no navigation, no fog-of-war game — it is a plate, not a level).
+7. ~~**Map spread spec.**~~ **Not required for v1 — ADR-005.** Re-opens only if
+   W-1 adds a real spatial axis to worldgen.
 8. **Ending & artifact spec.** What the closed chronicle contains, how the
    player's marks are named in it, what "handing it to a friend" consists of, and
    the shelf/empty-slot framing of replay.

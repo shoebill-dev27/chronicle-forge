@@ -93,7 +93,12 @@ build accepting the velocity/mixed-content cost; decide at/by 7/27.*
 
 ## 4. Hold-target sizing (I-05)
 
-The hold-to-remember verb (UX §6, ~800 ms) needs an adequate target:
+**Amended 2026-09-08 (baseline UX-R2):** inspection's primary path is a
+visible, labelled, keyboard-reachable "調べる" affordance; the hold below is an
+**optional convenience gesture**, never the only way in, and no timed input is
+required. The sizing rules apply to both the affordance and the hold target.
+
+The optional hold-to-inspect gesture (UX §6, ~800 ms) needs an adequate target:
 
 - **H-1.** The hit area is the **whole marked line**, minimum height ≥ 1.5×
   line-height and **≥ 44 CSS px** in the hold axis (touch/pointer floor).
@@ -110,16 +115,21 @@ The whole game lives in one ink world (UX §7 "same ink world"):
 - **Print ink (墨):** warm near-black; even, dry color.
 - **Hand ink:** a warmer, slightly wetter sepia/brown-black — perceptibly the
   same medium, a different hand.
-- **The one accent — 朱 (vermilion).** The single system-wide accent ink,
-  reserved for **"still shaping the world" content only** (P-12 rubricated
-  highlight; UX §7 "one accent, one meaning, everywhere"). 朱 is the traditional
+- **The one accent — 朱 (vermilion).** The single system-wide accent ink.
+  **Amended 2026-09-08 (baseline UX-R5): reserved for a *confirmed connection to
+  a past life*, and nothing else** — not for "still shaping the world", which is
+  now carried by explicit text where a reached projection supports it. The P-12
+  rubricated highlight is 朱 because it *is* a pre-revealed confirmed connection
+  (D-06). UX §7 "one accent, one meaning, everywhere" is unchanged; the meaning
+  is. 朱 is the traditional
   Japanese emphasis/annotation ink (朱書き) — culturally exact for "the line that
   still matters." No other color exists in v1. *`REVIEW_REQUIRED(owner)`: confirm
   朱 as the accent (vs. a darker red) — aesthetic + must pass the §8 contrast
   check.*
 
-Rule **P-1 (color carries exactly one meaning).** 朱 = still-shaping, nowhere
-else. Marks and Hand are ink-family, never accent.
+Rule **P-1 (color carries exactly one meaning).** 朱 = **confirmed past-life
+ connection**, nowhere else (amended 2026-09-08, baseline UX-R5). Marks, Hand,
+ ordinary selection and the S-03 promise mark are ink-family, never accent.
 
 ## 6. Marks — ⟜ / ❧
 

@@ -3,6 +3,18 @@
 Status: **Prototype spike / for owner decision. 製品コードは変更していない。**
 Date: 2026-08-18 · Branch `design/v1` @ `eca81f1`
 
+> **2026-09-08 baseline ratification.** The Astra UI/UX review's change ledger is
+> **adopted** as [`design_v1_uiux_baseline.md`](design_v1_uiux_baseline.md) and is
+> binding on the C1 renderer. Two items apply here:
+> **UX-R4** — one temporal encoding: *year = horizontal position, strata depth =
+> historical order*; thickness-as-event-count is a drawing detail, never a claim
+> about elapsed time (see §10).
+> **UX-R3** — D-03/D-04 bind this surface too: the caption may **not** name or
+> move the camera toward an older life's founder before that connection is
+> confirmed. The `sealed` register (朱 + push toward the player's *own* just-sealed
+> mark) is current-life and stays; the `echo` register counts events without
+> naming a founder.
+
 前提: [`review_x1_x4_first_loop.md`](review_x1_x4_first_loop.md) §6 のハイブリッド案
 （A「本を拡張」＋B「連続する時間面」）のうち、**B の未検証部分だけ**を実データで試作した。
 美術方向（夜の書見・単一光源・朱）は [`design_v1_art_direction.md`](design_v1_art_direction.md)
@@ -300,6 +312,13 @@ against this document:
   wall. Thickness is now a fixed px-per-event, so a first life is a thin sediment
   line under an empty dark sky and the strata fill the frame only by the last
   life. This was a legibility fix, but it is also more honest.
+  **Amended 2026-09-08 (baseline UX-R4):** a px-per-event thickness is *not* a
+  measure of elapsed years, and this document's earlier "カメラは8年の中にいる"
+  framing must not be read as one. The ratified encoding is: **year = horizontal
+  position** (actual duration, stable per-view scale, viewport moved deliberately
+  rather than rescaled after a choice); **strata depth = historical order**
+  (ordinal layering), never a quantitative year count. Event density is neither
+  age nor importance, and a shared cause is never drawn as exclusive ownership.
 * **The seal fan needed radii, not a constant.** Marks that share a planted year
   were spaced by a fixed 34 px; at the climax's 3.6× magnification two legacies
   merged into one blob. Spacing is now `slot × radius × 3.4`.

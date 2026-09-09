@@ -7,6 +7,13 @@ table*). Opus draft; owner review required on the marked points. This is the
 (tutorial and standard-world lenses) conforms to it, and the JP audit lane
 (DoD-7) enforces it.
 
+> **2026-09-08 baseline ratification.** The Astra UI/UX review's change ledger is
+> **adopted** as [`design_v1_uiux_baseline.md`](design_v1_uiux_baseline.md).
+> Binding here: **UX-R9** adds an explicit A-1 exemption for non-diegetic UI
+> control labels (§4); **UX-R2** gives inspection a visible label `U-investigate`
+> = 調べる (§8); **UX-R7** makes the P-10 digest one emphasized line with up to two
+> more on request (§5 budget unchanged, ≤3 lines); **UX-R10** confirms ⟜/❧ only.
+
 Authority: subordinate to `design_v1_definition.md` (North Star, 11 principles),
 `design_v1_direction.md` (the historian as a specified character),
 `v1_ux_spec.md` §5/§7 (discovery rules, the two voices), and **ADR-003**
@@ -88,6 +95,13 @@ shipped JP string; **zero waivers** (DoD-7).
 - **A-1 (Second-person / 呼びかけ audit).** Flag any あなた／君／汝／お前 or
   imperative 呼びかけ appearing on a **non-Confirm** surface. Replaces the
   English "you/your" grep. (Enforces V-4 / D-01.)
+  **A-1 exemption (2026-09-08, baseline UX-R9) — non-diegetic UI control labels.**
+  The §8 UI-string inventory (記す／封じる, 調べる, その前には？, 続きから, 本を
+  閉じる…) is **exempt** from A-1: these name an operation the player performs,
+  they are not the historian addressing the reader. Diegetic prose — every page
+  body, digest line, reveal line, aside — is **not** exempt. This is a rule, not a
+  waiver, so DoD-7's "zero waivers" is unaffected. Anything outside the §8
+  inventory that reads as an imperative still fails.
 - **A-2 (Character budgets).** Every string ≤ its surface budget (§5). Counted in
   全角 characters; 半角 digits/Latin count as ½. Over-budget = fail (a page that
   needs more becomes two pages — UX §7).
@@ -190,13 +204,20 @@ is `REVIEW_REQUIRED(owner)` for final wording; the English gloss fixes meaning.
 | U-newbook | P-01 | (empty slot) | 新しい世界 |
 | U-resume | P-01 | (wet-ink tab) | 続きから |
 | U-seal | P-06 | Seal | 記す / 封じる |
-| U-remember | P-06/05 | (hold-to-remember affordance) | *(no label — physical hold; tooltip only)* |
+| U-investigate | P-05/06/13 + any historical consequence | Investigate (the visible inspect affordance — **primary** path, keyboard-reachable) | 調べる |
+| ~~U-remember~~ | — | ~~(hold-to-remember affordance)~~ | **Superseded 2026-09-08 (UX-R2)** by `U-investigate`; the ~800 ms hold survives as an unlabelled optional gesture on the same target |
+| U-nowpage | P-05/06/13 (while flipped back) | Back to the wet ink | 今の頁へ |
+| U-reread | P-12 | Read the history again | 歴史を読み返す |
+| U-shelf | P-12/15 | To the shelf | 本棚へ |
 | U-follow | P-12/13 | Follow this thread | この糸をたどる |
 | U-before | P-14 | What came before? | その前には？ |
 
 Rules: the **glyph key is the only place a mark's meaning is written** (D-02); it
-lives in S-01 help, one line each, ⟜/❧ only. `U-remember` has **no visible label**
-(the hold is physical; UX §6) — a tooltip at most.
+lives in S-01 help, one line each, ⟜/❧ only. **Amended 2026-09-08 (baseline
+UX-R2):** inspection now has a visible, keyboard-reachable label (`U-investigate`
+= 調べる). Teaching the *operation* is required; it reveals no answer. The hold
+remains available as an optional convenience on the same target and carries no
+label of its own.
 
 ## 9. Tone exemplars (one per surface)
 

@@ -1,6 +1,31 @@
 # Chronicle Forge v1 — UX Specification ("The Living Chronicle")
 
 Status: **Specification / for review. No implementation.**
+
+> **2026-09-06 review note:** This is the historical specification, not an
+> as-built inventory. ADR-001 removed the ◦ memory glyph (struck below);
+> ADR-003 establishes Japanese-first and ADR-004 the horizontal baseline.
+> The owner-requested [UI/UX direction review](design_v1_uiux_review.md) records
+> current evidence, specification conflicts, and proposed revisions in its
+> change ledger.
+
+> **2026-09-08 baseline ratification.** The review's change ledger is **adopted**
+> as [`design_v1_uiux_baseline.md`](design_v1_uiux_baseline.md) (all ten items;
+> UX-R1/UX-R5 with modification). Binding on this spec, applied inline below:
+> - **UX-R1 / ADR-005:** the geographic Map (P-10 right page, P-11) is deferred
+>   past v1. The rebirth spread is the digest (left page) alone.
+> - **UX-R3:** D-03/D-04 apply to **every** surface — entry, C1 time surface,
+>   digest, history, trace, resume — not only the pages they name.
+> - **UX-R2:** inspect / select / commit are three separate actions (I-03/I-04
+>   below); inspection has a visible, keyboard-reachable affordance, the hold is
+>   an optional convenience.
+> - **UX-R4:** one temporal encoding — **year = horizontal position; strata
+>   depth = historical order** (not an event count standing in for years).
+> - **UX-R5:** **朱 = a confirmed connection to a past life**, and nothing else;
+>   ⟜/❧ stay trace-*kind* labels, never state.
+> - **UX-R10:** the ◦ memory mark and "remembers you" content are removed;
+>   glyph set is ⟜/❧ (ADR-001).
+
 Authority: implements [`design_v1_direction.md`](design_v1_direction.md) (adopted) —
 in particular Principle 10 (*the interface is the artifact*), Principle 11 (*one
 page, one focus*), and the North Star:
@@ -53,7 +78,7 @@ Conventions used in this document:
         │          P-09 PASSAGE OF YEARS (the book writes alone)                  │
         │               │ turn                                                    │
         │               ▼                                                         │
-        │          P-10 REBIRTH SPREAD ("the world you return to" + map)          │
+        │          P-10 REBIRTH SPREAD ("the world you return to" digest)         │
         └── next life ──┘                                                         │
                         │ the world's span ends (instead of another rebirth)      │
                         ▼                                                         │
@@ -66,8 +91,8 @@ Conventions used in this document:
                    P-15 CLOSING (the book goes to the shelf) ─────────────────────┘
 ```
 
-- **P-11 MAP SPREAD** is reachable as a plate from P-05/P-06/P-10/P-12/P-13 (see
-  §3) and returns to where it was opened from.
+- ~~**P-11 MAP SPREAD**~~ — **deferred past v1 (ADR-005).** No map surface exists
+  in v1; nothing links to one.
 - **S-01 RIBBON MENU** (pause/settings/quit) is reachable from every page except
   P-02 and P-09 (which are short, non-interactive transitions).
 - The loop P-04 → P-10 repeats once per life. A world contains a bounded number of
@@ -88,8 +113,8 @@ Conventions used in this document:
 | P-07 | Outcome Passage | The act, written | MUST | The chosen act enters the entry; plant cue may fire |
 | P-08 | Death Page | The entry ends | MUST | Death as punctuation; the ink dries on-screen |
 | P-09 | Passage of Years | Margins flicker with years | MUST | Felt time; the book writes without you |
-| P-10 | Rebirth Spread | A double spread | MUST | Left: "the world you return to" digest. Right: the map, redrawn |
-| P-11 | Map Spread | A tipped-in plate | MUST | The illustrated world; player-caused changes marked |
+| P-10 | Rebirth Spread | A single page | MUST | "The world you return to": changed present, then ≤3 attributed last-life lines (ADR-005 removed the map right page) |
+| ~~P-11~~ | ~~Map Spread~~ | — | **DEFERRED (ADR-005)** | No map ships in v1; the engine has no spatial axis |
 | P-12 | Final Chronicle | The completed book's last spread | MUST | The world ends; the chronicle becomes an artifact |
 | P-13 | Chronicle Reading | Free browsing of the finished book | MUST | Read any era/life/event of the finished world |
 | P-14 | Trace | A ribbon down the page | MUST | Follow one event backward to the life that seeded it |
@@ -129,14 +154,14 @@ sealing. This is the physical form of "few inputs, heavy inputs."
 | P-03 | turn ×N or "skip to your first life" tab | P-04 | Front matter is skimmable theater, never required reading (max 3 spreads) |
 | P-04 | turn | P-05 | — |
 | P-05 | the world provides a fateful moment | P-06 | The page turn to P-06 is automatic and marked (see §7 motion) |
-| P-05 / P-06 | map tab | P-11 | Returns to origin on close; available from the first rebirth onward (§8) |
+| ~~P-05 / P-06~~ | ~~map tab~~ | ~~P-11~~ | **Removed — ADR-005** |
 | P-06 | seal a choice (I-04) | P-07 | Sealing is the only way off P-06 forward; flipping back remains allowed |
 | P-06 | hold a marked line (I-05) | S-02 on P-06 | In-place; no navigation |
 | P-07 | turn | P-05 (more of this life) or P-08 (life ends) | The world provides which |
 | P-08 | turn | P-09 | — |
 | P-09 | auto-advance (≈6–10 s) or input to skip | P-10 | Not interactive; skippable after first world |
 | P-10 | turn | P-04 (next life) or P-12 (span ended) | The world provides which |
-| P-10 | touch a digest line's map mark | P-11 (that mark focused) | Digest and map are two halves of one reveal |
+| ~~P-10~~ | ~~touch a digest line's map mark~~ | ~~P-11~~ | **Removed — ADR-005.** The digest line itself carries the inspect affordance |
 | P-12 | "read the chronicle" | P-13 | — |
 | P-12 / P-13 | "follow this thread" on a traceable event (I-06) | P-14 | Entry points are marked events only |
 | P-14 | trace steps back / ribbon breadcrumb forward | P-14 (chain) | Ends at a life-page excerpt; "return" goes back to P-12/P-13 |
@@ -151,7 +176,13 @@ sealing. This is the physical form of "few inputs, heavy inputs."
   written *in this book*, including previous lives, front matter, and past rebirth
   spreads. Marks and any *already-revealed* Hands remain visible; **unrevealed
   attribution stays unrevealed** (flip-back never spoils, see D-04).
-- A persistent "return to the wet ink" tab is always visible while flipped back.
+- A persistent "return to the wet ink" tab (**「今の頁へ」**) is always visible
+  while flipped back. It restores the exact unresolved state left: page,
+  selected-not-sealed option, focus, and scroll position.
+- **Navigation and commitment are separate state (baseline UX-R8).** Past options
+  are readable but **inert** — rereading an old juncture cannot re-select or
+  re-seal it. Reading never earns a reveal (D-04). This read-only past is
+  available during play, not only after the world ends.
 
 ---
 
@@ -231,27 +262,32 @@ For each page: **Show** (printed for free) / **Hide** (never shown here) /
 - **Inferable:** roughly how long the skip was (density of year ticks).
 
 ### P-10 Rebirth Spread — *the delivered reveal*
-- **Show (left page):** heading *"The world you return to."* Then **at most 3
-  lines**, each one change that occurred during the skip **because of the
-  immediately previous life**, each explicitly attributed: *"The vault you
-  unsealed is now a shrine city."* Each line carries its mark glyph. Below, one
-  unattributed line of wider world news for contrast.
-- **Show (right page):** the Map plate, redrawn, with the ≤3 attributed changes
-  marked; touching a line focuses its map mark.
+- **Show:** heading *"The world you return to."* First the changed present in
+  wider world news; **then** the last-life feedback: **one** `(sealed act →
+  consequence)` line given default emphasis, up to two further truthful lines
+  available on request, **max 3 total**, each caused **by the immediately
+  previous life**, each explicitly attributed: *"The vault you unsealed is now a
+  shrine city."* Each line carries its mark glyph and quotes the act in the exact
+  wording the player sealed it under (baseline UX-R6/C-2). This is delivered
+  feedback that teaches persistence — **not** the earned-recognition climax
+  (baseline UX-R7).
+- ~~**Show (right page):** the Map plate~~ — **deferred, ADR-005.** The rebirth
+  spread is the digest alone; there is no right page in v1.
 - **Hide:** changes caused by lives *older* than the previous one (those must be
-  discovered, D-03); full change logs; anything numeric.
-- **Inferable:** that older, unmentioned marks may also be out there — the map may
-  show unexplained older marks *without* attribution lines.
+  discovered, D-03); full change logs; anything numeric; any founder identity
+  older than the previous life.
+- **Inferable:** that older, unmentioned marks may also be out there.
+- **Quiet/terminal cases:** a life with no juncture, or a skip with an empty echo
+  list, still gets its own dated entry and temporal place — never a fabricated
+  decision or an enlarged non-event. The final aftermath has no rebirth to turn
+  to and so P-10 is never reached empty.
 
-### P-11 Map Spread
-- **Show:** the illustrated world; place names; marks at player-caused changes
-  that have been *revealed so far* (via P-10 digests or S-02/P-14 discoveries);
-  faded unlabeled marks for revealed-but-old changes. New ink visibly overlays
-  older ink (palimpsest).
-- **Hide:** unrevealed attributions; routes, distances, resources, anything
-  navigational. The map is a plate, not a level (direction doc, deliverable 7).
-- **Inferable:** the geography of "my fingerprint" accumulating over the world's
-  life — the map is the loop's scoreboard without a single number.
+### ~~P-11 Map Spread~~ — deferred past v1 (ADR-005)
+
+The engine emits no spatial axis (`location_id` is `None` on every causal node),
+so a v1 map would be invented geography. The Map spread returns to scope only if
+W-1 adds a real spatial axis to worldgen. Nothing in v1 renders a map, a place
+coordinate, or a geographic mark.
 
 ### P-12 Final Chronicle
 - **Show:** the closing spread: the world's name and span; a ≤6-line closing
@@ -276,9 +312,21 @@ For each page: **Show** (printed for free) / **Hide** (never shown here) /
 - **Show:** the chosen event as a card at top; each backward step revealed **one
   player input at a time**: consequence → precursor → … → origin, rendered as a
   ribbon down the page; the chain's final card is a **life-page excerpt**: the
-  life ordinal, the year, and the sealed act in the Hand. If the origin life died
-  before the traced event occurred, the chain's last-but-one card is stamped:
-  *"You were not alive to see this."*
+  life ordinal, the year, and the sealed act in the Hand, **quoted in the exact
+  wording the player sealed it under** (baseline UX-R6/C-2). If the origin life
+  died before the traced event occurred, the chain's last-but-one card is
+  stamped: *"You were not alive to see this."*
+- **Every drawn link is a real causal edge (baseline UX-R6/C-3).** The chain is
+  an ordered walk of edges that exist in the graph. An ancestor *count* is never
+  drawn as a path; where repeated events are grouped into one readable passage,
+  the grouping is expandable to the real intermediate evidence and an ellipsis is
+  never drawn as a direct edge.
+- **Multiple contributors are never shown as one.** The earliest player seed in
+  an event's ancestry is **one contributing origin**, not proof that one life
+  alone caused it; where other causes contributed, the card says so.
+- **An autonomous origin is traced honestly but labelled as such.** A life's
+  self-taken action is narrated as history, never as "the choice you made"
+  (baseline UX-R6/C-6), and it does not satisfy Success Criterion 2.
 - **Hide:** the chain's length and destination in advance; sibling branches (v1
   traces a single thread; branching is P-16/SHOULD).
 - **Inferable:** at every step, the player is invited to guess the next link
@@ -309,13 +357,15 @@ attribution in the game is in exactly one tier at any moment.
 
 ### The mark system (the Hint vocabulary)
 
-Three glyphs, one per trace kind. Hand-drawn (not typeset), always marginal:
+Two glyphs, one per trace kind. Hand-drawn (not typeset), always marginal.
+(The ◦ memory mark is removed for v1 — ADR-001 §3, ratified in the 2026-09-08
+baseline; a memory mark may return post-v1 if the engine grows persisted lineage
+memory.)
 
 | Mark | Name | Attached to | Meaning (never printed; learned) |
 |---|---|---|---|
 | ⟜ | Echo mark | content descended from a past act that planted a consequence | "something done echoes here" |
 | ❧ | Legacy mark | content descended from a named, lasting institution/heritage | "something built still stands here" |
-| ◦ | Memory mark | people/lineages that remember the soul | "someone here has not forgotten" |
 
 Rules:
 
@@ -326,7 +376,8 @@ Rules:
 - **D-02 (Hint = mark, nothing more).** A mark appears beside content only if it
   is descended from one of *this soul's previous lives* in *this world*, and
   only at **decision and trace surfaces** — P-06 options, P-10 digest lines,
-  P-11 map, and traceable events on P-12/P-13. Running prose (P-03, P-05) is
+  and traceable events on P-12/P-13. (The P-11 map is deferred — ADR-005.)
+  Running prose (P-03, P-05) is
   never marked, even when descended — passing mentions are the withhold tier's
   raw material (amendment Δ1, see `v1_tutorial_world_proof.md` §2.4). Marks are
   never attached to current-life content (no self-marking), never explained in
@@ -338,10 +389,18 @@ Rules:
   deeper history — anything two or more lives old — can *only* reach Confirm via a
   player act (I-05 hold-to-remember or I-06/P-14 tracing). This is the line
   between "the game teaches the loop" and "the player lives the loop."
+  *(Baseline UX-R3: this applies on **every** surface that can name or depict an
+  origin — the C1 time surface caption, the entry, history, the trace, and any
+  resumed state — not only the P-10 digest. Before a connection is confirmed, no
+  older-life founder identity may surface through text, accessible label,
+  geometry, colour, camera move, or focus behaviour.)*
 - **D-04 (No passive confirms; no retroactive spoilers).** Reading (P-05
   flip-back, P-13) never auto-reveals. Reveals are permanent once earned (a
   remembered Hand stays visible everywhere that content appears), but flipping
   back before earning shows only marks.
+  *(Baseline UX-R3: "reading" here includes the C1 time surface and every
+  history/archive view. Checks run against the **actual reached prefix**, never a
+  full replay that already knows the outcome.)*
 - **D-05 (Confirm is staged, and the player goes first).** Every Confirm surface
   is ordered *withhold → hint → confirm*: the content is first shown as plain
   print (beat), its mark is present (hint), and the reveal fires only on the
@@ -366,7 +425,7 @@ Rules:
 | Moment | Tier | Surface |
 |---|---|---|
 | Act plants something durable | *Promise* (not attribution) | S-03 plant cue: mark drawn + "This will echo." |
-| Time-skip completes | **Confirm (delivered, last life only)** | P-10 digest, ≤3 lines + map marks |
+| Time-skip completes | **Confirm (delivered, last life only)** | P-10 digest, one emphasized line, ≤3 total (ADR-005: no map marks) |
 | Marked content encountered in a later life | **Hint** | Margin mark only (D-02) |
 | Player holds a marked line | **Confirm (earned)** | S-02 reveal grammar |
 | Player traces an event (post-world) | **Confirm (earned, stepwise)** | P-14 ribbon, origin card last |
@@ -382,13 +441,14 @@ Full input verb set. v1 posture: pointer-first with complete keyboard parity
 | ID | Verb | Pointer | Keyboard | Where | Notes |
 |---|---|---|---|---|---|
 | I-01 | Turn page (forward) | click right page edge | Space / → / Enter | everywhere the spine allows | The default "continue"; also skips P-02, shortens P-09 |
-| I-02 | Flip back / return | click left page edge; "wet ink" tab | ← ; Tab returns | P-05/06/07, P-13 | Read-only (§3.3) |
-| I-03 | Select option | click option | 1–5 / ↑↓ | P-06 | Selection previews the act *written faintly* in the Hand (not sealed) |
-| I-04 | **Seal** | click the seal on the selected option | Enter (held selection) | P-06 | The commit. Two-step always; sealing animates ink setting; irreversible |
-| I-05 | **Hold to remember** | press-and-hold a marked line (~800 ms) | hold R on focused line | P-05/P-06/P-13 | The discovery verb. Releasing early cancels without reveal (hypothesis stays the player's) |
+| I-02 | Flip back / return | click left page edge; "wet ink" tab | ← ; Tab returns | P-05/06/07, P-13 | Read-only (§3.3). Navigation only — never commits and never re-executes a past choice |
+| I-03 | Select option | click option | 1–5 / ↑↓ | P-06 | Selection previews the act *written faintly* in the Hand. Commits nothing; does **not** open inspection |
+| I-04 | **Seal (commit)** | click the seal on the selected option | Enter (held selection) | P-06 | The commit. Two-step always; sealing animates ink setting; irreversible. A single key event never both turns a page and seals |
+| I-05a | **Inspect** | click the "調べる" affordance on a marked line | Enter/Space on the focused affordance | P-05/P-06/P-13, and any surface showing a historical consequence | The discovery action, taught explicitly. Opens evidence; never selects, never commits. Keyboard-and-pointer equal |
+| I-05b | Hold to inspect (optional) | press-and-hold a marked line (~800 ms) | hold R on focused line | same as I-05a | A convenience gesture for I-05a only. Releasing early cancels with no effect; a hold can never consume a select/seal click; no timed input is ever required |
 | I-06 | Follow the thread | click a thread-end glyph | T on focused event | P-12/P-13 (→P-14) | Entry to tracing |
 | I-07 | Step the trace | click "what came before?" | Space / → | P-14 | One link per input (D-05) |
-| I-08 | Open map | click map tab | M | P-05/06/10/12/13 | Tab exists from first rebirth onward (§8) |
+| ~~I-08~~ | ~~Open map~~ | — | — | — | **Deferred past v1 — ADR-005.** No map surface ships in v1 |
 | I-09 | Ribbon menu | click ribbon | Esc | all except P-02/P-09 | Settings, glyph key, "close the book" (save-safe exit), quit |
 | I-10 | Choose from shelf | click spine/slot | ↑↓ + Enter | P-01 | — |
 
@@ -396,14 +456,25 @@ Interaction principles:
 
 - **No free text. No drag. No timers.** Nothing in v1 is dexterity- or
   speed-gated; a juncture waits forever. (Few inputs, heavy inputs.)
-- **The discovery verb is physically different from the continue verb.** Turning
-  is a tap; remembering is a *hold* — deliberate, cancellable, slightly effortful.
+- **The discovery verb is distinct from the continue verb**, but it is not a
+  secret. Turning is a tap; inspecting is a **visible, labelled, keyboard-
+  reachable action** ("調べる"), with the ~800 ms hold retained only as an
+  optional convenience gesture (baseline UX-R2). A hidden gesture is not a
+  historical mystery; teaching the operation does not reveal the answer.
+- **Accessibility is a baseline requirement, from the first world (baseline
+  UX-R9) — not an I-7 polish pass.** Reduced motion with a readable *static*
+  equivalent for every transition (including P-09/the time surface); text
+  scaling that reflows or scrolls the reading region rather than shrinking it
+  back into a fixed paper rectangle; full keyboard parity for every verb; a skip
+  that settles the transition before a separate continuation input; no
+  confirmation that disappears on a timer. Save/load failures state the problem
+  and the next action plainly.
   The player should feel themselves *choosing to know*.
 - **Sealing is ceremonial.** Select-then-seal exists so that no heavy choice is
   one accidental click, and so commitment has a physical beat (ink sets, page
   readies to turn).
 - **Everything is reachable in ≤2 inputs from the current page:** continue (1),
-  map (1), menu (1), back (1), remember (hold on visible line).
+  menu (1), back (1), inspect (visible affordance; optional hold). No map key (ADR-005).
 
 ---
 
@@ -426,23 +497,31 @@ exact faces, sizes, and palette; this section defines *what each element is for*
   P-09 flicker all live in margins. Body text never exceeds ~55 characters per
   line; a page that needs more text becomes two pages.
 - **Plates (illustrations).** Tipped-in, framed, captioned in print. Roles: front
-  matter era plates (world temperament), the Map (P-11), portrait plates
+  matter era plates (world temperament), ~~the Map (P-11)~~ (deferred, ADR-005), portrait plates
   (SHOULD). Plates never contain UI. Scarcity is intentional: ≤1 plate per
   spread.
-- **Icons.** Exactly the three marks (§5) plus three affordances (map tab, ribbon,
+- **Icons.** Exactly the two marks ⟜/❧ (§5) plus the affordances (ribbon,
   thread-end glyph). Marks are hand-drawn strokes, not chrome; affordances are
   physical book objects (a tab, a ribbon, a loose thread). **No other icons exist
   in v1.** Any proposed fourth glyph must displace one of these six.
-- **The Map.** An illustrated plate in the same ink world as the book. Its roles:
-  (1) the rebirth jolt made visible — new ink over old, changes marked; (2) the
-  accumulating fingerprint — revealed marks persist across the world's whole
-  span; (3) *never* navigation. Map marks are the same three glyphs, placed
-  geographically.
+- ~~**The Map.**~~ **Deferred past v1 — ADR-005.** The engine emits no spatial
+  axis, so v1 renders no map, no place coordinate, and no geographic mark. The
+  rebirth jolt is carried by the P-10 digest and the C1 time surface instead.
 - **The Chronicle (text of history).** Era headers (print, small caps, year
   range), event passages (print), life entries (the Hand, signed with ordinals).
   The highlighted line on P-12 uses the one emphasis treatment the book allows
-  (e.g., rubrication — a single accent ink reserved system-wide for "still
-  shaping the world" content). One accent, one meaning, everywhere.
+  (rubrication — see the 朱 rule below). One accent, one meaning, everywhere.
+- **The 朱 rule (baseline UX-R5, amends D-4).** 朱 — the single accent ink —
+  means **a confirmed connection to a past life**, and nothing else. It is used
+  consistently in prose, marks, and diagrams, and it persists once earned.
+  Ordinary selection and the S-03 promise mark stay in ink, never 朱. The
+  ⟜/❧ glyphs remain trace-*kind* labels; they never encode the
+  unconfirmed→confirmed transition — state is carried by an added line or a
+  revealed annotation, and screen-reader text and focus styling carry the same
+  meaning as the visible glyph. "Still shaping the world" survives as a
+  **concept** (D-06 needs it) but is expressed as a small explicit text
+  annotation, only where a current/reached projection supports it; a mark merely
+  gaining a name (`hardened`) does not confer it.
 - **Motion (ink is the animation language).** Page turns (short, physical); ink
   drying on P-08 (the one slow moment, ~3 s, unskippable in the first world);
   margin year-flicker on P-09; the Hand *blooming* under print on S-02 reveals
@@ -469,7 +548,7 @@ Timeline (targets, not hard gates — the player controls all pacing):
 | 3:00–10:00 | P-04→P-07 (Life 1: 2 junctures) | **Juncture 1** teaches select/seal: 3 options, all safe, no marks anywhere (nothing to discover yet — the world is clean). **Juncture 2 is the guaranteed plant**: every option on the page plants something durable (the guarantee is *option-set curation*, not forced choice), so S-03 fires regardless of what is sealed: the mark is drawn, *"This will echo."* (✎ aside #2, printed small under the cue): *"Marks in the margin are the chronicle's memory."* |
 | 10:00–11:00 | P-08 | First death. Ink-dry moment plays full length (unskippable, first world only). |
 | 11:00–12:00 | P-09 | First skip: ~8 s, margins flicker through decades. Unskippable in the first world (time must be *felt* once — Principle 5); skippable ever after. |
-| 12:00–13:00 | P-10 | **The delivered jolt (SC-3 seeded here):** digest line 1 attributes the Juncture-2 plant: *"The ⟨act⟩ of your last life has become ⟨changed thing⟩."* Right page: the map appears **for the first time** (I-08 tab exists from this moment), the change marked. Death has just paid out; loss reframed as sowing. |
+| 12:00–13:00 | P-10 | **The delivered jolt (SC-3 seeded here):** digest line 1 attributes the Juncture-2 plant: *"The ⟨act⟩ of your last life has become ⟨changed thing⟩."* Death has just paid out; loss reframed as sowing. (ADR-005: no map.) |
 | 13:00–25:00 | P-04→P-07 (Life 2: 2–3 junctures) | **The earned recognition (SC-1).** Staging: (a) mid-life, a P-05 passage mentions — in plain print, unmarked — a name/place descended from Life 1's *other* durable consequence (the one the digest did **not** cover; the curated scenario guarantees a second, undelivered plant from Juncture 2's option set). The player reads past it: withhold. (b) At the next juncture, one option carries that same name **with its mark** — the first mark the player has ever seen *on a choice*. Hint. (c) The first time the pointer rests on a marked option in the first world, the mark alone gives a single slow pulse (once, never again in any world). (d) If the player holds: **S-02 fires — the earned "that was me."** The reveal grammar (§5 D-05) names Life 1 and the sealed act. This is the game's peak moment and nothing interrupts it. (e) **Fallback for SC-1:** if the player seals a marked option *without* ever holding (any marked option, this life or later), the outcome passage on P-07 stages a delayed reveal: the act is written, then the Hand blooms beside it — *"…as your first life once intended."* Recognition is guaranteed by the end of Life 2 by one of the two paths. |
 | 25:00–30:00 | P-08→P-12 | The staged world's span is short (3 lives max; Life 3 exists only if pacing is fast, providing free play with the now-learned verbs). P-12: one highlighted still-shaping line (D-06). The invitation *"Follow this thread"* pulses once (the second and last UI pulse in the game). One trace (P-14, 3–4 links) reaches a Life-1 or Life-2 origin card — **SC-2 rehearsed**. P-15 closes: *"A different world could hold a different you."* The shelf now shows one spine and one empty slot. |
 
@@ -524,7 +603,7 @@ glyphs as in §5. All pages share the book frame (spread, gutter, margins).
 │                               │   [ Open the old granary  ]  │
 │                               │ ❧ [ Invoke the Vault Pact ]  │
 │                               │   [ Lead the towns south  ]  │
-│  (map tab)▐                   │                              │
+│                               │                              │
 │           ▐M                  │        — seal your choice —  │
 └───────────────────────────────┴──────────────────────────────┘
    ❧ = legacy mark in margin; hold it to remember (I-05)
@@ -578,19 +657,20 @@ glyphs as in §5. All pages share the book frame (spread, gutter, margins).
 ### P-10 Rebirth Spread
 ```
 ┌───────────────────────────────┬──────────────────────────────┐
-│  ≈ The world you return to    │        THE MAP, REDRAWN      │
-│                               │      ~new ink over old~      │
-│ ⟜ ≈ The vault your last life  │           ⟜◉ shrine city     │
-│     unsealed is now a         │      ▲▲                      │
-│     shrine city.              │     ▲    river towns         │
-│ ◦ ≈ The miller's line still   │            ◦∙ mill           │
-│     tells of you.             │    (older, unexplained       │
-│  ≈ In the north, a war        │     faded mark)  ⟜?          │
-│     nobody remembers          │                              │
-│     starting.                 │                              │
-│                        (turn)▷│                              │
-└───────────────────────────────┴──────────────────────────────┘
-   digest lines ≤3, last-life only (D-03); touching a line focuses its mark
+│  ≈ The world you return to                                   │
+│                                                              │
+│  ≈ In the north, a war nobody remembers starting.            │
+│    (the changed present, unattributed, comes first)          │
+│                                                              │
+│ ⟜ ≈ "Open the hill's undercroft" — the vault you unsealed    │
+│     is now a shrine city.                    [調べる]        │
+│     (the one emphasized line; the act quoted as sealed)      │
+│                                                              │
+│   ▸ two more truthful lines available on request (≤3 total)  │
+│                                                       (turn)▷│
+└──────────────────────────────────────────────────────────────┘
+   digest ≤3 lines, last-life only (D-03); one emphasized by default
+   (UX-R7); no map (ADR-005); no founder older than the last life
 ```
 
 ### P-12 Final Chronicle
@@ -631,7 +711,7 @@ glyphs as in §5. All pages share the book frame (spread, gutter, margins).
 │      ▼ ribbon                                                │
 │   ┌─────────────────────────┐   (page dimmed, still visible) │
 │   │  Close the book (save)  │                                │
-│   │  The glyph key   ⟜ ❧ ◦  │                                │
+│   │  The glyph key    ⟜ ❧   │                                │
 │   │  Settings               │                                │
 │   │  Leave the library      │                                │
 │   └─────────────────────────┘                                │

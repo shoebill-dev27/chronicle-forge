@@ -1,5 +1,16 @@
 # Chronicle Forge v1 — Definition of Done & Implementation Roadmap
 
+> **2026-09-06 UI/UX review · 2026-09-08 baseline ratified.** Every date in this
+> document is a **historical target**, not a renewed release commitment. The
+> [UI/UX direction review](design_v1_uiux_review.md)'s change ledger is now
+> **adopted** as [`design_v1_uiux_baseline.md`](design_v1_uiux_baseline.md)
+> (all ten items; UX-R1/UX-R5 with modification) and **ADR-005** defers the
+> geographic Map past v1. The next implementation unit is the **Discovery
+> Vertical Slice (DVS)** — §2e below — which replaces the old I-4/I-5/I-6 order.
+> Owner has approved: ADR-005; front-loading the minimum persistence /
+> read-only archive / accessibility floor; 朱 = confirmed past-life connection;
+> authored Japanese presentation templates over real reached-world facts.
+
 Status: **Active plan.** Owner-ratified decisions: ADR-001 (Living Chronicle /
 Dual Canon / ◦ cut / Must-only scope), ADR-002 (pywebview stack), ADR-003
 (Japanese-first). Dates: target **2026-08-16**, committed fallback
@@ -36,7 +47,11 @@ verification. No aspiration language.
 **DoD-1 · Experience gate (the only subjective-input gate, objectively
 scored).** An R2 cohort of 5 fresh Japanese testers (profiles per
 `v1_tutorial_world_proof.md` §4.2) passes all four bars under the §4.3
-protocol: SC-1 ≥4/5 recognize ≤30:00 with ≥3/5 via the earned (hold) path ·
+protocol: SC-1 ≥4/5 recognize ≤30:00 with ≥3/5 via the **earned path — player-initiated
+recognition supported by an explanation** (baseline UX-R9; visible-button or
+keyboard inspection counts equally, a completed hold is only an interaction
+event, a fallback reveal is recorded as assisted exposure, and delivered digest
+comprehension alone never passes this bar) ·
 SC-2 ≥4/5 · SC-3 ≤1/5 loss-coded and 0 restart attempts at death · SC-4 ≥3/5
 name a different intended mark. *Verification: filled scoring sheets, one per
 tester.*
@@ -97,11 +112,11 @@ always lead-reviewed).
 | I-0 | Lock closeout | DR-pass merged; ADRs committed; client-state spec (D-6); JP voice guide + name table + visual guide (D-3/D-4, incl. Q-UX-5 JP legibility check); standard-world spec (D-5 ← M-1) | Design Lock declared; no BLOCKER open | Lead + Opus (D-6, D-5), Sonnet (D-4 draft), owner reviews JP voice guide |
 | I-1 | Walking skeleton | pywebview shell; bridge to `app` JSON; page frame with print/Hand JP typefaces; verbs turn/flip/seal/hold; 3 pages (P-01 stub, P-04, P-06) | Two-typeface juncture page renders; hold fires a stub reveal; **ADR-002 go/no-go 7/27** | Opus (bridge + state machine) + Sonnet (pages) |
 | I-2 | Life loop | P-05/P-07/P-08 + S-03 plant cue + marks rendering + seal ceremony | A full life playable start→death on tutorial data | Sonnet, Opus review |
-| I-3 | Skip & rebirth | P-09/P-10/P-11; rebirth-digest read-model lens (new, golden-pinned); map plate with mark accumulation | Death→digest→map cycle E2E; lens golden green; engine goldens untouched | Opus (lens contract) + Sonnet |
-| I-4 | Ending & trace | P-12/P-13/P-14/P-15; trace composition over `trace_to_roots` (+ P18 lens work where it composes); rubric line; D-06 single seeded confirm | Trace chain walkable on tutorial + ≥3 generated seeds | Sonnet, Opus review |
+| I-3 | Skip & rebirth | P-09/P-10 (~~P-11~~ retired, ADR-005); rebirth digest built in `play/beats.py` (not a `reporting/` lens — see §2d) | Death→digest→next life E2E; engine goldens untouched | Opus + Sonnet — **DONE** |
+| ~~I-4~~ | ~~Ending & trace~~ | **Folded into the DVS (§2e)**, scoped down to *one* trace thread on one seed over an ordered real edge path | see §2e exit criteria | — |
 | I-5 | Tutorial pack | Authored canon (JP copy from voice guide) wired for all 3 branches; recognition staging incl. fallback + backstop (JN-5); asides ✎#1–#3 | DoD-3 driver passes ×3 | Sonnet (integration), owner (JP copy review), Ornith (mechanical copy transforms), audits via local lane |
-| I-6 | Standard worlds & state | Curated seed shelf per D-5; discovery-state store + save/resume per D-6; epithets | DoD-4/DoD-5/DoD-6 tests green | Opus (state store) + Sonnet |
-| I-7 | Hardening & release | JP audit lane wired to CI; packaging (PyInstaller, per-OS); cross-machine determinism script; a11y floor (scaling, reduced-motion, rubric) | DoD-2/7/8/9 green on RC | Sonnet + Haiku (chores), Ornith (repetitive fixes), lead sign-off |
+| I-6 | Standard worlds & state | Curated seed shelf per D-5; epithets. **The D-6 minimum (atomic `{sealed inputs, reveal set, cursor}` + exact resume + hash gate) moves forward into the DVS (§2e, baseline UX-R8);** the full productised version stays here | DoD-4/DoD-5/DoD-6 tests green | Opus (state store) + Sonnet |
+| I-7 | Hardening & release | JP audit lane wired to CI; packaging (PyInstaller, per-OS); cross-machine determinism script. **The a11y floor (keyboard parity, reduced motion + static equivalents, text scaling, skip) moves forward into the DVS (§2e, baseline UX-R9);** what remains here is CI wiring and packaging | DoD-2/7/8/9 green on RC | Sonnet + Haiku (chores), Ornith (repetitive fixes), lead sign-off |
 
 ### 2b. Amendment after X-1..X-4 (2026-08-17)
 
@@ -173,8 +188,84 @@ seed — an engine-content finding, not a client one), and the leaf is mostly
 empty because a life is 1–3 acts and nothing else. Both point at the same
 content floor W-1 names.
 
-Not done here and unchanged: I-3 (the rebirth digest, where D-5's SP-1 puts the
-guaranteed first recognition), P-11, I-4 (needs the P18 lens), I-5, I-6, I-7.
+Not done here: I-4 (folded into the DVS), I-5, I-6, I-7.
+**P-11 is retired for v1 — ADR-005** (2026-09-08); it is no longer "not done", it
+is out of scope until W-1.
+
+### 2d. I-3 (2026-08-27)
+
+**I-3 — Rebirth Digest (P-10). Implemented**, see
+[`design_v1_i3_rebirth_digest.md`](design_v1_i3_rebirth_digest.md). The loop now
+closes: surface → digest → the next life. The `aftermath` beat carries
+`changes`, the years' work grouped by the act behind it and cut to three in the
+stream, and the page renders that tuple and reasons about nothing.
+
+The increment turned out to be **P-10 alone**, on measured grounds:
+
+- **P-09 was already shipped** as the C1 Time Surface (§2b).
+- **P-11 is blocked, provably.** `location_id` is null on 0 of 301 causal nodes
+  across seeds 1/7/42/99/123 — every event in this engine is placeless, so a map
+  plate would be invented geography. It waits on **W-1**, not on view work.
+- The roadmap's "read-model lens" wording (§2) predates I-1b and no longer
+  holds: a `reporting/` lens cannot see the label the player *sealed an act
+  under*, only the world's own phrase for it. The digest is built in
+  `play/beats.py`, where the causal graph, the seed ids and the sealed labels
+  are all in hand, and `reporting/` stays untouched.
+
+Two findings worth carrying forward. **SP-1 is loop-guaranteed on real data**:
+across all 30 worlds of seeds 1–30, every first rebirth delivers a non-empty
+digest containing at least one line whose act the player sealed themselves — no
+staging, no engine change. And **`hardened` is not a digest input**: none of 229
+hardened marks in those worlds was founded by the life that just died, so
+delivering any of them would break D-03. They stay the map's unexplained older
+marks, which is I-4's material and not I-3's.
+
+
+
+### 2e. The Discovery Vertical Slice (DVS) — the next implementation unit (2026-09-08)
+
+Replaces the old I-4 → I-5 → I-6 order as the *next* thing built. Rationale and
+full contract text: [`design_v1_uiux_baseline.md`](design_v1_uiux_baseline.md) §5.
+
+**The slice is one complete playable sequence on one generated seed:**
+
+> readable choice → recorded act → death → years → return → later investigation
+> → ending → reopen
+
+**Start state.** The I-1b/I-2/I-3 tree committed as the base; the baseline ledger
+merged into the SoT (this pass); ADR-005 ratified; no interface teaching a removed
+feature (◦, map, 朱-as-still-shaping, hidden-only hold); authored Japanese
+presentation copy for a small set of *real* choices; engine untouched (8 frozen
+goldens + chronicle `aa4c67a416178e92` + transcript `98bea8622c686d8e`).
+
+**Contracts (specified with the build).**
+
+| ID | Contract | Home |
+|---|---|---|
+| C-1 | Choice content: target, role/affiliation, current condition, immediate action — every clause sourced in reached world data; a missing world fact is escalated, never invented | `play/beats.py` + presenter seam |
+| C-2 | Sealed-act identity: the original displayed label/text of every sealed act, carried on digest lines and recognition, stable across surfaces and resume | `play/beats.py` (`BeatRecorder._sealed`) |
+| C-3 | Ordered causal path: a concrete list of existing edges consequence→origin + honest alternate-cause disclosure; an ancestor count is never a path | app/trace composition over `trace_to_roots` |
+| C-4 | Discovery-state surface: one knowledge-state enum honoured identically by entry, time surface, digest, history, trace, resume; SR text + focus carry the glyph's meaning | `client/web/*.js` |
+| C-5 | Persistence (D-6 minimum): atomic `{sealed inputs, reveal set, cursor}`, exact resume, canonical-hash trust gate | new client-persistence module (ADR-002) |
+| C-6 | Autonomous/authored separation: a flag on every displayed act line; the Hand is reserved for sealed acts and confirmed recollections | `play/beats.py` + renderers |
+
+**Exit criteria.** One generated seed completes all eight beats **including a
+quiet interval** (a zero-juncture life and/or an empty-echo skip) with no crash
+and no fabricated content; a reader can say what each option *does now* before any
+outcome; the sealed act is written in the Hand and persisted; return shows the
+changed present first and then one emphasized `(sealed act → consequence)` line
+(≤3 total); investigation is reachable by visible affordance **or** keyboard **or**
+optional hold and walks a real ordered edge path to the origin's exact sealed
+wording; player-sealed / autonomous / contributing-cause are visually distinct;
+the ending offers 「歴史を読み返す」/「本棚へ」 and closes honestly (recording a
+content-gate miss) when no valid legacy exists; quit/reopen restores sealed
+inputs, reveal set, cursor and any confirmed trace; same-seed/different-choice
+books never share reveals; keyboard cannot double-advance or double-commit;
+reduced motion, skip and text scaling work from the first world.
+
+**Guardrail.** No engine, worldgen, RNG, canonical-recipe or `reporting/` change.
+Changes are confined to `client/web/*`, `play/beats.py` (+ its app seam), and the
+new client-persistence module.
 
 Playtests interleave: **R0 table read** (JP page cards) as soon as I-0's JP
 golden-path copy exists; **R1** on I-5's build; fix cycle; **R2** on the RC.
