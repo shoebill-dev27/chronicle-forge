@@ -30,6 +30,7 @@ THE BEATS
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import asdict, dataclass, field
 from typing import ClassVar, Dict, List, Optional, Sequence, Tuple
 
@@ -40,6 +41,7 @@ from ..reporting._data import (
     seed_by_id,
     seeds_of_life,
 )
+from ..causal import CausalGraph
 from ..reporting.labels import event_phrase, heritage_name, seed_label
 from . import render
 from .human import null_writer, scripted_reader
@@ -80,6 +82,13 @@ class Recognition:
     founder_talent: str
     planted_year: Optional[int]
     reach: int
+    # C-2 (baseline UX-R6): the words the founding life was sealed under, if that
+    # life was played in this run and the player chose the act themselves. A
+    # confirmation is a comparison, and it can only resolve against the wording
+    # the player actually read — not the world's own phrase for the same act.
+    # ``None`` means the engine cannot prove the player chose it; the client must
+    # then say so rather than borrow the world's phrasing and call it a memory.
+    sealed_act: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -117,6 +126,55 @@ class Legacy:
     founder_life: str
     action: str
     living: bool
+
+
+@dataclass(frozen=True)
+class CauseStep:
+    """One real hop on the way back from a consequence toward its origin.
+
+    A step exists only where a ``CausalEdge`` exists. Nothing is interpolated:
+    if two events are drawn as adjacent, the world really put an edge there.
+    """
+
+    year: int
+    phrase: str
+
+
+@dataclass(frozen=True)
+class CausePath:
+    """One consequence and the ordered real path back to the act that began it.
+
+    This is the investigation contract (C-3, baseline UX-R6). Three things it
+    deliberately is *not*:
+
+    * ``steps`` is a **path**, not a count. P18's ``CauseChain.steps`` is the
+      number of ancestors an event has, which is a summary; drawing it as a
+      distance would invent links the graph does not contain. Every entry here
+      is one existing edge, effect-first and origin-last.
+    * ``other_origins`` keeps a shared cause honest. An event can descend from
+      several of the player's acts; the earliest is *one contributing origin*,
+      never proof that one life alone caused it. A non-zero count is the
+      client's obligation to say so.
+    * ``origin_sealed`` separates what the player chose from what their life did
+      on its own (C-6). An autonomous origin is traced truthfully, but it is
+      narrated as history and may never be captioned "the choice you made".
+    """
+
+    # An opaque, deterministic handle for *this* consequence. The engine's five
+    # event phrases repeat, so (year, phrase) does not identify an event: two
+    # different "war breaks out" in the same year are two different threads. The
+    # client needs one stable key to bind a reveal to and to resume onto, and it
+    # must not be an engine id — so it is a digest of one. Never displayed.
+    ref: str
+    event: str
+    year: int
+    steps: Tuple[CauseStep, ...]  # effect-first, origin-last; real edges only
+    origin_life: int
+    origin_year: int
+    origin_act: str
+    origin_sealed: bool
+    other_origins: int
+    posthumous: bool  # the consequence outlived the life that seeded it
 
 
 @dataclass(frozen=True)
@@ -222,6 +280,11 @@ class Closing:
     lives: int
     ending: str
     legacies: Tuple[Legacy, ...]
+    # The threads the finished book can honestly offer (C-3). Carried on the
+    # closing beat because the whole world is reached by then — there is no
+    # unreached future left to leak. Nothing here is *shown* until the player
+    # inspects: D-04 forbids reading from confirming anything on its own.
+    cases: Tuple[CausePath, ...] = ()
 
 
 # P-10 delivers at most three lines (UX spec §P-10). The cut is made HERE, not
@@ -229,6 +292,12 @@ class Closing:
 # a stream that carried the remainder would be handing the client truth it is
 # forbidden to deliver.
 DIGEST_MAX = 3
+
+# The ending offers threads to pull, not a database to browse. The bound keeps
+# the closing payload finite on a long world; the *ordering* below decides which
+# survive, so the ones the player chose come first.
+# ponytail: a flat cap, fine while a world is ~200 years; page it if worlds grow.
+CASES_MAX = 12
 
 BEAT_KINDS = (
     "rebirth",
@@ -281,6 +350,55 @@ def to_dict(world_beats: WorldBeats) -> Dict:
 
 def _ordinal_of(world, life_id) -> Optional[int]:
     return life_index(world).get(life_id)
+
+
+def _ref(engine_id: str) -> str:
+    """A stable, opaque handle for an engine id — the same every run, and not
+    the id itself, so nothing downstream can start reading meaning into it."""
+    return hashlib.sha256(engine_id.encode()).hexdigest()[:12]
+
+
+def _cause_steps(nodes: Dict[str, object], node_id: str, target_id: str):
+    """The shortest real edge path from a consequence back to one origin seed.
+
+    Breadth-first over ``caused_by``, with every expansion sorted, so one world
+    always yields one path. Returns the events lying *between* the two ends,
+    effect-first; an empty tuple is the honest answer when the origin caused the
+    consequence directly. ``None`` means no path exists at all — the caller's
+    premise was wrong and it must drop the case rather than draw a link.
+
+    Breadth-first rather than ``CausalGraph.trace_to_roots``: that enumerates
+    *every* path and is exponential on a branchy DAG, and the page only ever
+    draws one.
+    """
+    if node_id == target_id:
+        return ()
+    prev: Dict[str, Optional[str]] = {node_id: None}
+    frontier = [node_id]
+    while frontier:
+        nxt: List[str] = []
+        for cur in frontier:
+            node = nodes.get(cur)
+            if node is None:  # a seed id: a root, nothing behind it
+                continue
+            for cause in sorted({e.from_id for e in node.caused_by}):
+                if cause in prev:
+                    continue
+                prev[cause] = cur
+                if cause == target_id:
+                    chain = [cause]
+                    walk = prev[cause]
+                    while walk is not None:
+                        chain.append(walk)
+                        walk = prev[walk]
+                    chain.reverse()  # effect-first: node_id … target_id
+                    return tuple(
+                        CauseStep(year=nodes[i].year, phrase=event_phrase(nodes[i]))
+                        for i in chain[1:-1]
+                    )
+                nxt.append(cause)
+        frontier = nxt
+    return None
 
 
 def _owners(world, node) -> Tuple[int, ...]:
@@ -546,6 +664,7 @@ class BeatRecorder:
                     )
                     for row in heritage_rows(world)
                 ),
+                cases=self._cases(world),
             )
         )
 
@@ -579,6 +698,11 @@ class BeatRecorder:
             founder_talent=(life.talent.value if life and life.talent else "soul"),
             planted_year=seed.planted_year if seed else None,
             reach=her.reach,
+            # C-2: only if THIS run played that life and the player sealed that
+            # very seed. `seed_label` would always return something, but it is
+            # the world's phrase for the act, not the sentence the player chose
+            # — offering it as a memory would be putting words in their mouth.
+            sealed_act=self._sealed.get(founder, {}).get(seed.id) if seed else None,
         )
 
     def _player_answered(self, offered: int) -> bool:
@@ -595,6 +719,61 @@ class BeatRecorder:
             return False
         raw = self._choices[i]
         return raw.isdigit() and 1 <= int(raw) <= offered
+
+    def _cases(self, world) -> Tuple[CausePath, ...]:
+        """Every consequence the finished book can trace back to the player.
+
+        One case per event that has a player-planted seed in its ancestry. The
+        origin is the *earliest-planted* such seed — one contributing origin,
+        which is why ``other_origins`` travels with it rather than being quietly
+        dropped.
+
+        ``player_seeds_in_ancestry`` walks a ``set``, so its order is not stable
+        across runs; sorting before taking the first is what makes the same world
+        produce the same book twice.
+        """
+        graph = CausalGraph.from_world(world)
+        nodes = {n.id: n for n in world.causal_nodes}
+        death_of = {
+            i: (lf.death_year if lf.death_year is not None else world.current_year)
+            for i, lf in enumerate(world.lives, start=1)
+        }
+
+        out: List[CausePath] = []
+        for node in world.causal_nodes:
+            seeds = sorted(
+                graph.player_seeds_in_ancestry(node.id),
+                key=lambda sd: (sd.planted_year, sd.id),
+            )
+            if not seeds:
+                continue
+            origin = seeds[0]
+            ordinal = _ordinal_of(world, origin.planted_by_life_id)
+            if ordinal is None:
+                continue
+            steps = _cause_steps(nodes, node.id, origin.id)
+            if steps is None:  # no real path: say nothing rather than draw one
+                continue
+            sealed = self._sealed.get(ordinal, {})
+            out.append(
+                CausePath(
+                    ref=_ref(node.id),
+                    event=event_phrase(node),
+                    year=node.year,
+                    steps=steps,
+                    origin_life=ordinal,
+                    origin_year=origin.planted_year,
+                    # the player's own words where they exist, the world's phrase
+                    # otherwise — and ``origin_sealed`` says which of the two it is
+                    origin_act=sealed.get(origin.id) or seed_label(world, origin.id),
+                    origin_sealed=origin.id in sealed,
+                    other_origins=len(seeds) - 1,
+                    posthumous=node.year > death_of.get(ordinal, node.year),
+                )
+            )
+        # what the player chose, then the longest fuse, then oldest first
+        out.sort(key=lambda c: (not c.origin_sealed, -len(c.steps), c.year, c.event))
+        return tuple(out[:CASES_MAX])
 
 
 # --------------------------------------------------------------------------

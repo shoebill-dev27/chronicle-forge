@@ -452,7 +452,7 @@ def test_the_first_rebirth_always_delivers_an_act_the_player_sealed():
     Measured on a *played* run. ``stream(seed)`` entrusts every juncture to the
     world, so it contains no player decision for SP-1 to be about; asserting the
     guarantee there passed only while ``sealed`` also counted the world's own
-    acts (fixed 2026-09-09).
+    acts (fixed 2026-09-09, see ``tests/test_discovery_slice.py``).
     """
     for seed in DIGEST_SEEDS:
         first = next(b for b in B.stream(seed, PLAYED).beats if b.KIND == "aftermath")

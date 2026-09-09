@@ -142,6 +142,8 @@ That is the finding I-3 rests on, and it is directly testable.
 > survives; it is simply now true rather than true by accident. The digest golden
 > moved `8ab659ae98abb179` → `3816281ad6b04a43`, and the SP-1 assertions in
 > `test_beat_stream.py` / `test_client_bridge.py` now measure played runs.
+> Regression guard:
+> `tests/test_discovery_slice.py::test_an_entrusted_run_claims_no_player_choice`.
 
 ### 2.5 The empty digest is always terminal
 
