@@ -319,10 +319,20 @@ def _planted_year(world, heritage) -> Optional[int]:
 class BeatRecorder:
     """The observer ``run_human_world`` calls. Read-only on every argument."""
 
-    def __init__(self) -> None:
+    def __init__(self, choices: Sequence = ()) -> None:
         self.beats: List[object] = []
         self._life = 0
         self._death_year = 0
+        # Which junctures the PLAYER answered. The recorder sees only the chosen
+        # option, and the session picks for the player on EOF, on empty input and
+        # on an explicit pass — in all three the world decided. Without the
+        # original input list there is no way to tell those apart from a real
+        # decision, and "the choice you made" would end up printed over an act
+        # nobody chose. Reading the list here keeps the judgement conservative:
+        # anything unrecognised is recorded as the world's doing, never as the
+        # player's.
+        self._choices: Tuple[str, ...] = tuple(str(c).strip() for c in choices)
+        self._asked = 0
         # life ordinal -> {seed id: the label the player sealed it under}. The
         # digest's strongest line is an act the player CHOSE, named in the words
         # they read it in; that pairing exists nowhere else, which is why the
@@ -343,6 +353,7 @@ class BeatRecorder:
         )
 
     def on_juncture(self, world, life, options, reason, recognize_id) -> None:
+        self._asked += 1
         top3 = render._top3(options)
         rows = []
         for n, option in enumerate(top3, start=1):
@@ -384,15 +395,22 @@ class BeatRecorder:
         top3 = render._top3(options)
         opp = choice.opportunity
         label = render._display_label(world, choice)
-        sealed = self._sealed.setdefault(self._life, {})
-        for seed_id in planted_ids:
-            sealed[seed_id] = label
+        option = next((i for i, o in enumerate(top3, 1) if o is choice), 0)
+        # Option 0 is the season let pass: the world answered, the player did
+        # not. Recording it here would let an autonomous act be captioned "the
+        # choice you made" on the digest and in a trace — C-6, and the one thing
+        # the discovery loop cannot afford to be wrong about. The act is still
+        # real and still traceable; it is simply narrated as history.
+        if option and self._player_answered(len(top3)):
+            sealed = self._sealed.setdefault(self._life, {})
+            for seed_id in planted_ids:
+                sealed[seed_id] = label
         self.beats.append(
             Outcome(
                 life=self._life,
                 year=world.current_year,
                 age=life.age,
-                option=next((i for i, o in enumerate(top3, 1) if o is choice), 0),
+                option=option,
                 label=label,
                 kind=render._KIND_WORD.get(opp.kind, "Chance") if opp else "Chance",
                 planted=len(planted_ids),
@@ -563,6 +581,21 @@ class BeatRecorder:
             reach=her.reach,
         )
 
+    def _player_answered(self, offered: int) -> bool:
+        """Did a person answer the juncture just resolved?
+
+        ``on_juncture`` and ``on_outcome`` fire once each per asked turn, so the
+        counter indexes the input list. An input that is not a plain pick — EOF
+        past the end, "", "0", anything unparsed — is the world being entrusted
+        with the turn. Unrecognised input fails to *autonomous*: over-claiming a
+        choice is the expensive direction of this error.
+        """
+        i = self._asked - 1
+        if not (0 <= i < len(self._choices)):
+            return False
+        raw = self._choices[i]
+        return raw.isdigit() and 1 <= int(raw) <= offered
+
 
 # --------------------------------------------------------------------------
 # the public entry point
@@ -582,7 +615,7 @@ def stream(
     """
     from .session import run_human_world  # local: session imports render, not us
 
-    recorder = BeatRecorder()
+    recorder = BeatRecorder(choices)
     world = run_human_world(
         seed,
         reader=scripted_reader(choices),

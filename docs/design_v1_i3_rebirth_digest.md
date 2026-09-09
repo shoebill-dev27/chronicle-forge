@@ -129,6 +129,20 @@ Ashfields", "Further Free Lanterns"). Measured over **seeds 1–30**:
 **SP-1 is loop-guaranteed on real data, with no staging and no engine change.**
 That is the finding I-3 rests on, and it is directly testable.
 
+> **Correction, 2026-09-09.** The 30/30 above was measured with a `sealed` flag
+> that was not yet telling the truth. `BeatRecorder.on_outcome` wrote *every*
+> resolved act into `_sealed`, but the session answers the juncture itself on
+> EOF, on empty input, and on an explicit pass — so acts **the world chose** were
+> being reported as acts the player sealed. A run with no player input at all
+> still claimed sealed lines.
+>
+> `sealed` now means the player really answered that juncture. Re-measured:
+> **SP-1 holds 30/30 on played runs** (seeds 1–30, always picking option 1), and
+> a fully-entrusted run now correctly claims **zero** sealed acts. The guarantee
+> survives; it is simply now true rather than true by accident. The digest golden
+> moved `8ab659ae98abb179` → `3816281ad6b04a43`, and the SP-1 assertions in
+> `test_beat_stream.py` / `test_client_bridge.py` now measure played runs.
+
 ### 2.5 The empty digest is always terminal
 
 17 of 116 aftermaths across seeds 1–30 produce no digest lines. **All 17 are the

@@ -21,8 +21,13 @@ from chronicle_forge.reporting._data import life_index
 
 SEEDS = (1, 7, 42, 99, 123)
 
-# I-3 P-10 digest, frozen over SEEDS (see test_the_digest_hash_is_frozen)
-GOLDEN_DIGEST_SHA = "8ab659ae98abb179"
+# I-3 P-10 digest, frozen over SEEDS (see test_the_digest_hash_is_frozen).
+# Re-frozen 2026-09-09: `Change.sealed` now means the player really answered
+# that juncture, so an entrusted run no longer reports acts as chosen.
+GOLDEN_DIGEST_SHA = "3816281ad6b04a43"
+
+# A run somebody played. Needed wherever `sealed` is the subject.
+PLAYED = ["1"] * 60
 
 REQUIRED = {
     "rebirth": {"life", "year", "talent", "era"},
@@ -442,9 +447,15 @@ def test_the_first_rebirth_always_delivers_an_act_the_player_sealed():
     """SP-1 (D-5 §3): a standard world's guaranteed first recognition is the
     first P-10 digest. It is guaranteed by the loop, with no staging and no
     engine change — but only if the data actually carries it every time. All 30
-    worlds, not a sample."""
+    worlds, not a sample.
+
+    Measured on a *played* run. ``stream(seed)`` entrusts every juncture to the
+    world, so it contains no player decision for SP-1 to be about; asserting the
+    guarantee there passed only while ``sealed`` also counted the world's own
+    acts (fixed 2026-09-09).
+    """
     for seed in DIGEST_SEEDS:
-        first = next(b for b in B.stream(seed).beats if b.KIND == "aftermath")
+        first = next(b for b in B.stream(seed, PLAYED).beats if b.KIND == "aftermath")
         assert first.changes, f"seed {seed}: the first rebirth delivers nothing"
         assert any(
             c.sealed for c in first.changes

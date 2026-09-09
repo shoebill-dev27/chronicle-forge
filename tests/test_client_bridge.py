@@ -44,11 +44,18 @@ def _source(name: str) -> str:
     return re.sub(r"^\s*//.*$", "", text, flags=re.M)
 
 
-def _probe(tmp_path: Path, seed: int) -> dict:
+# A run somebody played. `play(seed)` with no choices entrusts every juncture to
+# the world, which is the right stream for "does the page invent a decision?" and
+# the wrong one for any assertion about what the player chose.
+PLAYED = ["1"] * 60
+
+
+def _probe(tmp_path: Path, seed: int, choices=PLAYED) -> dict:
     """Run the shipped strings.js/time.js under node against a real stream."""
     stream = tmp_path / f"s{seed}.json"
     stream.write_text(
-        json.dumps(BookBridge(seed=seed).play(), ensure_ascii=False), encoding="utf-8"
+        json.dumps(BookBridge(seed=seed).play(choices=choices), ensure_ascii=False),
+        encoding="utf-8",
     )
     out = subprocess.run(
         ["node", str(_PROBE), str(stream)],
