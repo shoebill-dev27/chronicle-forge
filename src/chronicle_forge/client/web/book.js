@@ -28,7 +28,7 @@
 const STRINGS = window.CF_VOICE.strings;
 
 const HOLD_MS = 800;
-const PAGES = ["shelf", "opening", "juncture", "entry"];
+const PAGES = ["shelf", "opening", "juncture", "entry", "digest"];
 // The surface plays 0 -> TimeSurface.REBIRTH_END; the last stretch of the cut
 // is the real juncture page, not a picture of one.
 const SURFACE_MS = 14000;
@@ -60,7 +60,11 @@ const SAMPLE = {
         { year: 12, scale: "small", phrase: "a market opened", owners: [1] },
       ] },
     { t: "aftermath", after_life: 1, year: 14,
-      echoes: [{ year: 9, scale: "large", phrase: "a levee was raised", owners: [1] }], hardened: [] },
+      echoes: [{ year: 9, scale: "large", phrase: "a levee was raised", owners: [1] }], hardened: [],
+      changes: [
+        { act: "Open the hill's undercroft", sealed: true, consequence: "a levee was raised", times: 1, first_year: 9 },
+        { act: "cut a road", sealed: false, consequence: "a market opened", times: 1, first_year: 12 },
+      ] },
     { t: "rebirth", life: 2, year: 14, talent: "scribe", era: "an age of salt" },
     { t: "juncture", life: 2, year: 16, age: 18, reason: "history", header: "History remembers", era: "an age of salt",
       options: [
@@ -364,6 +368,57 @@ function leaveEntry() {
   playSurface(win);
 }
 
+/* ---- P-10 the rebirth digest ------------------------------------------------
+   The page between a life and the next one: what the years just shown did with
+   the acts of the life that just ended.
+
+   Everything on it is `aftermath.changes`, which the stream has already
+   grouped, ordered and cut to three. The page renders that tuple in the order
+   it was handed and does nothing else — it does not rank, does not weigh
+   `times`, and never infers which act caused which event. That join is a real
+   causal edge in the world, and it is made where the world is (play/beats.py);
+   a client that re-derived it would be guessing at causality from strings.
+
+   It reads only `state.win` — the window the surface just played — so it cannot
+   show a life the player has not yet buried. */
+function toDigest(win) {
+  // Fail closed. The digest is addressed to someone who is coming BACK: with no
+  // rebirth the world has ended and there is nowhere to return to, so the
+  // surface keeps its last frame and the closing page has the say. An empty
+  // `changes` is the same refusal — a heading over nothing is the book claiming
+  // the years did something it cannot name. (Measured: the only empty digests
+  // in seeds 1-30 are terminal, so this is a guard, not a code path.)
+  if (!win || !win.rebirth || !win.aftermath.changes.length) return false;
+  hideSurface();
+  const list = $("#changes");
+  list.innerHTML = "";
+  for (const change of win.aftermath.changes) {
+    const li = document.createElement("li");
+    // `sealed` is a stream field, not a judgement made here: it marks the lines
+    // whose act the player chose themselves, in the words they read it in.
+    li.className = "change print" + (change.sealed ? " sealed" : "");
+
+    // ⟜, the echo mark (ADR-001 K-1). Every line here IS an echo — something
+    // the player left, coming back — so every line carries it and no second
+    // glyph is invented to rank them.
+    const mark = document.createElement("span");
+    mark.className = "change-mark";
+    mark.setAttribute("aria-hidden", "true");
+    mark.textContent = "⟜";
+    li.appendChild(mark);
+
+    const line = document.createElement("p");
+    line.className = "change-line";
+    line.textContent = STRINGS.digestLine(change.act, change.consequence);
+    li.appendChild(line);
+    list.appendChild(li);
+  }
+  setRunningHead(`Year ${win.aftermath.year}`);
+  setStatus(STRINGS.statusYears);
+  show("digest", "forward");
+  return true;
+}
+
 function toJuncture(beat) {
   const data = beat || junctures()[state.cursor];
   if (!data) return show("opening", "forward");
@@ -659,11 +714,15 @@ async function seal() {
 function turn() {
   if (document.documentElement.dataset.surface === "time") {
     if (skipSurface()) return;      // still running: finish it, do not skip past it
+    // P-10 goes between the years and the life they lead to; when there is no
+    // digest to deliver the surface hands straight on, exactly as it used to.
+    if (toDigest(state.win)) return;
     // The next LIFE, not the next juncture — see advanceTo.
     return advanceTo(state.lifeShown + 1);
   }
   if (state.page === "shelf") return toOpening();
   if (state.page === "entry") return leaveEntry();
+  if (state.page === "digest") return advanceTo(state.lifeShown + 1);
   // The opening belongs to a life; what follows is that life's own page, which
   // is its juncture if it has one and its window if the world never asked it
   // anything.
@@ -672,6 +731,7 @@ function turn() {
 function flip() {
   if (document.documentElement.dataset.surface === "time") return; // the years do not run backwards
   if (state.page === "entry") return;   // the entry has no way back — see index.html
+  if (state.page === "digest") return; // nor does the digest: the years are spent
   if (state.page === "juncture") return show("opening", "back");
   if (state.page === "opening") return show("shelf", "back");
 }

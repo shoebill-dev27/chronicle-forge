@@ -355,3 +355,82 @@ def test_the_act_the_page_shows_is_the_act_the_stream_recorded():
     js = _source("book.js")
     assert "STRINGS.actLine(act.year, act.label)" in js
     assert "act.option === 0" in js  # a season let pass is said, not credited
+
+
+# --------------------------------------------------------------------------
+# I-3 — the rebirth digest (P-10)
+# --------------------------------------------------------------------------
+
+
+@needs_node
+@pytest.mark.parametrize("seed", _SEEDS)
+def test_the_digest_sits_between_the_years_and_the_life_they_lead_to(tmp_path, seed):
+    """The loop the increment closes: surface -> digest -> the next life. Before
+    I-3 the surface handed straight to the next rebirth and the world never said
+    what the years had done with the life just buried."""
+    walk = _probe(tmp_path, seed)["walk"]
+    digests = [i for i, s in enumerate(walk) if s["page"] == "digest"]
+    assert digests, "this world delivers no digest at all"
+    for i in digests:
+        assert walk[i - 1]["page"] == "surface"
+        # the digest names the life whose years were just shown, not the next one
+        assert walk[i]["beatLife"] == walk[i - 1]["life"] == walk[i]["life"]
+        # and the page after it belongs to the NEXT life
+        assert i + 1 < len(walk) and walk[i + 1]["life"] == walk[i]["life"] + 1
+
+
+@needs_node
+@pytest.mark.parametrize("seed", _SEEDS)
+def test_the_first_digest_delivers_the_players_own_act(tmp_path, seed):
+    """SP-1 at the page, not just in the stream: the first rebirth's digest has
+    at least one line whose act the player sealed themselves — and it is the
+    line the page shows first, because the stream ordered it that way."""
+    walk = _probe(tmp_path, seed)["walk"]
+    first = next(s for s in walk if s["page"] == "digest")
+    assert first["beatLife"] == 1
+    assert first["sealed"] >= 1
+    assert 1 <= first["lines"] <= 3
+
+
+def test_the_digest_page_renders_the_stream_and_reasons_about_nothing():
+    """The act->consequence join is a real causal edge, made where the world is.
+    A page that re-derived it would be guessing at causality from strings, and a
+    page that re-sorted would be overruling D-03's delivery order."""
+    js = _source("book.js")
+    body = js.split("function toDigest", 1)[1].split("function toJuncture", 1)[0]
+    assert "win.aftermath.changes" in body
+    # no ranking, no filtering, no arithmetic on the digest's ordering fields
+    for forbidden in ("sort(", "filter(", "change.times", "change.first_year"):
+        assert forbidden not in body, f"the digest page does its own {forbidden!r}"
+    # fails closed: no life to return to, or nothing named -> no page
+    assert "!win.rebirth || !win.aftermath.changes.length" in body
+
+
+def test_the_digest_offers_no_way_back_into_spent_years():
+    html = (_WEB_DIR / "index.html").read_text(encoding="utf-8")
+    page = html.split('data-page="digest"', 1)[1].split("</section>", 1)[0]
+    assert 'data-verb="turn"' in page
+    assert 'data-verb="flip"' not in page
+    assert 'data-verb="seal"' not in page
+    assert 'if (state.page === "digest") return;' in _source("book.js")
+
+
+def test_the_digest_prints_no_number_and_coins_no_mark():
+    """UX §P-10 hides everything numeric from the digest's own lines: `times`
+    and `first_year` are ordering inputs the stream uses, never words the page
+    says. (The running head is the book's furniture and carries the year on
+    every page, as it does on the entry.) And the only mark drawn here is the
+    echo (ADR-001 K-1) — the lines on this page ARE echoes."""
+    js = _source("book.js")
+    body = js.split("function toDigest", 1)[1].split("function toJuncture", 1)[0]
+    marks = {ch for ch in body if ch in "\u27dc\u2767"}
+    assert marks == {"\u27dc"}
+    inventory = _source("strings.js")
+    assert "digestLine:" in inventory
+    line = inventory.split("digestLine:", 1)[1].split("\n", 1)[0]
+    for field in ("times", "first_year"):
+        assert field not in line
+    # the page's own words for this spread live in the inventory, not in book.js
+    for sentence in ("The world you return to",):
+        assert sentence in inventory
+        assert sentence not in _source("book.js")

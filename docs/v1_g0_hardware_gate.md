@@ -58,8 +58,9 @@ the canvas probe and the whole I-2 loop.
 | the years hand the page back, and name the next life | the `#surface-turn`/`#surface-rebirth` handoff |
 | a life with no juncture still gets its own window | seed 99's life 2 — the B-1 bug, checked on hardware |
 | **I-2**: the act enters the entry, exactly one arrives, the cue matches the data one-for-one, the mark sits in the margin, the sealed juncture cannot be answered twice, the years follow the life's last act | the whole I-2 loop |
+| **I-3**: the years hand to the digest, the surface lets go, the digest still names the life just buried, its lines are the stream's lines in the stream's order, ≤3 of them, at least one is an act the player sealed (**SP-1**), every line carries ⟜ in the margin, no line prints a number, and the page fits the leaf | the whole I-3 page. SP-1 is the standard world's *guaranteed* first recognition, so seeing it in the stream is not enough — it has to reach a screen |
 
-## 3. Result, 2026-08-21
+## 3. Result, 2026-08-21 (re-run 2026-08-27 with I-3: 5 seeds, 0 failures)
 
 All five seeds: **0 failures**. Measured on seed 1:
 
@@ -89,6 +90,12 @@ capture never saw it, because the capture harness only ever shoots a frozen
 frame; the hardware walk hit it on the second seed. Fixed by cutting the acts to
 `state.cursor` — the same discipline as the strata scale (`DEPTH`): the page may
 never read a beat the player has not reached.
+
+**The 2026-08-27 re-run caught nothing new** — the digest stage passed on all
+five seeds first time. That is the expected result of a gate, not a wasted one:
+the walk it protects is now a page longer, and the `#surface-turn` handoff it
+used to assert would have gone stale silently otherwise (it now lands on the
+digest, not on the next life).
 
 ## 5. Limits of this gate
 

@@ -21,13 +21,16 @@ from chronicle_forge.reporting._data import life_index
 
 SEEDS = (1, 7, 42, 99, 123)
 
+# I-3 P-10 digest, frozen over SEEDS (see test_the_digest_hash_is_frozen)
+GOLDEN_DIGEST_SHA = "8ab659ae98abb179"
+
 REQUIRED = {
     "rebirth": {"life", "year", "talent", "era"},
     "juncture": {"life", "year", "age", "reason", "header", "era", "options"},
     "outcome": {"life", "year", "age", "option", "label", "kind", "planted"},
     "death": {"life", "year", "age", "talent", "title", "named", "pending"},
     "years": {"after_life", "from_year", "to_year", "span", "world_ended", "events"},
-    "aftermath": {"after_life", "year", "echoes", "hardened"},
+    "aftermath": {"after_life", "year", "echoes", "hardened", "changes"},
     "closing": {"year", "lives", "ending", "legacies"},
 }
 
@@ -326,3 +329,156 @@ def test_the_act_is_labelled_in_the_engines_own_words(streams, seed):
             continue
         assert beat.label and ":" not in beat.label
         assert beat.label == beat.label.strip()
+
+
+# --------------------------------------------------------------------------
+# I-3 — the rebirth digest (P-10)
+# --------------------------------------------------------------------------
+
+DIGEST_SEEDS = tuple(range(1, 31))  # SP-1 is a claim about worlds, not a sample
+
+
+def _world_of(seed):
+    return run_human_world(
+        seed, reader=lambda: None, writer=lambda _t: None, life_cap=60
+    )
+
+
+def _life_vocabulary(world, ordinal, stream):
+    """(acts, consequences) the digest of the life ``ordinal`` may legally use.
+
+    Rebuilt here from the world independently of the recorder, so the test can
+    catch a digest that reached into a life other than the one that just died.
+    """
+    from chronicle_forge.play import render
+    from chronicle_forge.reporting.labels import event_phrase, seed_label
+
+    life = world.lives[ordinal - 1]
+    acts = {seed_label(world, sid) for sid in render._seed_ids(world, life)}
+    # plus the labels the player sealed those seeds under, which are the option
+    # texts and exist nowhere in the reporting layer
+    acts |= {b.label for b in stream.beats if b.KIND == "outcome" and b.life == ordinal}
+    return acts, {event_phrase(n) for n in render._echoes(world, life)}
+
+
+@pytest.mark.parametrize("seed", SEEDS)
+def test_a_digest_line_descends_only_from_the_life_it_follows(streams, seed):
+    """D-03: the digest delivers the immediately previous life and nothing else.
+    Changes caused by older lives must be discovered, not handed over."""
+    world = _world_of(seed)
+    stream = streams[seed]
+    checked = 0
+    for beat in stream.beats:
+        if beat.KIND != "aftermath":
+            continue
+        acts, consequences = _life_vocabulary(world, beat.after_life, stream)
+        for change in beat.changes:
+            checked += 1
+            assert (
+                change.act in acts
+            ), f"{change.act!r} is not an act of life {beat.after_life}"
+            assert change.consequence in consequences
+    assert checked > 0
+
+
+@pytest.mark.parametrize("seed", SEEDS)
+def test_a_hardened_mark_never_becomes_a_digest_line(streams, seed):
+    """Measured over seeds 1-30: NONE of 229 hardened marks was founded by the
+    life that just died, so every one of them would break D-03 if delivered.
+    They stay on the aftermath for the surface and for tracing, and the digest
+    is built from echoes alone."""
+    names = set()
+    lines = 0
+    for beat in streams[seed].beats:
+        if beat.KIND != "aftermath":
+            continue
+        names |= {mark.name for mark in beat.hardened}
+        for change in beat.changes:
+            lines += 1
+            assert change.act not in names
+            assert change.consequence not in names
+    assert names and lines, "this seed proves nothing without both"
+
+
+@pytest.mark.parametrize("seed", SEEDS)
+def test_one_act_and_one_consequence_make_exactly_one_line(streams, seed):
+    """Seed 1's first rebirth has 31 echoes carrying 4 distinct phrases: taking
+    the loudest three would print one sentence three times. Repetition is not
+    more truth."""
+    for beat in streams[seed].beats:
+        if beat.KIND != "aftermath":
+            continue
+        keys = [(c.act, c.consequence) for c in beat.changes]
+        assert len(keys) == len(set(keys))
+        for change in beat.changes:
+            assert change.times >= 1
+            assert change.first_year >= 0
+
+
+@pytest.mark.parametrize("seed", SEEDS)
+def test_the_digest_order_is_total_and_belongs_to_the_stream(streams, seed):
+    """What the player chose first, then what the world did most with it. The
+    page renders this order and never re-sorts, so it has to be total: any tie
+    left here would let two runs of one seed disagree."""
+    for beat in streams[seed].beats:
+        if beat.KIND != "aftermath":
+            continue
+        key = lambda c: (not c.sealed, -c.times, c.first_year, c.act, c.consequence)
+        assert list(beat.changes) == sorted(beat.changes, key=key)
+        assert len({key(c) for c in beat.changes}) == len(beat.changes)
+
+
+@pytest.mark.parametrize("seed", SEEDS)
+def test_the_digest_delivers_at_most_three(streams, seed):
+    """UX §P-10. The cut is made in the stream, not on the page: D-03 reserves
+    everything past it for the player to find, so the client must never be
+    handed the remainder."""
+    for beat in streams[seed].beats:
+        if beat.KIND == "aftermath":
+            assert len(beat.changes) <= B.DIGEST_MAX == 3
+
+
+def test_the_first_rebirth_always_delivers_an_act_the_player_sealed():
+    """SP-1 (D-5 §3): a standard world's guaranteed first recognition is the
+    first P-10 digest. It is guaranteed by the loop, with no staging and no
+    engine change — but only if the data actually carries it every time. All 30
+    worlds, not a sample."""
+    for seed in DIGEST_SEEDS:
+        first = next(b for b in B.stream(seed).beats if b.KIND == "aftermath")
+        assert first.changes, f"seed {seed}: the first rebirth delivers nothing"
+        assert any(
+            c.sealed for c in first.changes
+        ), f"seed {seed}: nothing in the first digest is the player's own choice"
+
+
+def test_a_digest_is_empty_only_when_no_life_follows():
+    """17 of 116 aftermaths across seeds 1-30 name nothing, and all 17 are the
+    world's last — where there is no rebirth and so no digest page. The client
+    still fails closed on `win.rebirth`; this is what makes that a guard rather
+    than a code path."""
+    empty_midworld = []
+    for seed in DIGEST_SEEDS:
+        stream = B.stream(seed)
+        last = stream.lives[-1].ordinal
+        for beat in stream.beats:
+            if (
+                beat.KIND == "aftermath"
+                and not beat.changes
+                and beat.after_life != last
+            ):
+                empty_midworld.append((seed, beat.after_life))
+    assert not empty_midworld
+
+
+def test_the_digest_hash_is_frozen():
+    """Cheap drift detection under the invariants above, which are the real
+    guard: a hash cannot tell you SP-1 held."""
+    payload = []
+    for seed in SEEDS:
+        for beat in B.stream(seed).beats:
+            if beat.KIND == "aftermath":
+                payload.append([seed, beat.after_life, B.beat_dict(beat)["changes"]])
+    digest = hashlib.sha256(
+        json.dumps(payload, ensure_ascii=False, sort_keys=True).encode()
+    ).hexdigest()[:16]
+    assert digest == GOLDEN_DIGEST_SHA

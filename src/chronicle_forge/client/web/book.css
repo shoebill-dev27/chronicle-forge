@@ -260,6 +260,23 @@ h2.place{font-size:26px; font-weight:600; margin:0 0 18px}
   .act.arriving .act-mark, .act.arriving .plant-cue{animation:none}
 }
 
+/* ---- P-10 the rebirth digest ----
+   The same margin-stage rule as the entry (D-4 M-2): the ⟜ hangs outside the
+   measure so the three lines read as one settled block of print. Sealed lines —
+   the acts the player chose themselves — carry the Hand's ink in their mark and
+   sit at full weight; the world's own acts stay a shade back. No count and no
+   year is rendered anywhere here: UX §P-10 hides everything numeric. */
+.changes{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:20px}
+.change{position:relative; max-inline-size:var(--measure); color:var(--muted)}
+.change.sealed{color:var(--sumi)}
+.change-line{margin:0}
+.change-mark{
+  position:absolute; inset-inline-start:calc(-1 * var(--margin-stage) + .9rem);
+  inset-block-start:.15em; font-size:.85em; color:var(--rule);
+  transform:rotate(-4deg); pointer-events:none;
+}
+.change.sealed .change-mark{color:var(--hand-ink)}
+
 /* ---- verbs: quiet print on a hairline — never a filled CTA slab ---- */
 .verbs{display:flex; gap:20px; margin-top:auto; padding-top:26px}
 .verb{

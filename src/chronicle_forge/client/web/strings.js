@@ -98,6 +98,15 @@
       actLine: (year, label) => `Year ${year} — ${label}.`,
       passLine: (year) => `Year ${year} — you let the season pass.`,
       plantCue: "This will echo.",
+
+      // --- P-10 the rebirth digest. `digestLine` joins two engine strings —
+      // the act (the label the player sealed it under, or the world's own
+      // phrase for an act it took alone) and what the world did with it. The
+      // dash is the only word this file owns here. No count and no year: UX
+      // §P-10 hides everything numeric from the digest's lines (the running
+      // head is furniture and carries the year, as on every other page).
+      digestEyebrow: "The world you return to",
+      digestLine: (act, consequence) => `${act} — ${consequence}.`,
     },
   };
 })();

@@ -40,7 +40,7 @@ from ..reporting._data import (
     seed_by_id,
     seeds_of_life,
 )
-from ..reporting.labels import event_phrase, heritage_name
+from ..reporting.labels import event_phrase, heritage_name, seed_label
 from . import render
 from .human import null_writer, scripted_reader
 
@@ -80,6 +80,24 @@ class Recognition:
     founder_talent: str
     planted_year: Optional[int]
     reach: int
+
+
+@dataclass(frozen=True)
+class Change:
+    """One thing the world did with one act of the life that just ended.
+
+    The two halves are joined by a causal edge that already exists: the events
+    of ``render._echoes`` descend from that life's own seeds, and a seed is the
+    act that planted it. Neither half is authored here — ``act`` is the label
+    the player was shown (or the world's own phrase for an act it took on its
+    own), ``consequence`` is ``event_phrase``.
+    """
+
+    act: str
+    sealed: bool  # True when this act was the player's own sealed choice
+    consequence: str
+    times: int  # how many events, so the page can weigh without a score
+    first_year: int
 
 
 @dataclass(frozen=True)
@@ -192,6 +210,9 @@ class Aftermath:
     year: int
     echoes: Tuple[Event, ...]
     hardened: Tuple[Mark, ...]
+    # P-10's digest: the echoes above, grouped by the act behind them and cut to
+    # what one page delivers. Never sourced from `hardened` — see `_changes`.
+    changes: Tuple[Change, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -202,6 +223,12 @@ class Closing:
     ending: str
     legacies: Tuple[Legacy, ...]
 
+
+# P-10 delivers at most three lines (UX spec §P-10). The cut is made HERE, not
+# on the page: D-03 reserves everything beyond it for the player to discover, so
+# a stream that carried the remainder would be handing the client truth it is
+# forbidden to deliver.
+DIGEST_MAX = 3
 
 BEAT_KINDS = (
     "rebirth",
@@ -296,6 +323,11 @@ class BeatRecorder:
         self.beats: List[object] = []
         self._life = 0
         self._death_year = 0
+        # life ordinal -> {seed id: the label the player sealed it under}. The
+        # digest's strongest line is an act the player CHOSE, named in the words
+        # they read it in; that pairing exists nowhere else, which is why the
+        # digest is built here and not in a reporting lens.
+        self._sealed: Dict[int, Dict[str, str]] = {}
 
     # -- hooks (called by play.session; each mirrors one render call site) --
 
@@ -351,13 +383,17 @@ class BeatRecorder:
         """
         top3 = render._top3(options)
         opp = choice.opportunity
+        label = render._display_label(world, choice)
+        sealed = self._sealed.setdefault(self._life, {})
+        for seed_id in planted_ids:
+            sealed[seed_id] = label
         self.beats.append(
             Outcome(
                 life=self._life,
                 year=world.current_year,
                 age=life.age,
                 option=next((i for i, o in enumerate(top3, 1) if o is choice), 0),
-                label=render._display_label(world, choice),
+                label=label,
                 kind=render._KIND_WORD.get(opp.kind, "Chance") if opp else "Chance",
                 planted=len(planted_ids),
             )
@@ -430,8 +466,52 @@ class BeatRecorder:
                 year=world.current_year,
                 echoes=tuple(_event(world, n) for n in render._echoes(world, life)),
                 hardened=tuple(hardened),
+                changes=self._changes(world, life),
             )
         )
+
+    def _changes(self, world, life) -> Tuple[Change, ...]:
+        """P-10's digest: what the years did with the acts of the life that just
+        ended, one line per distinct act-and-consequence.
+
+        ``hardened`` is deliberately not an input. Measured over seeds 1-30,
+        **none** of 229 hardened marks was founded by the life that just died —
+        a seed needs a life or two to gain a name — so delivering them would
+        attribute changes to OLDER lives, which D-03 reserves for the player to
+        discover. Hardened marks stay on the aftermath as their own field, for
+        the surface and for tracing; they never become a digest line.
+
+        Raw echoes cannot be the digest either: seed 1's first rebirth has 31 of
+        them carrying 4 distinct phrases, so the top three would print the same
+        sentence three times. Repetition is not more truth, so this groups.
+        """
+        mine = render._seed_ids(world, life)
+        sealed = self._sealed.get(self._life, {})
+        grouped: Dict[Tuple[bool, str, str], set] = {}
+        for node in render._echoes(world, life):
+            phrase = event_phrase(node)
+            # one seed may reach a node by several edges; the node is still one
+            # thing the world did, so causes are taken as a set
+            for seed_id in {e.from_id for e in node.caused_by} & mine:
+                label = sealed.get(seed_id)
+                key = (label is not None, label or seed_label(world, seed_id), phrase)
+                grouped.setdefault(key, set()).add((node.id, node.year))
+        rows = [
+            Change(
+                act=act,
+                sealed=was_sealed,
+                consequence=phrase,
+                times=len(nodes),
+                first_year=min(year for _, year in nodes),
+            )
+            for (was_sealed, act, phrase), nodes in grouped.items()
+        ]
+        # A total order, so the same (seed, choices) always yields the same page:
+        # what the player chose first, then what the world did most with it.
+        rows.sort(
+            key=lambda c: (not c.sealed, -c.times, c.first_year, c.act, c.consequence)
+        )
+        return tuple(rows[:DIGEST_MAX])
 
     def on_closing(self, world) -> None:
         self.beats.append(

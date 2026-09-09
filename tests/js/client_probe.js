@@ -43,6 +43,19 @@ for (let life = 1, guard = 0; guard < 500; guard++) {
     register: TS.register(win),
     rebirth: win.rebirth ? win.rebirth.life : null,
   });
+  // P-10 sits between the years and the life they lead to, and only there:
+  // book.js `toDigest` fails closed on a window with no rebirth, and on one
+  // whose aftermath named nothing.
+  if (win.rebirth && win.aftermath.changes.length) {
+    walk.push({
+      page: "digest",
+      life,
+      beatLife: win.aftermath.after_life,
+      lines: win.aftermath.changes.length,
+      sealed: win.aftermath.changes.filter((c) => c.sealed).length,
+      acts: win.aftermath.changes.map((c) => c.act),
+    });
+  }
   if (!win.rebirth) break;
   life += 1;
 }

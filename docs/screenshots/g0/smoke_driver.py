@@ -392,8 +392,87 @@ def run(window):
     )
     shot("09-surface-settled")
 
-    print("== the next life ==", flush=True)
+    # I-3: P-10 sits between the years and the life they lead to. It is the
+    # standard world's guaranteed first recognition (SP-1), so the gate has to
+    # see it on real hardware and not merely in the stream.
+    print("== the rebirth digest ==", flush=True)
     js(window, "document.querySelector('#surface-turn').click()")
+    time.sleep(1.2)
+    digest = json.loads(
+        note(
+            "digest",
+            js(
+                window,
+                "JSON.stringify({page: state.page, life: state.lifeShown, "
+                "surface: document.documentElement.dataset.surface || null, "
+                "lines: [...document.querySelectorAll('.change-line')].map(e=>e.textContent), "
+                "marks: document.querySelectorAll('.change-mark').length, "
+                "sealed_rows: document.querySelectorAll('.change.sealed').length, "
+                "eyebrow: document.querySelector('[data-page=\"digest\"] .eyebrow').textContent, "
+                "mark_box: (() => { const m = document.querySelector('.change-mark'); if (!m) return null; "
+                "const r = m.getBoundingClientRect(), cs = getComputedStyle(m), "
+                "col = document.querySelector('.text-column').getBoundingClientRect(), "
+                "leaf = document.querySelector('.leaf').getBoundingClientRect(); "
+                "return {x: Math.round(r.x), w: Math.round(r.width), h: Math.round(r.height), "
+                "opacity: cs.opacity, colour: cs.color, "
+                "left_of_measure: r.right <= col.left + 1, inside_leaf: r.left >= leaf.left}; })(), "
+                "stream_changes: state.win.aftermath.changes.map(c => c.act + ' | ' + c.consequence), "
+                "stream_sealed: state.win.aftermath.changes.filter(c => c.sealed).length})",
+            ),
+        )
+    )
+    check(
+        "the years hand to the digest (P-10)", digest["page"] == "digest", str(digest)
+    )
+    check("the surface let go of the screen", digest["surface"] is None)
+    check(
+        "the digest still names the life just buried, not the next one",
+        digest["life"] == 1,
+        str(digest["life"]),
+    )
+    check(
+        "the digest renders the stream's lines, in the stream's order",
+        [ln.rsplit(" \u2014 ", 1)[0] for ln in digest["lines"]]
+        == [c.split(" | ")[0] for c in digest["stream_changes"]],
+        f"page={digest['lines']} stream={digest['stream_changes']}",
+    )
+    check(
+        "the digest delivers at most three (UX \u00a7P-10)",
+        1 <= len(digest["lines"]) <= 3,
+        str(len(digest["lines"])),
+    )
+    check(
+        "SP-1: the first digest delivers an act the player sealed",
+        digest["stream_sealed"] >= 1
+        and digest["sealed_rows"] == digest["stream_sealed"],
+        f"rows={digest['sealed_rows']} stream={digest['stream_sealed']}",
+    )
+    check(
+        "every digest line carries the echo mark, in the margin (D-4 M-2)",
+        digest["marks"] == len(digest["lines"])
+        and bool(digest["mark_box"])
+        and digest["mark_box"]["left_of_measure"]
+        and digest["mark_box"]["inside_leaf"],
+        str(digest["mark_box"]),
+    )
+    check(
+        "no digest line prints a number",
+        not any(ch.isdigit() for ln in digest["lines"] for ch in ln),
+        str(digest["lines"]),
+    )
+    fit_digest = json.loads(note("fit_digest", js(window, PROBE_FIT)))
+    check(
+        "the digest fits the leaf",
+        not fit_digest["column_overflows"] and fit_digest["overset"] == "false",
+        str(fit_digest),
+    )
+    shot("09b-digest")
+
+    print("== the next life ==", flush=True)
+    js(
+        window,
+        'document.querySelector(\'[data-page="digest"] [data-verb="turn"]\').click()',
+    )
     time.sleep(1.2)
     after = note(
         "after_turn",
