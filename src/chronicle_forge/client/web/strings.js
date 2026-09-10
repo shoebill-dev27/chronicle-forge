@@ -105,6 +105,46 @@
       passLine: (year) => `Year ${year} — you let the season pass.`,
       plantCue: "This will echo.",
 
+      // --- P-13 the archive, P-12 the closing, P-14 the trace.
+      // Non-diegetic controls (D-3 §8, exempt from the A-1 imperative audit
+      // because they name an operation the reader performs, not the historian
+      // addressing them).
+      archiveEyebrow: "これらの頁は、もう書かれている",
+      archivePrev: "前へ",
+      archiveNext: "次へ",
+      nowPage: "今の頁へ",
+      investigate: "調べる",
+      whatBefore: "その前には？",
+      backToClosing: "戻る",
+      reread: "歴史を読み返す",
+      toShelf: "本棚へ",
+      closingEyebrow: "年代記は閉じた",
+      traceEyebrow: "これはどこから来たのか",
+
+      // The archive's read-only note: the page a reader is looking at is spent,
+      // and saying so is kinder than a dead control.
+      archiveSpent: "この頁はもう記されている。",
+
+      // A trace step. Both halves are engine words; the year is the event's own.
+      traceStep: (year, phrase) => `${year}年 — ${phrase}。`,
+      // The origin card. `sealed` decides which of the two forms is honest:
+      // the player's own words, or the world's phrase for something their life
+      // did without being asked (C-6 — never "the choice you made").
+      traceOriginSealed: (ordinal, year, act) =>
+        `——${epithet(ordinal)}が、${year}年に「${act}」を選んだ。`,
+      // C-6: their life did this, they did not choose it. 行った / 選んだ carries
+      // the distinction, and the trailing clause leaves no room to read it as a
+      // decision. Never "the choice you made".
+      traceOriginAuto: (ordinal, year, act) =>
+        `——${epithet(ordinal)}は、${year}年に${act}を行った。選んだのではない。`,
+      // Multi-cause honesty: the earliest act is ONE contributing origin.
+      traceOthers: (n) =>
+        `この出来事には、ほかに ${n} つの始まりがある。これはそのひとつ。`,
+      traceDirect: "この出来事は、その行いから直に生まれた。",
+      // The ending, when the world holds no traceable act of the player's. Said
+      // plainly rather than papered over with an invented invitation.
+      closingNoThread: "この世界には、あなたの手にたどり着く糸が残らなかった。",
+
       // --- C-1: the option's context line (baseline UX-R6 §5.2).
       //
       // Everything here is a *frame* around engine fields: the role word

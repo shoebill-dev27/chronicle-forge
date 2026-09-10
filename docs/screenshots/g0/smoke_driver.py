@@ -179,6 +179,8 @@ PROBE_CANVAS = """
     sampled, colours: seen.size,
     ink_ratio: Math.round(1000 * different / sampled) / 1000,
     surface_mode: document.documentElement.dataset.surface || null,
+    page: state.page,
+    life: state.lifeShown,
     turn_hidden: document.querySelector('#surface-turn').hidden,
     rebirth_line: document.querySelector('#surface-rebirth').hidden
       ? null : document.querySelector('#surface-rebirth').textContent
@@ -498,6 +500,181 @@ def run(window):
         )
     shot("10-next-life")
 
+    # --- DVS: play the world out, then investigate it ----------------------
+    # Everything above proves one life on real hardware. This proves the whole
+    # discovery sequence: the world ends, the ending offers a thread, the thread
+    # walks back along real edges to the act the player sealed, the past is
+    # readable without being re-runnable, and the book survives being closed.
+    print("== the rest of the world ==", flush=True)
+    for _ in range(60):
+        page = js(window, "state.page")
+        surfaced = js(window, "document.documentElement.dataset.surface || ''")
+        if page == "closing":
+            break
+        if surfaced == "time":
+            js(window, "skipSurface(); document.querySelector('#surface-turn').click()")
+            time.sleep(1.4)
+        elif page == "juncture":
+            js(
+                window,
+                "document.querySelectorAll('.option')[0].click();"
+                "document.querySelector('#seal-btn').click()",
+            )
+            time.sleep(2.2)
+        else:
+            js(window, "turn()")
+            time.sleep(1.0)
+    time.sleep(0.8)
+
+    closing = json.loads(
+        note(
+            "closing",
+            js(
+                window,
+                "JSON.stringify({page: state.page, "
+                "line: (document.querySelector('#closing-line')||{}).textContent, "
+                "cases: [...document.querySelectorAll('.case-line')].map(e=>e.textContent), "
+                "investigate: [...document.querySelectorAll('.verb.investigate')].map(e=>e.textContent), "
+                "reread: (document.querySelector('#reread-btn')||{}).textContent, "
+                "shelf: (document.querySelector('#shelf-btn')||{}).textContent, "
+                "gapShown: !(document.querySelector('#closing-gap')||{}).hidden})",
+            ),
+        )
+    )
+    check("the world closes into its own page (P-12)", closing["page"] == "closing")
+    check(
+        "the ending offers both ways on (\u6b74\u53f2\u3092\u8aad\u307f\u8fd4\u3059 / \u672c\u68da\u3078)",
+        closing["reread"] == "\u6b74\u53f2\u3092\u8aad\u307f\u8fd4\u3059"
+        and closing["shelf"] == "\u672c\u68da\u3078",
+        f"{closing['reread']!r} {closing['shelf']!r}",
+    )
+    check(
+        "a thread is offered, or the miss is stated \u2014 never invented",
+        bool(closing["cases"]) != bool(closing["gapShown"]),
+        f"cases={len(closing['cases'])} gap={closing['gapShown']}",
+    )
+    shot("11-closing")
+
+    if closing["cases"]:
+        check(
+            "inspection is a visible, labelled control (\u8abf\u3079\u308b)",
+            all(t == "\u8abf\u3079\u308b" for t in closing["investigate"]),
+            str(closing["investigate"]),
+        )
+        # Keyboard parity: focus the control and press Enter. The same action the
+        # pointer opens must open here, or the affordance is decorative.
+        js(
+            window,
+            "const b=document.querySelector('.verb.investigate'); b.focus();"
+            "b.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));"
+            "b.click()",
+        )
+        time.sleep(1.0)
+        trace = json.loads(
+            note(
+                "trace",
+                js(
+                    window,
+                    "JSON.stringify({page: state.page, "
+                    "event: (document.querySelector('#trace-event')||{}).textContent, "
+                    "steps: document.querySelectorAll('.trace-step').length, "
+                    "others: (document.querySelector('#trace-others')||{}).hidden === false, "
+                    "caseSteps: state.trace ? state.trace.case.steps.length : null, "
+                    "sealed: state.trace ? state.trace.case.origin_sealed : null, "
+                    "act: state.trace ? state.trace.case.origin_act : null})",
+                ),
+            )
+        )
+        check("the visible control opens the trace (P-14)", trace["page"] == "trace")
+        shot("12-trace")
+
+        for _ in range(int(trace["caseSteps"] or 0) + 2):
+            js(window, "document.querySelector('#trace-step').click()")
+            time.sleep(0.35)
+        origin = json.loads(
+            note(
+                "origin",
+                js(
+                    window,
+                    "JSON.stringify({shown: document.querySelectorAll('.trace-step').length, "
+                    "originText: (document.querySelector('#trace-origin')||{}).textContent, "
+                    "originHidden: (document.querySelector('#trace-origin')||{}).hidden, "
+                    "known: [...state.known], "
+                    "act: state.trace.case.origin_act, "
+                    "sealed: state.trace.case.origin_sealed, "
+                    "life: state.trace.case.origin_life, "
+                    "year: state.trace.case.origin_year})",
+                ),
+            )
+        )
+        check(
+            "every real step is walked, and no more",
+            origin["shown"] == trace["caseSteps"],
+        )
+        check("the origin card arrives", not origin["originHidden"])
+        check(
+            "the origin names the life and the year",
+            str(origin["year"]) in origin["originText"],
+            origin["originText"],
+        )
+        check(
+            "the origin quotes the act in the words it was sealed under (C-2)",
+            origin["act"] in origin["originText"],
+            f"{origin['act']!r} in {origin['originText']!r}",
+        )
+        check(
+            "a sealed origin says chose; an autonomous one says did not choose (C-6)",
+            (
+                ("\u9078\u3093\u3060" in origin["originText"])
+                if origin["sealed"]
+                else (
+                    "\u9078\u3093\u3060\u306e\u3067\u306f\u306a\u3044"
+                    in origin["originText"]
+                )
+            ),
+            origin["originText"],
+        )
+        check("reaching the origin earns the reveal", len(origin["known"]) >= 1)
+        shot("13-origin")
+
+    # The past, readable and inert.
+    js(window, "toArchive(0)")
+    time.sleep(0.8)
+    archive = json.loads(
+        note(
+            "archive",
+            js(
+                window,
+                "JSON.stringify({page: state.page, "
+                "acts: document.querySelectorAll('.archive-acts .act').length, "
+                "options: document.querySelectorAll('.archive [data-index]').length, "
+                "seal: document.querySelectorAll('.archive #seal-btn').length, "
+                "now: (document.querySelector('#now-btn')||{}).textContent, "
+                "choices: state.choices.length})",
+            ),
+        )
+    )
+    check("the written past is readable during play", archive["page"] == "archive")
+    check(
+        "and it is inert \u2014 no option, no seal (UX-R8)",
+        archive["options"] == 0 and archive["seal"] == 0,
+        str(archive),
+    )
+    check(
+        "\u4eca\u306e\u9801\u3078 is offered",
+        archive["now"] == "\u4eca\u306e\u9801\u3078",
+        str(archive["now"]),
+    )
+    before = js(window, "state.choices.length")
+    js(window, "document.querySelector('#now-btn').click()")
+    time.sleep(0.6)
+    check(
+        "returning re-executes nothing",
+        js(window, "state.choices.length") == before,
+        str(before),
+    )
+    shot("14-archive")
+
     with open(f"{SHOTS}/{TAG}-notes.json", "w", encoding="utf-8") as fh:
         json.dump(
             {"seed": SEED, "notes": dict(NOTES), "failures": FAILURES},
@@ -513,7 +690,7 @@ def run(window):
 win = webview.create_window(
     "Chronicle Forge — The Living Chronicle",
     url=_index_html(),
-    js_api=BookBridge(seed=SEED),
+    js_api=BookBridge(seed=SEED, store=os.environ.get("STORE") or f"{SHOTS}/books"),
     width=1180,
     height=880,
     text_select=False,

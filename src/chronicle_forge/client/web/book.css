@@ -349,3 +349,33 @@ h2.place{font-size:26px; font-weight:600; margin:0 0 18px}
 .surface-verbs{ margin-block-start:0; padding-block-start:0 }
 .surface-verbs .verb{ color:#cdbf9f; border-color:#4a4238 }
 .surface-verbs .verb:hover{ color:#efdcb6; border-color:#8a7862 }
+
+/* ---- P-13 archive / P-12 closing / P-14 trace ---------------------------
+   The archive is the same leaf, dimmed a shade so a reader can feel they are
+   behind the wet ink rather than on it. Nothing here is interactive except the
+   way back: a spent page offers no verbs. */
+.archive-acts .act.written { opacity: .82; }
+
+.cases { list-style: none; margin: 1.1rem 0 0; padding: 0; }
+.case { display: flex; align-items: baseline; gap: .8rem; margin: .55rem 0; }
+.case-line { flex: 1 1 auto; }
+/* The inspect affordance is a visible, focusable control — never a gesture the
+   reader has to be told about in a tooltip (baseline UX-R2). */
+.verb.investigate { flex: 0 0 auto; font-size: .82em; padding: .18em .7em; }
+.case.holding { background: rgba(198,162,96,.10); }
+/* 朱 is a confirmed connection to a past life, and nothing else (UX-R5). */
+.case.confirmed .case-line { color: var(--shu, #b03a2c); }
+
+.trace-steps { margin: .9rem 0 0; padding-inline-start: 1.1rem; }
+.trace-step { margin: .35rem 0; }
+.trace-origin { margin-top: 1.1rem; padding-top: .7rem; border-block-start: 1px solid rgba(120,96,60,.35); }
+
+@media (prefers-reduced-motion: reduce) {
+  /* The transitions become instant states rather than disappearing: every page
+     still arrives, it simply does not travel (baseline UX-R9). */
+  .page, .page.turn-forward, .page.turn-back,
+  .option-hand.blooming, .option-confirm.blooming-confirm {
+    animation: none !important;
+    transition: none !important;
+  }
+}

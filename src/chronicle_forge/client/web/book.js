@@ -28,7 +28,7 @@
 const STRINGS = window.CF_VOICE.strings;
 
 const HOLD_MS = 800;
-const PAGES = ["shelf", "opening", "juncture", "entry", "digest"];
+const PAGES = ["shelf", "opening", "juncture", "entry", "digest", "archive", "closing", "trace"];
 // The surface plays 0 -> TimeSurface.REBIRTH_END; the last stretch of the cut
 // is the real juncture page, not a picture of one.
 const SURFACE_MS = 14000;
@@ -131,6 +131,9 @@ let state = {
   frozenT: null,    // ?t= — a frozen surface clock, for reproducible captures
   known: new Set(), // coords the reader has CONFIRMED (C-5). Never guessed at.
   bookId: null,     // the shelf slot this run is being written into
+  archiveLife: 0,   // which past life the archive is showing, 0 = not browsing
+  resume: null,     // the unresolved page 「今の頁へ」 returns to
+  trace: null,      // { case, shown } — one investigation, one link per input
 };
 
 /* The surface asks the client what has been confirmed; the client is the only
@@ -649,7 +652,9 @@ function playSurface(win) {
     // it. What decides that is whether a life was BORN after this one, not
     // whether a juncture remains — a life the world asked nothing of still has
     // a page.
-    $("#surface-turn").hidden = t < end || !win.rebirth;
+    // With a rebirth this turns to the next life; without one the world is
+    // over and it turns to the closing page, which is the only thing after it.
+    $("#surface-turn").hidden = t < end;
   };
 
   if (state.frozenT !== null) return paint(state.frozenT);
@@ -709,10 +714,10 @@ async function seal() {
   let stream;
   try {
     if (state.live && state.bookId) {
-      // Commit through the book, not past it. `play` returns the same stream
-      // but writes nothing, so quitting between two junctures lost the act the
-      // reader had just sealed — the one thing a save exists to keep (C-5).
-      // The book is written before the page moves.
+      // Commit through the book, not past it. `play` would return the same
+      // stream but leave the choice only in this window, so quitting between
+      // two junctures lost the act the reader had just sealed — the one thing
+      // a save exists to keep (C-5). The book is written before the page moves.
       const book = await bridge("seal_choice", state.bookId, state.selected);
       stream = book.stream;
     } else {
@@ -732,6 +737,212 @@ async function seal() {
   return toEntry(state.lifeShown);
 }
 
+/* ---- P-13 the archive: the past, readable, inert -------------------------
+   Navigation is not commitment (baseline UX-R8). The acts of an earlier life
+   are printed exactly as they were written; the options that produced them are
+   not re-offered, because a juncture the world has already answered cannot be
+   answered again. Reading confirms nothing (D-04) — this function reads
+   `state.known` and never adds to it. */
+
+function livesWritten() {
+  const ordinals = new Set(beatsOf("outcome").map((b) => b.life));
+  return [...ordinals].sort((a, b) => a - b);
+}
+
+function toArchive(life) {
+  const written = livesWritten();
+  if (!written.length) return;
+  // Remember the unresolved page ONCE, on the way in, so repeated browsing
+  // cannot overwrite the thing 「今の頁へ」 exists to return to.
+  if (!state.resume) {
+    state.resume = { page: state.page, life: state.lifeShown, selected: state.selected };
+  }
+  state.archiveLife = life || written[written.length - 1];
+  const list = $("#archive-acts");
+  list.innerHTML = "";
+  for (const beat of beatsOf("outcome")) {
+    if (beat.life !== state.archiveLife) continue;
+    const li = document.createElement("li");
+    li.className = "act hand written";
+    li.textContent = beat.option
+      ? STRINGS.actLine(beat.year, beat.label)
+      : STRINGS.passLine(beat.year);
+    list.appendChild(li);
+  }
+  const spent = document.createElement("li");
+  spent.className = "print muted";
+  spent.textContent = STRINGS.archiveSpent;
+  list.appendChild(spent);
+  const idx = written.indexOf(state.archiveLife);
+  $("#archive-prev").disabled = idx <= 0;
+  $("#archive-next").disabled = idx >= written.length - 1;
+  setRunningHead(`${window.CF_VOICE.epithet(state.archiveLife)}`);
+  show("archive", "back");
+  cursor({ page: "archive", archive_life: state.archiveLife });
+}
+
+function archiveStep(delta) {
+  const written = livesWritten();
+  const idx = written.indexOf(state.archiveLife) + delta;
+  if (idx < 0 || idx >= written.length) return;
+  toArchive(written[idx]);
+}
+
+// 「今の頁へ」 — back to the exact page the reader left, selection intact.
+function toNow() {
+  const back = state.resume;
+  state.archiveLife = 0;
+  state.resume = null;
+  cursor({ page: back ? back.page : "juncture", archive_life: null });
+  if (!back) return;
+  if (back.page === "juncture") {
+    toJuncture(junctures()[state.cursor]);
+    if (back.selected != null) {
+      const li = document.querySelector(`.option[data-index="${back.selected}"]`);
+      if (li) selectOption(li, { n: back.selected });
+    }
+    return;
+  }
+  show(back.page, "forward");
+}
+
+/* ---- P-12 the closing, and P-14 the trace ------------------------------- */
+
+function closingBeat() { return firstBeat("closing"); }
+
+function toClosing() {
+  const beat = closingBeat();
+  if (!beat) return;
+  hideSurface();
+  $("#closing-line").textContent = STRINGS.closingLine(beat.year, beat.lives, beat.ending);
+  const list = $("#cases");
+  list.innerHTML = "";
+  // Only the threads that really reach an act the PLAYER sealed are offered as
+  // the ending's invitation; an autonomous origin is real history and is still
+  // traceable, but it cannot answer "which choice of yours caused this".
+  const cases = (beat.cases || []).filter((c) => c.origin_sealed);
+  for (const c of cases.slice(0, 3)) list.appendChild(buildCase(c));
+  const gap = $("#closing-gap");
+  gap.hidden = cases.length > 0;
+  if (!cases.length) {
+    // The content-gate miss, said plainly. Inventing an invitation here would
+    // be the one failure the whole design is built to avoid.
+    gap.textContent = STRINGS.closingNoThread;
+    console.warn("content gate: this world offers no player-sealed thread to trace");
+  }
+  setRunningHead("");
+  setStatus(STRINGS.inkSets);
+  show("closing", "forward");
+  cursor({ page: "closing" });
+}
+
+// One offered thread. The consequence reads as ordinary history; the only thing
+// beside it is a truthful, visible, keyboard-reachable way to ask about it.
+function buildCase(c) {
+  const li = document.createElement("li");
+  li.className = "case print";
+  if (state.known.has(c.ref)) li.classList.add("confirmed");
+
+  const line = document.createElement("span");
+  line.className = "case-line";
+  line.textContent = STRINGS.traceStep(c.year, c.event);
+  li.appendChild(line);
+
+  // I-05a. A real button, so Enter and Space work because they always have —
+  // inspection is taught, not hidden behind a gesture (baseline UX-R2).
+  const btn = document.createElement("button");
+  btn.className = "verb ghost investigate";
+  btn.type = "button";
+  btn.textContent = STRINGS.investigate;
+  btn.addEventListener("click", (e) => { e.stopPropagation(); openTrace(c); });
+  li.appendChild(btn);
+
+  // I-05b. The hold is the same action by another route, never a third one.
+  wireInspectHold(li, c);
+  return li;
+}
+
+// The optional ~800 ms hold. It opens exactly what the button opens; it can be
+// released to cancel; and it never selects or commits anything.
+function wireInspectHold(el, c) {
+  let timer = null;
+  const cancel = () => { if (timer) clearTimeout(timer); timer = null; el.classList.remove("holding"); };
+  el.addEventListener("pointerdown", () => {
+    el.classList.add("holding");
+    timer = setTimeout(() => { holdConsumedClick = true; cancel(); openTrace(c); }, HOLD_MS);
+  });
+  for (const ev of ["pointerup", "pointerleave", "pointercancel"]) el.addEventListener(ev, cancel);
+}
+
+/* One consequence, walked back along edges the world really holds. `steps` is a
+   path, never a count: each entry is an event that exists, in order, and the
+   page draws nothing between them. */
+function openTrace(c) {
+  state.trace = { case: c, shown: 0 };
+  $("#trace-event").textContent = STRINGS.traceStep(c.year, c.event);
+  $("#trace-steps").innerHTML = "";
+  $("#trace-origin").hidden = true;
+  const others = $("#trace-others");
+  // A shared cause says so. The earliest act is ONE contributing origin, and a
+  // page that quietly drops the others would be claiming sole authorship.
+  others.hidden = !c.other_origins;
+  if (c.other_origins) others.textContent = STRINGS.traceOthers(c.other_origins);
+  $("#trace-step").hidden = false;
+  $("#trace-step").disabled = false;
+  setRunningHead("");
+  show("trace", "forward");
+  cursor({ page: "trace" });
+  if (!c.steps.length) traceStep();   // a direct edge: there is nothing between
+}
+
+// One link per input (D-05), so the reader is invited to guess before it turns.
+function traceStep() {
+  const t = state.trace;
+  if (!t) return;
+  const c = t.case;
+  if (t.shown < c.steps.length) {
+    const step = c.steps[t.shown++];
+    const li = document.createElement("li");
+    li.className = "trace-step print";
+    li.textContent = STRINGS.traceStep(step.year, step.phrase);
+    $("#trace-steps").appendChild(li);
+    fitPage();
+    return;
+  }
+  revealOrigin(c);
+}
+
+/* The last card. Its wording is decided by `origin_sealed` and by nothing else:
+   the player's own remembered sentence when they chose it, the world's phrase
+   for it when their life acted alone. Reaching it is what earns the reveal. */
+function revealOrigin(c) {
+  const box = $("#trace-origin");
+  box.textContent = c.origin_sealed
+    ? STRINGS.traceOriginSealed(c.origin_life, c.origin_year, c.origin_act)
+    : STRINGS.traceOriginAuto(c.origin_life, c.origin_year, c.origin_act);
+  if (!c.steps.length) box.dataset.direct = STRINGS.traceDirect;
+  box.hidden = false;
+  $("#trace-step").disabled = true;
+  setStatus(STRINGS.statusRemembered);
+  confirmReveal("P14_TRACE", c.ref);
+  fitPage();
+}
+
+// A confirmation is permanent and belongs to the book, not to this window.
+function confirmReveal(surface, coord) {
+  if (state.known.has(coord)) return;
+  state.known.add(coord);
+  publishKnown();
+  if (state.live && state.bookId) {
+    bridge("confirm", state.bookId, surface, coord).catch(() => {});
+  }
+}
+
+// Where the reader is, remembered. Never touches the recipe (UX-R8).
+function cursor(patch) {
+  if (state.live && state.bookId) bridge("move_cursor", state.bookId, patch).catch(() => {});
+}
+
 /* ---- verbs / wiring ---- */
 
 function turn() {
@@ -740,7 +951,9 @@ function turn() {
     // P-10 goes between the years and the life they lead to; when there is no
     // digest to deliver the surface hands straight on, exactly as it used to.
     if (toDigest(state.win)) return;
-    // The next LIFE, not the next juncture — see advanceTo.
+    // The next LIFE, not the next juncture — see advanceTo. When no life
+    // follows, the world is finished and the book closes.
+    if (!state.win || !state.win.rebirth) return toClosing();
     return advanceTo(state.lifeShown + 1);
   }
   if (state.page === "shelf") return toOpening();
@@ -753,20 +966,45 @@ function turn() {
 }
 function flip() {
   if (document.documentElement.dataset.surface === "time") return; // the years do not run backwards
-  if (state.page === "entry") return;   // the entry has no way back — see index.html
-  if (state.page === "digest") return; // nor does the digest: the years are spent
-  if (state.page === "juncture") return show("opening", "back");
+  if (state.page === "digest") return; // the years are spent
+  // Flipping back reaches everything already written in this book (UX §3.3).
+  // What it reaches is READ-ONLY: the archive prints past acts and offers no
+  // way to answer their junctures again, so rereading can never double-execute.
+  if (state.page === "juncture" || state.page === "entry") {
+    return livesWritten().length ? toArchive(0) : show("opening", "back");
+  }
+  if (state.page === "archive") return toNow();
   if (state.page === "opening") return show("shelf", "back");
 }
+
+const VERBS = {
+  turn,
+  flip,
+  seal,
+  now: toNow,
+  "archive-prev": () => archiveStep(-1),
+  "archive-next": () => archiveStep(1),
+  "trace-step": traceStep,
+  "trace-back": toClosing,
+  reread: () => toArchive(0),
+  shelf: () => show("shelf", "back"),
+};
 
 function wireVerbs() {
   document.addEventListener("click", (e) => {
     const v = e.target.closest("[data-verb]");
     if (!v) return;
-    ({ turn, flip, seal }[v.dataset.verb] || (() => {}))();
+    // A completed hold ends in a pointerup the browser also reports as a click.
+    // Inspecting is not continuing, so that trailing click must not turn a page.
+    if (holdConsumedClick) { holdConsumedClick = false; return; }
+    (VERBS[v.dataset.verb] || (() => {}))();
   });
   document.addEventListener("keydown", (e) => {
     if (e.target.closest(".option")) return; // hold key handled per-option
+    // A focused control already answers Enter/Space itself. Letting the page
+    // ALSO act on the same event is how one key press both commits a choice and
+    // turns the page past its result (baseline UX-R9: no double-commit).
+    if (e.target.closest("button, [tabindex]")) return;
     if (e.key === "Enter" || e.key === " " || e.key === "ArrowRight") { turn(); }
     else if (e.key === "ArrowLeft") { flip(); }
   });

@@ -88,6 +88,54 @@
         </div>
       </section>
 
+      <!-- P-13 · The archive — the past, read-only, DURING play.
+           Navigation is not commitment (baseline UX-R8): the acts of earlier
+           lives can be read at any time, the options that produced them are
+           gone rather than re-offered, and 「今の頁へ」 puts the reader back on
+           the exact page they left, selection and all. Nothing here can earn a
+           reveal: reading never confirms (D-04). -->
+      <section class="page archive" data-page="archive" hidden>
+        <p class="eyebrow print" data-str="archiveEyebrow">These pages are written</p>
+        <ol class="acts archive-acts" id="archive-acts"></ol>
+        <div class="verbs">
+          <button class="verb ghost" data-verb="archive-prev" id="archive-prev" data-str="archivePrev">Earlier</button>
+          <button class="verb ghost" data-verb="archive-next" id="archive-next" data-str="archiveNext">Later</button>
+          <button class="verb primary" data-verb="now" id="now-btn" data-str="nowPage">To the current page</button>
+        </div>
+      </section>
+
+      <!-- P-12 · The closing. One grounded passage, and the threads the book
+           can honestly offer. A case is only listed when the world really holds
+           an ordered path back to an act; when it holds none the page says so
+           and records the content-gate miss rather than inventing an invitation. -->
+      <section class="page closing" data-page="closing" hidden>
+        <p class="eyebrow print" data-str="closingEyebrow">The chronicle is complete</p>
+        <p class="print" id="closing-line">&mdash;</p>
+        <ul class="cases" id="cases"></ul>
+        <p class="print muted" id="closing-gap" hidden></p>
+        <div class="verbs">
+          <button class="verb ghost" data-verb="reread" id="reread-btn" data-str="reread">Read the history again</button>
+          <button class="verb primary" data-verb="shelf" id="shelf-btn" data-str="toShelf">To the shelf</button>
+        </div>
+      </section>
+
+      <!-- P-14 · The trace. One consequence, walked back along real edges to
+           the act that began it — one link per input (D-05), so the reader is
+           invited to guess the next before it turns. The last card names the
+           life, the year and, when the player sealed it themselves, the act in
+           the exact words they sealed it under (C-2). -->
+      <section class="page trace" data-page="trace" hidden>
+        <p class="eyebrow print" data-str="traceEyebrow">How did this come about</p>
+        <p class="print trace-event" id="trace-event">&mdash;</p>
+        <ol class="trace-steps" id="trace-steps"></ol>
+        <div class="trace-origin hand" id="trace-origin" hidden></div>
+        <p class="print muted" id="trace-others" hidden></p>
+        <div class="verbs">
+          <button class="verb ghost" data-verb="trace-step" id="trace-step" data-str="whatBefore">What came before?</button>
+          <button class="verb primary" data-verb="trace-back" id="trace-back" data-str="backToClosing">Back</button>
+        </div>
+      </section>
+
     </div>
 
     <!-- The Time Surface (B2 死 / B3 時間経過 / B4 余波・次の生). Not a leaf page:

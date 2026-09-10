@@ -455,6 +455,74 @@ def test_the_digest_prints_no_number_and_coins_no_mark():
 
 
 # --------------------------------------------------------------------------
+# C-4 — the discovery guard on the time surface (baseline UX-R3 / UX-R5)
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("seed", _SEEDS)
+@needs_node
+def test_the_surface_names_no_founder_before_the_reader_earns_it(tmp_path, seed):
+    """The leak this guard exists for.
+
+    Every hardened mark belongs to a life OLDER than the one that just died
+    (0 of 229 across seeds 1-30 were founded by the last life), so D-03 reserves
+    all of them for the player to discover. The surface used to caption the
+    first one with its founding life the moment the years finished — on the
+    first surface a player ever sees.
+    """
+    probe = _probe(tmp_path, seed)["discovery"]
+    if probe is None:
+        pytest.skip("this seed hardens no mark")
+    assert probe["unknownRegister"] == "unattributed"
+    for ordinal in probe["founders"]:
+        assert window_epithet(ordinal) not in probe["unknownCaption"], (
+            f"seed {seed}: the caption names life {ordinal} unearned — "
+            f"{probe['unknownCaption']!r}"
+        )
+
+
+@pytest.mark.parametrize("seed", _SEEDS)
+@needs_node
+def test_a_confirmed_connection_may_finally_name_its_life(tmp_path, seed):
+    """The other half: the guard withholds, it does not delete. Once the reader
+    has earned the connection the surface says whose it was."""
+    probe = _probe(tmp_path, seed)["discovery"]
+    if probe is None:
+        pytest.skip("this seed hardens no mark")
+    assert probe["knownRegister"] == "sealed"
+    assert window_epithet(probe["founders"][0]) in probe["knownCaption"]
+
+
+@pytest.mark.parametrize("seed", _SEEDS)
+@needs_node
+def test_confirmation_changes_the_geometry_not_only_the_words(tmp_path, seed):
+    """An unconfirmed mark must not be filed into its founder's stratum, and the
+    camera must not close on it: geometry attributes just as loudly as a caption
+    does. If the two draws were identical the guard would be cosmetic."""
+    probe = _probe(tmp_path, seed)["discovery"]
+    if probe is None:
+        pytest.skip("this seed hardens no mark")
+    assert probe["geometryDiffers"], (
+        f"seed {seed}: the surface draws an unconfirmed mark exactly as it draws "
+        "a confirmed one"
+    )
+
+
+@pytest.mark.parametrize("seed", _SEEDS)
+@needs_node
+def test_an_unexplained_mark_still_appears_and_keeps_its_name(tmp_path, seed):
+    """Withholding whose it is must not become hiding that it exists — marks
+    never lie (D-08), and an unexplained older mark is what the spec wants
+    sitting there to be investigated."""
+    probe = _probe(tmp_path, seed)["discovery"]
+    if probe is None:
+        pytest.skip("this seed hardens no mark")
+    assert probe["names"] and all(probe["names"])
+    assert probe["refs"] and all(probe["refs"])
+    assert probe["unknownCaption"], "the surface went silent instead of truthful"
+
+
+# --------------------------------------------------------------------------
 # C-5 through the bridge — the book that survives quitting
 # --------------------------------------------------------------------------
 
@@ -556,77 +624,89 @@ def test_the_cursor_ignores_keys_it_does_not_know(tmp_path):
     assert bridge.open_book(book_id=bid)["cursor"]["page"] == "archive"
 
 
+# --------------------------------------------------------------------------
+# the new surfaces, as source contracts (the real window asserts the behaviour)
+# --------------------------------------------------------------------------
+
+
+def test_inspection_never_selects_and_never_commits():
+    """I-05a is a third action, not a way into the other two (baseline UX-R2).
+    If `openTrace` could reach selection or sealing, asking a question would
+    answer one."""
+    src = _source("book.js")
+    body = src[src.index("function openTrace(") : src.index("function traceStep(")]
+    for forbidden in ("selectOption", "seal(", "state.selected =", "state.sealed ="):
+        assert forbidden not in body, f"openTrace reaches {forbidden}"
+
+
+def test_the_archive_offers_no_way_to_answer_a_spent_juncture():
+    """Read-only means the options are not re-offered at all — the safest form
+    of "cannot re-execute" is having nothing to click (baseline UX-R8)."""
+    src = _source("book.js")
+    body = src[src.index("function toArchive(") : src.index("function archiveStep(")]
+    for forbidden in ("buildOption", "#seal-btn", "selectOption"):
+        assert forbidden not in body, f"the archive builds {forbidden}"
+    html = _source("index.html")
+    archive = html[
+        html.index('data-page="archive"') : html.index('data-page="closing"')
+    ]
+    assert 'data-verb="seal"' not in archive
+
+
+def test_browsing_remembers_the_unresolved_page_once():
+    """Entering the archive twice must not overwrite the page 「今の頁へ」 exists
+    to return to."""
+    src = _source("book.js")
+    body = src[src.index("function toArchive(") : src.index("function archiveStep(")]
+    assert "if (!state.resume)" in body, "the resume point is not latched"
+
+
+def test_shu_is_reserved_for_a_confirmed_connection():
+    """UX-R5: one accent, one meaning. The only rule that may paint 朱 in the
+    new surfaces is the confirmed one."""
+    css = re.sub(
+        r"/\*.*?\*/",
+        "",
+        (_WEB_DIR / "book.css").read_text(encoding="utf-8"),
+        flags=re.S,
+    )
+    for line in css.splitlines():
+        # the declaration of the custom property is not a use of it
+        if "var(--shu" in line:
+            assert "confirmed" in line, f"朱 painted outside a confirmation: {line}"
+
+
+def test_the_ending_states_a_miss_rather_than_inventing_a_thread():
+    src = _source("book.js")
+    body = src[src.index("function toClosing(") : src.index("function buildCase(")]
+    assert "closingNoThread" in body, "the ending has no honest empty case"
+    assert "origin_sealed" in body, "the ending offers threads it cannot substantiate"
+
+
+def test_the_page_never_paints_a_founder_the_reader_has_not_earned():
+    """time.js must ask, not assume: the only path to a founder-shaped caption
+    or placement is through `knows`."""
+    src = _source("time.js")
+    assert "knows(m.ref)" in src, "mark placement does not consult the reveal set"
+    assert "confirmed(win)[0]" in src, "the sealed caption does not consult it either"
+
+
+def test_sealing_reaches_the_book_not_only_the_window(tmp_path):
+    """A choice committed in the page must be in the book before the page moves.
+    The client used to seal via `play`, which returns the right stream but
+    writes nothing — so quitting between two junctures lost the act just sealed,
+    which is the one thing a save exists to keep."""
+    bridge = BookBridge(seed=42, store=tmp_path)
+    bid = bridge.open_book()["book_id"]
+    bridge.seal_choice(bid, 2)
+    bridge.seal_choice(bid, 1)
+    reopened = BookBridge(seed=42, store=tmp_path).open_book(book_id=bid)
+    assert reopened["choices"] == ["2", "1"]
+
+
 def test_the_page_seals_through_the_book():
     src = _source("book.js")
     # `_source` strips comments, so the section marker is gone — slice to the
     # next function instead.
     body = src[src.index("async function seal(") : src.index("function turn()")]
     assert "seal_choice" in body, "the page still seals past the store"
-
-
-# --------------------------------------------------------------------------
-# C-4 — the discovery guard on the time surface (baseline UX-R3 / UX-R5)
-# --------------------------------------------------------------------------
-
-
-@pytest.mark.parametrize("seed", _SEEDS)
-@needs_node
-def test_the_surface_names_no_founder_before_the_reader_earns_it(tmp_path, seed):
-    """The leak this guard exists for.
-
-    Every hardened mark belongs to a life OLDER than the one that just died
-    (0 of 229 across seeds 1-30 were founded by the last life), so D-03 reserves
-    all of them for the player to discover. The surface used to caption the
-    first one with its founding life the moment the years finished — on the
-    first surface a player ever sees.
-    """
-    probe = _probe(tmp_path, seed)["discovery"]
-    if probe is None:
-        pytest.skip("this seed hardens no mark")
-    assert probe["unknownRegister"] == "unattributed"
-    for ordinal in probe["founders"]:
-        assert window_epithet(ordinal) not in probe["unknownCaption"], (
-            f"seed {seed}: the caption names life {ordinal} unearned — "
-            f"{probe['unknownCaption']!r}"
-        )
-
-
-@pytest.mark.parametrize("seed", _SEEDS)
-@needs_node
-def test_a_confirmed_connection_may_finally_name_its_life(tmp_path, seed):
-    """The other half: the guard withholds, it does not delete. Once the reader
-    has earned the connection the surface says whose it was."""
-    probe = _probe(tmp_path, seed)["discovery"]
-    if probe is None:
-        pytest.skip("this seed hardens no mark")
-    assert probe["knownRegister"] == "sealed"
-    assert window_epithet(probe["founders"][0]) in probe["knownCaption"]
-
-
-@pytest.mark.parametrize("seed", _SEEDS)
-@needs_node
-def test_confirmation_changes_the_geometry_not_only_the_words(tmp_path, seed):
-    """An unconfirmed mark must not be filed into its founder's stratum, and the
-    camera must not close on it: geometry attributes just as loudly as a caption
-    does. If the two draws were identical the guard would be cosmetic."""
-    probe = _probe(tmp_path, seed)["discovery"]
-    if probe is None:
-        pytest.skip("this seed hardens no mark")
-    assert probe["geometryDiffers"], (
-        f"seed {seed}: the surface draws an unconfirmed mark exactly as it draws "
-        "a confirmed one"
-    )
-
-
-@pytest.mark.parametrize("seed", _SEEDS)
-@needs_node
-def test_an_unexplained_mark_still_appears_and_keeps_its_name(tmp_path, seed):
-    """Withholding whose it is must not become hiding that it exists — marks
-    never lie (D-08), and an unexplained older mark is what the spec wants
-    sitting there to be investigated."""
-    probe = _probe(tmp_path, seed)["discovery"]
-    if probe is None:
-        pytest.skip("this seed hardens no mark")
-    assert probe["names"] and all(probe["names"])
-    assert probe["refs"] and all(probe["refs"])
-    assert probe["unknownCaption"], "the surface went silent instead of truthful"

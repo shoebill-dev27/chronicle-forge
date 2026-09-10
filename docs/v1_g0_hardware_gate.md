@@ -106,3 +106,48 @@ digest, not on the next life).
   human question and belongs to R1/R2.
 - **Nothing here is a golden.** The frames are evidence, not fixtures; no test
   compares them.
+
+---
+
+## Update — 2026-09-10: the gate now walks the whole Discovery Vertical Slice
+
+The gate used to stop at the second life: it proved one life, the Time Surface
+and the rebirth digest on real hardware, which was everything the client could
+do. The DVS added the other half of the loop, so the driver now plays the world
+out and investigates it.
+
+New legs, all on the real `BookBridge` in the real pywebview window:
+
+* **The world closes into P-12.** The driver seals through every remaining
+  juncture and skips every surface until the book ends, then reads the closing
+  page: its passage, its threads, and both ways on
+  (**「歴史を読み返す」/「本棚へ」**).
+* **A thread is offered, or the miss is stated.** The check is an exclusive or —
+  a world with no player-sealed thread must say so and record the content-gate
+  miss, never invent an invitation.
+* **Inspection is a visible, labelled control.** 「調べる」 is read off the page,
+  focused, activated by keyboard *and* by pointer, and both reach the same trace.
+* **The trace walks real edges.** Every step the case carries is walked and no
+  more, and the origin card names the life, the year, and the act **in the exact
+  words the player sealed it under** — seed 1 returns
+  *「——最初のあなたが、0年に「Support Karic」を選んだ。」*
+* **Player-sealed and autonomous origins read differently** (C-6), and reaching
+  the origin earns the reveal.
+* **The past is readable and inert.** The archive prints earlier acts, offers no
+  option and no seal, and 「今の頁へ」 returns without re-executing anything —
+  asserted against the sealed-choice count before and after.
+
+The driver now runs with a book store (`STORE`, default `$SHOTS/books`), so the
+run also exercises C-5 for real. After a full pass on seed 1 the book on disk
+holds all **8 sealed inputs**, the reveal earned in the trace, and the cursor;
+re-loading it answers `knows(...) == True`.
+
+**Result (2026-09-10, seed 1): 0 failures, 0 bridge errors.** Evidence:
+`docs/screenshots/g0/dvs-s1-notes.json`.
+
+Two bugs were caught here that no unit test had: `BookBridge.move_cursor` used a
+`**kwargs` signature that pywebview cannot reach positionally (every call from
+the page raised a TypeError the page never saw, so the reader's position was
+silently never written), and the page sealed via `play` rather than through the
+book, so a quit between two junctures lost the act just sealed. Both now have
+regression tests.
