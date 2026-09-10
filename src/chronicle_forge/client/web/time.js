@@ -75,9 +75,35 @@
     return null;
   }
 
-  // Which of the three registers this window is in — decided by the stream.
-  function register(win) {
-    if (win.aftermath.hardened.length) return "sealed";
+  /* Which attributions the reader has actually uncovered. The surface asks;
+     it never decides. Default: nothing is known, which is the safe answer — a
+     surface that guesses wrong here shows a stranger their own forgotten hand
+     before they have found it. */
+  let knows = () => false;
+  function setKnown(fn) { knows = typeof fn === "function" ? fn : () => false; }
+
+  // The confirmed hardened marks of this window, in stream order.
+  function confirmed(win) {
+    return (win.aftermath.hardened || []).filter((m) => knows(m.ref));
+  }
+
+  /* Which register this window is in — decided by the stream AND by what the
+     reader has earned (D-03/D-04, baseline UX-R3).
+
+     `sealed` is the loud one: 朱, the founder's own layer, and the camera
+     closing on it. That is the grammar of a CONFIRMED connection to a past
+     life, so it may only fire once the connection is confirmed. Every hardened
+     mark belongs to a life older than the last, so firing it on arrival — which
+     is what this did until 2026-09-10 — delivered exactly the attribution D-03
+     reserves for the player to discover, on the first surface they ever see.
+
+     `unattributed` is the honest form of the same data: the mark is drawn, and
+     named, but at a neutral depth, in ink, with no camera move and no founder.
+     An unexplained older mark is what the spec wants there. */
+  function register(win, known) {
+    if (typeof known === "function") setKnown(known);
+    if (confirmed(win).length) return "sealed";
+    if ((win.aftermath.hardened || []).length) return "unattributed";
     if (win.aftermath.echoes.length) return "echo";
     return "silent";
   }
@@ -119,10 +145,15 @@
     g.addColorStop(0, "rgba(255,232,190,.16)"); g.addColorStop(0.5, "rgba(255,226,180,.05)"); g.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   }
-  function wax(ctx, x, y, rad, r) { // the 朱 seal
+  /* The seal. 朱 ONLY when the connection to a past life is confirmed
+     (baseline UX-R5: one accent, one meaning). An unconfirmed mark is real and
+     is drawn — marks never lie — but in ink, because vermilion here would be
+     the page asserting a bond the reader has not earned. */
+  function wax(ctx, x, y, rad, r, isConfirmed) {
     ctx.save();
     const g = ctx.createRadialGradient(x - rad * 0.3, y - rad * 0.35, rad * 0.1, x, y, rad * 1.15);
-    g.addColorStop(0, SHU_HI); g.addColorStop(0.62, SHU); g.addColorStop(1, "rgba(90,24,18,0)");
+    if (isConfirmed) { g.addColorStop(0, SHU_HI); g.addColorStop(0.62, SHU); g.addColorStop(1, "rgba(90,24,18,0)"); }
+    else { g.addColorStop(0, "#6d5c46"); g.addColorStop(0.62, "#4a3d2e"); g.addColorStop(1, "rgba(30,24,17,0)"); }
     ctx.fillStyle = g; ctx.beginPath();
     for (let i = 0; i <= 26; i++) { const a = (i / 26) * Math.PI * 2, w = rad * (0.9 + 0.16 * r()); ctx[i ? "lineTo" : "moveTo"](x + Math.cos(a) * w, y + Math.sin(a) * w); }
     ctx.fill();
@@ -199,6 +230,7 @@
     const surface = Math.min.apply(null, [base].concat(Object.keys(bandTop).map((k) => bandTop[k])));
 
     const marks = fan(win.aftermath.hardened).slice(0, 3);
+    const anyConfirmed = confirmed(win).length > 0;
     const pop = ease(clamp(after / 0.6, 0, 1));
     const pos = marks.map((m) => {
       // A seal's size is its reach, so the gap between two seals of the same
@@ -210,13 +242,21 @@
         m,
         rad,
         x: clamp(X(m.planted_year || 0) + m.slot * rad * 3.4, PAD + 16, W - PAD - 16),
-        y: bandY[m.founder_life] || base - 24,
+        // The year is horizontal position and says nothing about whose the mark
+        // is; the LAYER is the founding life, and that is an attribution. So an
+        // unconfirmed mark floats just above the strata instead of being filed
+        // into the life that made it (baseline UX-R3: no founder-specific
+        // geometry before confirmation).
+        y: knows(m.ref) ? bandY[m.founder_life] || base - 24 : surface - 26,
+        confirmed: knows(m.ref),
       };
     });
 
     // The close. The seal never leaves its year or its layer — the frame comes
     // to IT. At 292px a bloom was not enough; a push is (see the spike doc).
-    const close = pos.length ? ease(clamp((after - 0.55) / 0.45, 0, 1)) : 0;
+    // A push toward one mark says "this one, and it is yours". Before the
+    // connection is confirmed that is the reveal itself, done by camera.
+    const close = pos.length && anyConfirmed ? ease(clamp((after - 0.55) / 0.45, 0, 1)) : 0;
     const z = 1 + 2.6 * close;
     ctx.save();
     if (close > 0) { ctx.translate(W / 2, H * 0.52); ctx.scale(z, z); ctx.translate(-pos[0].x, -pos[0].y); }
@@ -273,7 +313,7 @@
       const k = clamp((pop - i * 0.13) / 0.55, 0, 1); if (k <= 0) return;
       ctx.save(); ctx.globalAlpha = k * 0.55; ctx.strokeStyle = GOLD; ctx.lineWidth = 1 / Math.max(1, z * 0.6);
       ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.moveTo(P.x, P.y); ctx.lineTo(P.x, surface - 6); ctx.stroke(); ctx.restore();
-      wax(ctx, P.x, P.y, P.rad * k, r);
+      wax(ctx, P.x, P.y, P.rad * k, r, P.confirmed);
     });
     ctx.restore();
 
@@ -298,14 +338,17 @@
       return span > 0 ? S.surfaceFalling(span) : S.surfaceHeld;
     }
     if (reg === "sealed") {
-      const m = win.aftermath.hardened[0];
+      const m = confirmed(win)[0];
       // `planted_year` is optional in the stream; a mark without one is still a
       // mark, so the date is dropped rather than printed as a hole.
       return S.surfaceSealed(m.founder_life, m.planted_year);
     }
+    // Something gained a name, but whose it is has not been earned yet: count
+    // it truthfully and name no life (D-03).
+    if (reg === "unattributed") return S.surfaceHardened(win.aftermath.hardened.length);
     if (reg === "echo") return S.surfaceEcho(win.aftermath.echoes.length);
     return span > 0 ? S.surfaceSilent(span) : S.surfaceHeld;
   }
 
-  window.TimeSurface = { W, H, CUT, REBIRTH_END, done, pickWindow, register, draw, caption };
+  window.TimeSurface = { W, H, CUT, REBIRTH_END, done, pickWindow, register, draw, caption, setKnown, confirmed };
 })();

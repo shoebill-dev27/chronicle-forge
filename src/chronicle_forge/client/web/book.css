@@ -34,12 +34,14 @@
   --sumi:#241E17;            /* 墨 — print ink */
   --hand-ink:#6E4A2F;        /* the Hand — warmer, wetter ink */
   --muted:#8A7B63;
-  /* 朱 — reserved. D-4 §5 rule P-1: 朱 means "still-shaping the world"
-     content ONLY (P-12's single rubricated highlight). That content does not
-     exist in this I-1 skeleton, so 朱 is defined but UNUSED here — marks,
-     the hold-fill, the reveal and the focus ring all moved to the ink
-     family below. Do not reach for --shu until a still-shaping surface
-     actually ships. */
+  /* 朱 — the single system-wide accent. Amended 2026-09-10 (baseline UX-R5,
+     which amends D-4 §5 rule P-1): it means **a confirmed connection to a past
+     life**, and nothing else. It previously meant "still-shaping the world",
+     a rule the visual guide already contradicted two sections later; the
+     still-shaping idea survives as explicit text, not as this colour.
+     Marks, the hold-fill, ordinary selection, the S-03 promise mark and the
+     focus ring are all ink. Reach for --shu only where the reader has earned
+     the connection. */
   --shu:#B23A28;
   --rule:#D3C6AC;
   /* Bundled face first; the system stacks stay only as a last resort if the

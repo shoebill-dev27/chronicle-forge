@@ -126,8 +126,17 @@ class Change:
 
 @dataclass(frozen=True)
 class Mark:
-    """A seed that gained a name during the skip that just ran."""
+    """A seed that gained a name during the skip that just ran.
 
+    Every one of these belongs to a life OLDER than the one that just died — a
+    seed needs a life or two to gain a name (0 of 229 over seeds 1-30 were
+    founded by the last life). D-03 therefore reserves ``founder_life`` for the
+    player to discover: the surface may draw the mark, and name it, but it may
+    not say whose it is until that connection is confirmed. ``ref`` is the
+    handle the client checks its reveal set against.
+    """
+
+    ref: str
     name: str
     founder_life: int
     planted_year: Optional[int]
@@ -620,6 +629,7 @@ class BeatRecorder:
         for ordinal, marks in render._hardened(world, promoted_seed_ids):
             hardened.extend(
                 Mark(
+                    ref=_ref(h.id),
                     name=heritage_name(h),
                     founder_life=ordinal,
                     planted_year=_planted_year(world, h),

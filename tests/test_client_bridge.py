@@ -50,6 +50,17 @@ def _source(name: str) -> str:
 PLAYED = ["1"] * 60
 
 
+# The closed epithet table (JP voice guide D-3 §7) — how a former self is named,
+# and therefore what a caption must NOT contain before it is earned.
+_NUM = ["", "", "二", "三", "四", "五", "六", "七", "八", "九", "十"]
+
+
+def window_epithet(ordinal: int) -> str:
+    if ordinal == 1:
+        return "最初のあなた"
+    return (_NUM[ordinal] if ordinal < len(_NUM) else str(ordinal)) + "度目のあなた"
+
+
 def _probe(tmp_path: Path, seed: int, choices=PLAYED) -> dict:
     """Run the shipped strings.js/time.js under node against a real stream."""
     stream = tmp_path / f"s{seed}.json"
@@ -551,3 +562,71 @@ def test_the_page_seals_through_the_book():
     # next function instead.
     body = src[src.index("async function seal(") : src.index("function turn()")]
     assert "seal_choice" in body, "the page still seals past the store"
+
+
+# --------------------------------------------------------------------------
+# C-4 — the discovery guard on the time surface (baseline UX-R3 / UX-R5)
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("seed", _SEEDS)
+@needs_node
+def test_the_surface_names_no_founder_before_the_reader_earns_it(tmp_path, seed):
+    """The leak this guard exists for.
+
+    Every hardened mark belongs to a life OLDER than the one that just died
+    (0 of 229 across seeds 1-30 were founded by the last life), so D-03 reserves
+    all of them for the player to discover. The surface used to caption the
+    first one with its founding life the moment the years finished — on the
+    first surface a player ever sees.
+    """
+    probe = _probe(tmp_path, seed)["discovery"]
+    if probe is None:
+        pytest.skip("this seed hardens no mark")
+    assert probe["unknownRegister"] == "unattributed"
+    for ordinal in probe["founders"]:
+        assert window_epithet(ordinal) not in probe["unknownCaption"], (
+            f"seed {seed}: the caption names life {ordinal} unearned — "
+            f"{probe['unknownCaption']!r}"
+        )
+
+
+@pytest.mark.parametrize("seed", _SEEDS)
+@needs_node
+def test_a_confirmed_connection_may_finally_name_its_life(tmp_path, seed):
+    """The other half: the guard withholds, it does not delete. Once the reader
+    has earned the connection the surface says whose it was."""
+    probe = _probe(tmp_path, seed)["discovery"]
+    if probe is None:
+        pytest.skip("this seed hardens no mark")
+    assert probe["knownRegister"] == "sealed"
+    assert window_epithet(probe["founders"][0]) in probe["knownCaption"]
+
+
+@pytest.mark.parametrize("seed", _SEEDS)
+@needs_node
+def test_confirmation_changes_the_geometry_not_only_the_words(tmp_path, seed):
+    """An unconfirmed mark must not be filed into its founder's stratum, and the
+    camera must not close on it: geometry attributes just as loudly as a caption
+    does. If the two draws were identical the guard would be cosmetic."""
+    probe = _probe(tmp_path, seed)["discovery"]
+    if probe is None:
+        pytest.skip("this seed hardens no mark")
+    assert probe["geometryDiffers"], (
+        f"seed {seed}: the surface draws an unconfirmed mark exactly as it draws "
+        "a confirmed one"
+    )
+
+
+@pytest.mark.parametrize("seed", _SEEDS)
+@needs_node
+def test_an_unexplained_mark_still_appears_and_keeps_its_name(tmp_path, seed):
+    """Withholding whose it is must not become hiding that it exists — marks
+    never lie (D-08), and an unexplained older mark is what the spec wants
+    sitting there to be investigated."""
+    probe = _probe(tmp_path, seed)["discovery"]
+    if probe is None:
+        pytest.skip("this seed hardens no mark")
+    assert probe["names"] and all(probe["names"])
+    assert probe["refs"] and all(probe["refs"])
+    assert probe["unknownCaption"], "the surface went silent instead of truthful"

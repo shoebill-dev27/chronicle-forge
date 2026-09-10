@@ -133,6 +133,14 @@ let state = {
   bookId: null,     // the shelf slot this run is being written into
 };
 
+/* The surface asks the client what has been confirmed; the client is the only
+   thing that knows. Registered once, so time.js never has to reach for state. */
+function publishKnown() {
+  if (window.TimeSurface && TimeSurface.setKnown) {
+    TimeSurface.setKnown((ref) => state.known.has(ref));
+  }
+}
+
 function setStatus(t) { $("#status").textContent = t; }
 function setRunningHead(text) { $("#running-head").textContent = text || ""; }
 function setFolio(page) { $("#folio").textContent = String(PAGES.indexOf(page) + 1); }
@@ -774,6 +782,7 @@ async function boot() {
 
   applyStrings();
   wireVerbs();
+  publishKnown();   // nothing is confirmed yet, and the surface must be told so
 
   // The two bundled faces have different metrics from any fallback, so nothing
   // is measured (or drawn on the canvas) until they are in.
@@ -803,6 +812,7 @@ async function boot() {
         state.cursor = state.choices.length;
         state.stream = book.stream;
         state.known = new Set(book.known || []);
+        publishKnown();
       }
     } catch (err) {
       // A build without the store keeps the pre-C-5 behaviour rather than

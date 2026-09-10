@@ -115,8 +115,34 @@ const sealedWin = D.beats.some((b) => b.t === "aftermath" && b.hardened.length)
   ? TS.pickWindow(D, D.beats.find((b) => b.t === "aftermath" && b.hardened.length).after_life)
   : null;
 
+/* ---- 4. the discovery guard (C-4): what the surface says before and after
+   the reader has earned the connection. Every hardened mark belongs to a life
+   older than the last, so the "before" answer is the one D-03 governs. ---- */
+let discovery = null;
+if (sealedWin) {
+  const refs = sealedWin.aftermath.hardened.map((m) => m.ref);
+  TS.setKnown(() => false);
+  const unknownCaption = TS.caption(sealedWin, 0.62);
+  const unknownRegister = TS.register(sealedWin);
+  const unknownGeom = geometry(D, sealedWin, 0.92);
+  TS.setKnown((ref) => ref === refs[0]);
+  const knownCaption = TS.caption(sealedWin, 0.62);
+  const knownRegister = TS.register(sealedWin);
+  const knownGeom = geometry(D, sealedWin, 0.92);
+  TS.setKnown(() => false);
+  discovery = {
+    refs,
+    founders: sealedWin.aftermath.hardened.map((m) => m.founder_life),
+    names: sealedWin.aftermath.hardened.map((m) => m.name),
+    unknownCaption, knownCaption,
+    unknownRegister, knownRegister,
+    geometryDiffers: unknownGeom !== knownGeom,
+  };
+}
+
 process.stdout.write(JSON.stringify({
   lives: D.lives.map((l) => l.ordinal),
+  discovery,
   walk,
   scaleStable,
   captions: {

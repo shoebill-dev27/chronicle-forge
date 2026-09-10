@@ -67,6 +67,12 @@
         year == null
           ? `${epithet(ordinal)}が置いたもの`
           : `${epithet(ordinal)}が置いたもの — ${year}年に`,
+      // A hardened mark whose origin is NOT yet confirmed. Every hardened mark
+      // belongs to a life older than the last, and D-03 reserves those for the
+      // player to find, so this counts what gained a name without saying whose
+      // it was. The mark itself still appears — it is real, and marks never lie.
+      surfaceHardened: (n) =>
+        n === 1 ? "その歳月、ひとつのものが名を得た" : `その歳月、${n}つのものが名を得た`,
       surfaceEcho: (n) => `その歳月、世界はあなたが遺したものの上で ${n} 度動いた`,
       surfaceSilent: (span) => `${span}年、世界は静かだった`,
 
