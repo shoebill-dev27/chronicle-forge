@@ -63,12 +63,27 @@ class Event:
 
 @dataclass(frozen=True)
 class Option:
-    """One offered action, exactly as ``render.turn_screen`` would print it."""
+    """One offered action, exactly as ``render.turn_screen`` would print it.
+
+    ``target`` is the opportunity's own name — the person, faction, place or
+    legacy the act is aimed at. It was always in the world and was being thrown
+    away here, leaving the page to print a bare verb and an internal tension
+    word (C-1: an option must say who it is about and what it does *now*).
+
+    ``why`` is the dominant tension signal in words, and is ``None`` when that
+    signal is the player's own past. The engine's word for it is "your past
+    pulls here", which is an *attribution* — and it dominated 63% of all offered
+    options across seeds 1/7/42/99/123, including in first lives that have no
+    past. D-01 confines "your past life" to Confirm surfaces, so a juncture may
+    not print it: whether a former self is here is what the ``recognition``
+    field says, once, where the engine can actually prove it.
+    """
 
     n: int  # the displayed number (1..3)
     label: str
     kind: str
-    why: str
+    target: str
+    why: Optional[str]
     heritage_id: Optional[str] = None  # set only for a Legacy action
 
 
@@ -352,6 +367,22 @@ def _ordinal_of(world, life_id) -> Optional[int]:
     return life_index(world).get(life_id)
 
 
+# The engine's word for the Ω signal — the pull of the player's own past. It is
+# a true reading and it is not a thing a decision surface may say out loud.
+_OMEGA_PHRASE = "your past pulls here"
+
+
+def _why_without_attribution(opp) -> Optional[str]:
+    """Why this opportunity is live, unless the reason is the player themselves.
+
+    ``None`` is the honest answer there. Falling through to the next-loudest
+    signal would be worse than silence: it would name a reason that is not the
+    reason, which is a small lie told to fill a line.
+    """
+    why = render.why_now(opp.signals)
+    return None if why == _OMEGA_PHRASE else why
+
+
 def _ref(engine_id: str) -> str:
     """A stable, opaque handle for an engine id — the same every run, and not
     the id itself, so nothing downstream can start reading meaning into it."""
@@ -481,7 +512,8 @@ class BeatRecorder:
                     n=n,
                     label=render._display_label(world, option),
                     kind=render._KIND_WORD.get(opp.kind, "Chance"),
-                    why=render.why_now(opp.signals),
+                    target=getattr(opp, "name", "") or "",
+                    why=_why_without_attribution(opp),
                     heritage_id=(
                         opp.target_id
                         if opp.kind.name == "LEGACY"  # the only kind that names one

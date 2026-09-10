@@ -99,6 +99,42 @@
       passLine: (year) => `Year ${year} — you let the season pass.`,
       plantCue: "This will echo.",
 
+      // --- C-1: the option's context line (baseline UX-R6 §5.2).
+      //
+      // Everything here is a *frame* around engine fields: the role word
+      // renders `option.kind`, the target is `option.target` printed exactly as
+      // the world spelled it, and the condition renders `option.why`. The
+      // action itself is the engine's label and is never touched.
+      //
+      // CONTENT GAP (W-1, deliberately not filled): the world knows a target's
+      // name and kind and how much tension stands on it, and nothing else. It
+      // has no stake, no want, no relationship and no cost to state, so the
+      // line cannot say what is *at issue* — only who this is about and how
+      // pressing it is. Inventing the missing half is the one thing the client
+      // may not do, so the line stops where the data stops.
+      kindWord: {
+        Person: "人",
+        Faction: "派閥",
+        Place: "地",
+        Legacy: "遺されたもの",
+        Wildcard: "兆し",
+        Chance: "機",
+      },
+      // The tension signals, in words. Ω ("your past pulls here") is absent by
+      // construction — the stream sends `null` for it, because naming the
+      // player's own past on a decision surface is a Confirm, not a hint (D-01).
+      whyWord: {
+        "tension rising": "いま張りつめている",
+        "long neglected": "長く顧みられていない",
+        "an ally awaits": "味方が待っている",
+      },
+      optionContext(kind, target, why) {
+        const role = this.kindWord[kind] || this.kindWord.Chance;
+        const head = target ? `${role}〈${target}〉` : role;
+        const cond = why ? this.whyWord[why] : null;
+        return cond ? `${head} — ${cond}。` : `${head}。`;
+      },
+
       // --- P-10 the rebirth digest. `digestLine` joins two engine strings —
       // the act (the label the player sealed it under, or the world's own
       // phrase for an act it took alone) and what the world did with it. The

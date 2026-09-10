@@ -20,6 +20,7 @@ from chronicle_forge.causal import CausalGraph
 from chronicle_forge.play import beats as B
 from chronicle_forge.play.session import run_human_world
 from chronicle_forge.play.human import null_writer, scripted_reader
+from chronicle_forge.reporting.labels import heritage_name
 
 SEEDS = (1, 7, 42, 99, 123)
 
@@ -299,3 +300,61 @@ def test_a_ref_is_stable_opaque_and_never_an_engine_id(worlds):
         # stable across a second identical run
         again = [c.ref for c in _cases(B.stream(seed, PLAY))]
         assert refs == again, f"seed {seed}: refs move between identical runs"
+
+
+# --------------------------------------------------------------------------
+# C-1 — a juncture says who it is about, and never who the player was
+# --------------------------------------------------------------------------
+
+
+def test_no_option_prints_an_attribution(worlds):
+    """The leak C-1 closes.
+
+    ``why_now`` returns the dominant tension signal in words, and the engine's
+    word for Ω is "your past pulls here" — a claim about the player's own past.
+    It dominated 63% of all offered options across these seeds, printed as plain
+    page text, in first lives that have no past at all. D-01 confines that to a
+    Confirm surface, and ``recognition`` is the field that carries it there.
+    """
+    for seed, (_world, stream) in worlds.items():
+        for beat in stream.beats:
+            if beat.KIND != "juncture":
+                continue
+            for opt in beat.options:
+                assert opt.why != "your past pulls here", f"seed {seed}: Ω printed"
+                assert opt.why is None or "your past" not in opt.why
+                assert "past life" not in (opt.why or "")
+
+
+def test_the_option_line_names_a_target_the_world_really_has(worlds):
+    """Every clause of an option must have a source in reached world data. The
+    target is the opportunity's own name and is checked against the world."""
+    for seed, (world, stream) in worlds.items():
+        real = (
+            {n.name for n in getattr(world, "npcs", [])}
+            | {f.name for f in getattr(world, "factions", [])}
+            | {loc.name for loc in getattr(world, "locations", [])}
+            | {heritage_name(h) for h in getattr(world, "heritage", [])}
+        )
+        seen = 0
+        for beat in stream.beats:
+            if beat.KIND != "juncture":
+                continue
+            for opt in beat.options:
+                assert opt.target, f"seed {seed}: an option names no target"
+                if opt.target in real:
+                    seen += 1
+        assert seen, f"seed {seed}: no option target resolved to a real world thing"
+
+
+def test_a_suppressed_why_is_absent_not_substituted(worlds):
+    """When the reason is the player's own past the line says nothing, rather
+    than falling through to the next-loudest signal — naming a reason that is
+    not the reason would be a small lie told to fill a line."""
+    assert any(
+        opt.why is None
+        for _world, stream in worlds.values()
+        for beat in stream.beats
+        if beat.KIND == "juncture"
+        for opt in beat.options
+    ), "no option suppressed its reason — is the Ω guard wired?"

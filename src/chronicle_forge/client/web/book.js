@@ -455,9 +455,13 @@ function buildOption(opt, isMarked, recognition) {
   label.textContent = opt.label;
   li.appendChild(label);
 
+  // C-1: who this is about and how pressing it is, in Japanese, composed from
+  // stream fields only. The old line printed the engine's internal tension
+  // vocabulary straight to the page — including "your past pulls here", which
+  // dominated 63% of options and is an attribution D-01 reserves for a Confirm.
   const kind = document.createElement("span");
   kind.className = "kind";
-  kind.textContent = `${opt.kind} · ${opt.why}`;
+  kind.textContent = STRINGS.optionContext(opt.kind, opt.target, opt.why);
   li.appendChild(kind);
 
   const bar = document.createElement("span");
