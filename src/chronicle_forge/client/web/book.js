@@ -129,6 +129,8 @@ let state = {
   win: null,        // the death/years/aftermath window the surface is playing
   entryLife: 0,     // whose entry the acts on the page belong to
   frozenT: null,    // ?t= — a frozen surface clock, for reproducible captures
+  known: new Set(), // coords the reader has CONFIRMED (C-5). Never guessed at.
+  bookId: null,     // the shelf slot this run is being written into
 };
 
 function setStatus(t) { $("#status").textContent = t; }
@@ -694,7 +696,16 @@ async function seal() {
   const choices = state.choices.concat([state.selected]);
   let stream;
   try {
-    stream = state.live ? await bridge("play", null, choices) : (window.CF_BEATS || SAMPLE);
+    if (state.live && state.bookId) {
+      // Commit through the book, not past it. `play` returns the same stream
+      // but writes nothing, so quitting between two junctures lost the act the
+      // reader had just sealed — the one thing a save exists to keep (C-5).
+      // The book is written before the page moves.
+      const book = await bridge("seal_choice", state.bookId, state.selected);
+      stream = book.stream;
+    } else {
+      stream = state.live ? await bridge("play", null, choices) : (window.CF_BEATS || SAMPLE);
+    }
   } catch (err) {
     return bridgeFailed("play", err);
   }
@@ -777,6 +788,23 @@ async function boot() {
   $("#specimen").hidden = state.live || injected;
 
   if (state.live) {
+    // C-5: open the book this shelf slot holds. Everything the reader had
+    // earned and everywhere they had got to comes back with it; a build with no
+    // store (or a book this build cannot vouch for) simply starts clean.
+    try {
+      const book = await bridge("open_book", params.get("book") || null, null);
+      if (book) {
+        state.bookId = book.book_id;
+        state.choices = book.choices.map(Number);
+        state.cursor = state.choices.length;
+        state.stream = book.stream;
+        state.known = new Set(book.known || []);
+      }
+    } catch (err) {
+      // A build without the store keeps the pre-C-5 behaviour rather than
+      // refusing to open the book at all.
+      console.warn("no book store:", err);
+    }
     try {
       const inv = await bridge("shelf");
       if (inv && inv.invitation) {

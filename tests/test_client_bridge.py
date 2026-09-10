@@ -441,3 +441,113 @@ def test_the_digest_prints_no_number_and_coins_no_mark():
     for sentence in ("The world you return to",):
         assert sentence in inventory
         assert sentence not in _source("book.js")
+
+
+# --------------------------------------------------------------------------
+# C-5 through the bridge — the book that survives quitting
+# --------------------------------------------------------------------------
+
+
+def test_a_book_reopens_with_its_choices_reveals_and_cursor(tmp_path):
+    bridge = BookBridge(seed=42, store=tmp_path)
+    book = bridge.open_book()
+    bid = book["book_id"]
+    bridge.seal_choice(bid, 1)
+    bridge.seal_choice(bid, 2)
+    bridge.confirm(bid, "P14_TRACE", "coord-a")
+    bridge.move_cursor(
+        bid, {"page": "juncture", "life_ordinal": 2, "selected_option": 3}
+    )
+
+    reopened = BookBridge(seed=42, store=tmp_path).open_book(book_id=bid)
+    assert reopened["choices"] == ["1", "2"]
+    assert reopened["known"] == ["coord-a"]
+    assert reopened["cursor"]["page"] == "juncture"
+    assert reopened["cursor"]["selected_option"] == 3, "a pending selection was lost"
+
+
+def test_the_stream_follows_the_sealed_choices(tmp_path):
+    """The book is the world so far: sealing must change what the page reads,
+    or resume would return the reader to a different history than they left."""
+    bridge = BookBridge(seed=42, store=tmp_path)
+    bid = bridge.open_book()["book_id"]
+    before = bridge.open_book(book_id=bid)["stream"]
+    after = bridge.seal_choice(bid, 2)["stream"]
+    assert before != after
+
+
+def test_two_books_from_one_seed_never_share_what_was_found(tmp_path):
+    """CS-2 at the seam. Same seed, different choices, different worlds — a
+    coordinate earned in one names a different fact in the other."""
+    bridge = BookBridge(seed=42, store=tmp_path)
+    a = bridge.open_book()["book_id"]
+    b = bridge.open_book()["book_id"]
+    assert a != b, "one seed must be able to hold two books"
+    bridge.seal_choice(a, 1)
+    bridge.confirm(a, "P14_TRACE", "coord-a")
+    bridge.seal_choice(b, 2)
+    assert bridge.open_book(book_id=b)["known"] == []
+    assert bridge.open_book(book_id=a)["known"] == ["coord-a"]
+
+
+def test_reading_a_book_never_grows_what_is_known(tmp_path):
+    bridge = BookBridge(seed=42, store=tmp_path)
+    bid = bridge.open_book()["book_id"]
+    bridge.confirm(bid, "P10_DIGEST", "coord-a")
+    for _ in range(3):
+        bridge.move_cursor(bid, {"page": "entry", "archive_life": 1})
+        bridge.open_book(book_id=bid)
+    assert bridge.open_book(book_id=bid)["known"] == ["coord-a"]
+
+
+def test_browsing_the_archive_never_moves_the_unresolved_page(tmp_path):
+    """Navigation is not commitment: 「今の頁へ」 has to have somewhere to return."""
+    bridge = BookBridge(seed=42, store=tmp_path)
+    bid = bridge.open_book()["book_id"]
+    bridge.seal_choice(bid, 1)
+    bridge.move_cursor(
+        bid, {"page": "juncture", "life_ordinal": 2, "selected_option": 1}
+    )
+    bridge.move_cursor(bid, {"archive_life": 1})
+    book = bridge.open_book(book_id=bid)
+    assert book["cursor"]["page"] == "juncture"
+    assert book["cursor"]["selected_option"] == 1
+    assert book["choices"] == ["1"], "browsing re-executed a past choice"
+
+
+def test_a_corrupt_book_starts_clean_rather_than_resuming_a_stranger(tmp_path):
+    bridge = BookBridge(seed=42, store=tmp_path)
+    bid = bridge.open_book()["book_id"]
+    bridge.seal_choice(bid, 1)
+    (tmp_path / f"{bid}.json").write_text("{ not a book", encoding="utf-8")
+    fresh = bridge.open_book(book_id=bid)
+    assert fresh["choices"] == []
+    assert fresh["known"] == []
+
+
+def test_the_cursor_survives_the_way_the_frontend_actually_calls_it(tmp_path):
+    """pywebview marshals JS arguments positionally, so a ``**kwargs`` bridge
+    method is unreachable from the page. It raised a TypeError the page could
+    not see, and the reader's position was silently never written — caught only
+    because the real window logged it."""
+    bridge = BookBridge(seed=42, store=tmp_path)
+    bid = bridge.open_book()["book_id"]
+    bridge.move_cursor(bid, {"page": "trace", "archive_life": None})
+    assert bridge.open_book(book_id=bid)["cursor"]["page"] == "trace"
+
+
+def test_the_cursor_ignores_keys_it_does_not_know(tmp_path):
+    """The page is allowed to grow a field before the store does; an unknown key
+    must not take the book down with it."""
+    bridge = BookBridge(seed=42, store=tmp_path)
+    bid = bridge.open_book()["book_id"]
+    bridge.move_cursor(bid, {"page": "archive", "not_a_cursor_field": 1})
+    assert bridge.open_book(book_id=bid)["cursor"]["page"] == "archive"
+
+
+def test_the_page_seals_through_the_book():
+    src = _source("book.js")
+    # `_source` strips comments, so the section marker is gone — slice to the
+    # next function instead.
+    body = src[src.index("async function seal(") : src.index("function turn()")]
+    assert "seal_choice" in body, "the page still seals past the store"
