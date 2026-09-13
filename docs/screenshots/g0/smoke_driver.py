@@ -34,6 +34,9 @@ from chronicle_forge.client.shell import _index_html  # noqa: E402
 SHOTS = os.environ.get("SHOTS", "docs/screenshots/g0")
 TAG = os.environ.get("TAG", "g0")
 SEED = int(os.environ.get("SEED", "1"))
+# "" walks the ordinary sequence; the a11y modes change one condition each and
+# then walk the same beats, so a failure is attributable to the condition.
+MODE = os.environ.get("MODE", "")
 NOTES = []
 FAILURES = []
 
@@ -189,8 +192,40 @@ PROBE_CANVAS = """
 """
 
 
+# Anything the page throws or logs as an error, kept where the driver can read
+# it. A run that "passes" while the console is full of exceptions has not passed.
+ERROR_TRAP = """
+(() => {
+  if (window.__cf_errors) return 'already';
+  window.__cf_errors = [];
+  window.addEventListener('error', (e) => window.__cf_errors.push('error: ' + e.message));
+  window.addEventListener('unhandledrejection', (e) => window.__cf_errors.push('reject: ' + e.reason));
+  const ce = console.error.bind(console);
+  console.error = (...a) => { window.__cf_errors.push('console: ' + a.join(' ')); ce(...a); };
+  return 'installed';
+})()
+"""
+
+# prefers-reduced-motion is read per call, so overriding the matcher is enough
+# to put the client on its static path without rebuilding the window.
+REDUCE_MOTION = """
+(() => {
+  const real = window.matchMedia.bind(window);
+  window.matchMedia = (q) =>
+    /prefers-reduced-motion/.test(q) ? { matches: true, media: q, addListener(){}, removeListener(){}, addEventListener(){}, removeEventListener(){} } : real(q);
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+})()
+"""
+
+
 def run(window):
     time.sleep(4.5)  # bridge handshake + font loading
+    js(window, ERROR_TRAP)
+    if MODE == "reduced":
+        check("reduced motion is in force", js(window, REDUCE_MOTION) is True)
+    if MODE == "large":
+        # A reader turning the text up, not a narrower window.
+        js(window, "document.documentElement.style.fontSize = '150%'")
     js(window, FORCE_FONTS)
     time.sleep(1.5)
     boot = json.loads(note("boot", js(window, PROBE_BOOT)))
@@ -674,6 +709,233 @@ def run(window):
         str(before),
     )
     shot("14-archive")
+
+    # --- a11y and error hygiene -------------------------------------------
+    # These run in every mode; the MODE-specific ones assert the condition they
+    # were launched under actually held.
+    print("== accessibility ==", flush=True)
+
+    # One key event must not both commit and turn past the result.
+    js(window, "toNow(); turn()")
+    time.sleep(0.6)
+    dbl = json.loads(
+        note(
+            "double_event",
+            js(
+                window,
+                "(() => {"
+                "  const before = state.choices.length, page = state.page;"
+                "  const ev = new KeyboardEvent('keydown', {key:'Enter', bubbles:true, cancelable:true});"
+                "  document.dispatchEvent(ev);"
+                "  return JSON.stringify({before, after: state.choices.length, page, now: state.page});"
+                "})()",
+            ),
+        )
+    )
+    check(
+        "one key event commits at most once",
+        dbl["after"] - dbl["before"] <= 1,
+        str(dbl),
+    )
+
+    # Keyboard parity: every DVS control must be reachable and operable by key.
+    keys = json.loads(
+        note(
+            "keyboard",
+            js(
+                window,
+                "(() => {"
+                "  const sel = ['#now-btn','#trace-step','#trace-back','#reread-btn','#shelf-btn','#seal-btn'];"
+                "  const out = {};"
+                "  for (const s of sel) { const el = document.querySelector(s);"
+                "    out[s] = el ? (el.tagName === 'BUTTON' || el.tabIndex >= 0) : null; }"
+                "  const inv = document.querySelector('.verb.investigate');"
+                "  out.investigate = inv ? (inv.tagName === 'BUTTON' || inv.tabIndex >= 0) : null;"
+                "  out.options = [...document.querySelectorAll('.option')].every(o => o.tabIndex >= 0);"
+                "  return JSON.stringify(out);"
+                "})()",
+            ),
+        )
+    )
+    check(
+        "every DVS control is keyboard-operable",
+        all(v is not False for v in keys.values()),
+        str(keys),
+    )
+
+    # Focus must land somewhere a reader can carry on from, not on <body>.
+    focus = json.loads(
+        note(
+            "focus",
+            js(
+                window,
+                "(() => {"
+                "  toClosing();"
+                "  const c = document.querySelector('.verb.investigate') || document.querySelector('#reread-btn');"
+                "  if (c) c.click();"
+                "  const afterOpen = document.activeElement ? document.activeElement.tagName : null;"
+                "  const back = document.querySelector('#trace-back'); if (back) back.click();"
+                "  const afterBack = document.activeElement ? document.activeElement.tagName : null;"
+                "  return JSON.stringify({afterOpen, afterBack, page: state.page});"
+                "})()",
+            ),
+        )
+    )
+    check(
+        "focus is not dropped on the body when a view closes",
+        focus["afterBack"] != "BODY",
+        str(focus),
+    )
+
+    if MODE == "reduced":
+        red = json.loads(
+            note(
+                "reduced",
+                js(
+                    window,
+                    "(() => {"
+                    "  const w = TimeSurface.pickWindow(state.stream, 1);"
+                    "  state.win = w; playSurface(w);"
+                    "  return JSON.stringify({"
+                    "    reduced: window.matchMedia('(prefers-reduced-motion: reduce)').matches,"
+                    "    turnOffered: !document.querySelector('#surface-turn').hidden,"
+                    "    caption: TimeSurface.caption(w, TimeSurface.REBIRTH_END),"
+                    "    rebirthLine: document.querySelector('#surface-rebirth').textContent});"
+                    "})()",
+                ),
+            )
+        )
+        check(
+            "reduced motion still arrives at the whole picture",
+            red["turnOffered"] and bool(red["caption"]),
+            str(red),
+        )
+        check(
+            "and it still says what happened",
+            bool(red["rebirthLine"]),
+            str(red["rebirthLine"]),
+        )
+        shot("15-reduced")
+
+    if MODE == "large":
+        big = json.loads(
+            note(
+                "large_text",
+                js(
+                    window,
+                    "(() => {"
+                    "  toClosing();"
+                    "  const p = document.querySelector('#closing-line');"
+                    "  const eff = () => { const cs = getComputedStyle(p);"
+                    "    const pg = document.querySelector(`[data-page='${state.page}']`);"
+                    "    const z = parseFloat(pg.style.zoom || '1') || 1;"
+                    "    return parseFloat(cs.fontSize) * z; };"
+                    "  document.documentElement.style.fontSize = '150%'; fitPage();"
+                    "  const large = eff();"
+                    "  document.documentElement.style.fontSize = '100%'; fitPage();"
+                    "  const base = eff();"
+                    "  document.documentElement.style.fontSize = '150%'; fitPage();"
+                    "  const col = document.querySelector('.text-column');"
+                    "  const btn = document.querySelector('#shelf-btn').getBoundingClientRect();"
+                    "  return JSON.stringify({base, large, ratio: large / base,"
+                    "    scrollable: col.scrollHeight > col.clientHeight,"
+                    "    controlVisible: btn.width > 0 && btn.height > 0,"
+                    "    overset: document.documentElement.dataset.overset || null});"
+                    "})()",
+                ),
+            )
+        )
+        check(
+            "enlarged text stays enlarged (the fit must not quietly undo it)",
+            big["ratio"] >= 1.35,
+            f"base={big['base']} large={big['large']} ratio={round(big['ratio'], 3)}",
+        )
+        check(
+            "and its controls stay reachable",
+            big["controlVisible"],
+            str(big),
+        )
+        shot("16-large-text")
+
+    # Skip, in the first world. One input settles the transition; it must not
+    # also carry the reader past the page the transition was leading to.
+    skip = json.loads(
+        note(
+            "skip",
+            js(
+                window,
+                "(() => {"
+                "  const w = TimeSurface.pickWindow(state.stream, 1);"
+                "  state.win = w; state.lifeShown = 1; playSurface(w);"
+                "  const during = document.documentElement.dataset.surface || null;"
+                "  turn();"
+                "  const afterFirst = {surface: document.documentElement.dataset.surface || null, page: state.page};"
+                "  turn();"
+                "  const afterSecond = {surface: document.documentElement.dataset.surface || null, page: state.page};"
+                "  return JSON.stringify({during, afterFirst, afterSecond});"
+                "})()",
+            ),
+        )
+    )
+    check("skip works from the first world", skip["during"] == "time", str(skip))
+    if MODE == "reduced":
+        # There is no animation to settle, so "settle, then continue" collapses
+        # to "continue". What must still hold is that one input advances exactly
+        # one page: the digest the years were leading to, never past it.
+        check(
+            "with motion reduced the years arrive already settled",
+            skip["afterFirst"]["surface"] is None,
+            str(skip["afterFirst"]),
+        )
+        check(
+            "and one input lands on the next page, not past it",
+            skip["afterFirst"]["page"] == "digest",
+            str(skip["afterFirst"]),
+        )
+    else:
+        check(
+            "one input settles the years without also leaving them",
+            skip["afterFirst"]["surface"] == "time",
+            str(skip["afterFirst"]),
+        )
+        check(
+            "a second input is what moves on",
+            skip["afterSecond"]["page"] != skip["afterFirst"]["page"]
+            or skip["afterSecond"]["surface"] != "time",
+            str(skip["afterSecond"]),
+        )
+
+    # What shape of world this seed actually is, so a quiet or juncture-less
+    # life is recorded as having been exercised rather than assumed away.
+    shape = json.loads(
+        note(
+            "shape",
+            js(
+                window,
+                "(() => {"
+                "  const b = state.stream.beats;"
+                "  const lives = state.stream.lives.map(l => l.ordinal);"
+                "  const asked = new Set(b.filter(x => x.t === 'juncture').map(x => x.life));"
+                "  const quiet = b.filter(x => x.t === 'aftermath' && !x.changes.length).length;"
+                "  const empty = b.filter(x => x.t === 'years' && !x.events.length).length;"
+                "  return JSON.stringify({lives: lives.length,"
+                "    livesNeverAsked: lives.filter(o => !asked.has(o)),"
+                "    emptyDigests: quiet, emptySkips: empty,"
+                "    closingCases: (b.find(x => x.t === 'closing') || {cases: []}).cases.length});"
+                "})()",
+            ),
+        )
+    )
+    check(
+        "a life the world never asked still has its place",
+        all(o <= shape["lives"] for o in shape["livesNeverAsked"]),
+        str(shape),
+    )
+
+    errors = json.loads(
+        note("errors", js(window, "JSON.stringify(window.__cf_errors || [])"))
+    )
+    check("the page logged no errors", errors == [], str(errors))
 
     with open(f"{SHOTS}/{TAG}-notes.json", "w", encoding="utf-8") as fh:
         json.dump(

@@ -151,3 +151,53 @@ the page raised a TypeError the page never saw, so the reader's position was
 silently never written), and the page sealed via `play` rather than through the
 book, so a quit between two junctures lost the act just sealed. Both now have
 regression tests.
+
+---
+
+## Update — 2026-09-11: a11y checks and the five-seed DVS sweep
+
+The gate now carries accessibility assertions and runs under `MODE`:
+`""` (ordinary), `reduced` (the matcher is overridden so the client takes its
+static path) and `large` (the reader turns the text up to 150%). Every mode
+installs an error trap first, so a run that "passes" with a console full of
+exceptions cannot.
+
+What is asserted in every mode: one key event commits at most once; every DVS
+control is keyboard-operable; focus is not dropped on `<body>` when a view
+closes; skip behaves; a life the world never asked still has its place; and the
+page logged **no** errors. `reduced` additionally asserts the whole picture and
+its caption still arrive; `large` asserts the enlargement survives the fit and
+its controls stay reachable.
+
+| Run | Checks | Failures | Page errors | World shape |
+|---|---:|---:|---:|---|
+| seed 1 | 60 | 0 | 0 | 3 lives |
+| seed 1 · reduced motion | 63 | 0 | 0 | 3 lives |
+| seed 1 · 150% text | 62 | 0 | 0 | 3 lives |
+| seed 7 | 60 | 0 | 0 | 3 lives |
+| seed 42 | 60 | 0 | 0 | 4 lives, 1 empty digest, 1 empty skip |
+| seed 99 | 52 | 0 | 0 | 5 lives, **life 2 never asked**, 1 empty digest, 1 empty skip |
+| seed 123 | 60 | 0 | 0 | 4 lives |
+
+Seed 99 is the one that matters most: the world never asks life 2 anything, and
+the loop carries that life through its own page, its years and its digest with
+nothing invented to fill the gap. Seeds 42 and 99 also cover a quiet interval.
+
+Two real defects were found here that no unit test had, both in the client:
+
+* **A keydown with nothing focused threw.** The handler called
+  `e.target.closest`, but an event with no focused element targets `document`,
+  which has no such method — so the first key press of a keyboard-only session
+  raised `TypeError` and took the page's navigation with it. Both the keydown
+  and the click handler now ask only what can answer.
+* **Focus was dropped on `<body>`** whenever a view opened or closed, which
+  leaves a keyboard reader unable to reach any verb and restarts Tab at the top
+  of the document. The trace, the closing, the archive and 「今の頁へ」 now place
+  focus, and returning from a trace goes back to the thread it was opened from.
+
+One check was wrong rather than the client: under reduced motion there is no
+animation to settle, so "settle, then continue" correctly collapses to
+"continue". The assertion is mode-aware now and still forbids the thing that
+matters — one input landing more than one page on.
+
+Evidence: `docs/screenshots/g0/dvs-*-notes.json`.
