@@ -1,0 +1,8 @@
+{
+  "name": "ChronicleForge.Editor",
+  "rootNamespace": "ChronicleForge.EditorTools",
+  "references": ["ChronicleForge.Runtime", "MCPForUnity.Editor"],
+  "includePlatforms": ["Editor"],
+  "excludePlatforms": [],
+  "autoReferenced": true
+}

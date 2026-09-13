@@ -1,0 +1,10 @@
+{
+  "name": "ChronicleForge.Runtime",
+  "rootNamespace": "ChronicleForge",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "overrideReferences": true,
+  "precompiledReferences": ["Newtonsoft.Json.dll"],
+  "autoReferenced": true
+}
