@@ -990,9 +990,15 @@ const VERBS = {
   shelf: () => show("shelf", "back"),
 };
 
+// `closest` lives on Element. An event with nothing focused — or one dispatched
+// straight at the document — targets something that has no such method, so ask
+// only what can answer rather than throwing on the way to a null check.
+const within = (e, sel) =>
+  e.target instanceof Element ? e.target.closest(sel) : null;
+
 function wireVerbs() {
   document.addEventListener("click", (e) => {
-    const v = e.target.closest("[data-verb]");
+    const v = within(e, "[data-verb]");
     if (!v) return;
     // A completed hold ends in a pointerup the browser also reports as a click.
     // Inspecting is not continuing, so that trailing click must not turn a page.
@@ -1000,11 +1006,14 @@ function wireVerbs() {
     (VERBS[v.dataset.verb] || (() => {}))();
   });
   document.addEventListener("keydown", (e) => {
-    if (e.target.closest(".option")) return; // hold key handled per-option
+    // With nothing focused the event targets `document`: the first key press
+    // of a keyboard-only session used to throw here and take the page's
+    // navigation with it.
+    if (within(e, ".option")) return; // hold key handled per-option
     // A focused control already answers Enter/Space itself. Letting the page
     // ALSO act on the same event is how one key press both commits a choice and
     // turns the page past its result (baseline UX-R9: no double-commit).
-    if (e.target.closest("button, [tabindex]")) return;
+    if (within(e, "button, [tabindex]")) return;
     if (e.key === "Enter" || e.key === " " || e.key === "ArrowRight") { turn(); }
     else if (e.key === "ArrowLeft") { flip(); }
   });

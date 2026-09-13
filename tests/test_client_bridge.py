@@ -710,3 +710,15 @@ def test_the_page_seals_through_the_book():
     # next function instead.
     body = src[src.index("async function seal(") : src.index("function turn()")]
     assert "seal_choice" in body, "the page still seals past the store"
+
+
+def test_a_key_event_with_nothing_focused_cannot_throw():
+    """With no focused element a keydown targets `document`, which has no
+    `closest`. The handler called it unguarded, so the first key press of a
+    keyboard-only session threw and took the page's navigation with it."""
+    src = _source("book.js")
+    assert "e.target instanceof Element" in src, "nothing guards the event target"
+    body = src[src.index("function wireVerbs()") : src.index("async function boot()")]
+    assert (
+        "e.target.closest" not in body
+    ), "a handler still calls closest on a possible non-Element"
