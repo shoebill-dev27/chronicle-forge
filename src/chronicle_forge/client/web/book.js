@@ -191,6 +191,20 @@ function fitPage() {
   return FIT_STEPS[FIT_STEPS.length - 1];
 }
 
+/* Put the reader somewhere they can carry on from.
+
+   A view that opens or closes without moving focus drops a keyboard reader onto
+   <body>, where none of the page's verbs are reachable and the next Tab starts
+   from the top of the document. `back` is what to return to when there is a
+   place to return to — the control the reader came from. */
+function focusPage(page, back) {
+  const target =
+    (back && document.body.contains(back) && back) ||
+    document.querySelector(`[data-page="${page}"] .verb.primary:not([disabled])`) ||
+    document.querySelector(`[data-page="${page}"] .verb:not([disabled])`);
+  if (target) target.focus({ preventScroll: true });
+}
+
 function show(page, direction = "forward") {
   hideSurface();
   state.page = page;
@@ -778,6 +792,7 @@ function toArchive(life) {
   $("#archive-next").disabled = idx >= written.length - 1;
   setRunningHead(`${window.CF_VOICE.epithet(state.archiveLife)}`);
   show("archive", "back");
+  focusPage("archive");
   cursor({ page: "archive", archive_life: state.archiveLife });
 }
 
@@ -799,11 +814,15 @@ function toNow() {
     toJuncture(junctures()[state.cursor]);
     if (back.selected != null) {
       const li = document.querySelector(`.option[data-index="${back.selected}"]`);
-      if (li) selectOption(li, { n: back.selected });
+      // Restore the selection to exactly where it was, and put focus on it:
+      // the reader left mid-decision and should not have to find it again.
+      if (li) { selectOption(li, { n: back.selected }); li.focus({ preventScroll: true }); }
+      return;
     }
-    return;
+    return focusPage("juncture");
   }
   show(back.page, "forward");
+  focusPage(back.page);
 }
 
 /* ---- P-12 the closing, and P-14 the trace ------------------------------- */
@@ -832,7 +851,11 @@ function toClosing() {
   }
   setRunningHead("");
   setStatus(STRINGS.inkSets);
+  const back = state.trace && state.trace.from;
   show("closing", "forward");
+  // Coming back from a trace, the reader returns to the thread they opened.
+  focusPage("closing", back);
+  state.trace = null;
   cursor({ page: "closing" });
 }
 
@@ -854,7 +877,7 @@ function buildCase(c) {
   btn.className = "verb ghost investigate";
   btn.type = "button";
   btn.textContent = STRINGS.investigate;
-  btn.addEventListener("click", (e) => { e.stopPropagation(); openTrace(c); });
+  btn.addEventListener("click", (e) => { e.stopPropagation(); openTrace(c, btn); });
   li.appendChild(btn);
 
   // I-05b. The hold is the same action by another route, never a third one.
@@ -869,7 +892,11 @@ function wireInspectHold(el, c) {
   const cancel = () => { if (timer) clearTimeout(timer); timer = null; el.classList.remove("holding"); };
   el.addEventListener("pointerdown", () => {
     el.classList.add("holding");
-    timer = setTimeout(() => { holdConsumedClick = true; cancel(); openTrace(c); }, HOLD_MS);
+    timer = setTimeout(() => {
+      holdConsumedClick = true;
+      cancel();
+      openTrace(c, $(".verb.investigate", el));
+    }, HOLD_MS);
   });
   for (const ev of ["pointerup", "pointerleave", "pointercancel"]) el.addEventListener(ev, cancel);
 }
@@ -877,8 +904,8 @@ function wireInspectHold(el, c) {
 /* One consequence, walked back along edges the world really holds. `steps` is a
    path, never a count: each entry is an event that exists, in order, and the
    page draws nothing between them. */
-function openTrace(c) {
-  state.trace = { case: c, shown: 0 };
+function openTrace(c, from) {
+  state.trace = { case: c, shown: 0, from: from || null };
   $("#trace-event").textContent = STRINGS.traceStep(c.year, c.event);
   $("#trace-steps").innerHTML = "";
   $("#trace-origin").hidden = true;
@@ -891,6 +918,7 @@ function openTrace(c) {
   $("#trace-step").disabled = false;
   setRunningHead("");
   show("trace", "forward");
+  focusPage("trace");
   cursor({ page: "trace" });
   if (!c.steps.length) traceStep();   // a direct edge: there is nothing between
 }

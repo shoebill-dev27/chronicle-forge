@@ -712,6 +712,11 @@ def test_the_page_seals_through_the_book():
     assert "seal_choice" in body, "the page still seals past the store"
 
 
+# --------------------------------------------------------------------------
+# accessibility regressions, both found by driving the real window
+# --------------------------------------------------------------------------
+
+
 def test_a_key_event_with_nothing_focused_cannot_throw():
     """With no focused element a keydown targets `document`, which has no
     `closest`. The handler called it unguarded, so the first key press of a
@@ -722,3 +727,25 @@ def test_a_key_event_with_nothing_focused_cannot_throw():
     assert (
         "e.target.closest" not in body
     ), "a handler still calls closest on a possible non-Element"
+
+
+def test_a_view_change_does_not_drop_focus_on_the_body():
+    """A keyboard reader who opens or closes a view must keep their place: from
+    <body> none of the page's verbs are reachable and the next Tab restarts at
+    the top of the document."""
+    src = _source("book.js")
+    assert "function focusPage(" in src, "no focus management at all"
+    for fn, nxt in (
+        ("function openTrace(", "function traceStep("),
+        ("function toClosing(", "function buildCase("),
+        ("function toArchive(", "function archiveStep("),
+        ("function toNow(", "function closingBeat("),
+    ):
+        body = src[src.index(fn) : src.index(nxt)]
+        assert "focus" in body, f"{fn.strip()} leaves focus where it fell"
+
+
+def test_returning_from_a_trace_goes_back_to_the_thread_it_opened():
+    src = _source("book.js")
+    body = src[src.index("function toClosing(") : src.index("function buildCase(")]
+    assert "state.trace && state.trace.from" in body, "the return point is not kept"
