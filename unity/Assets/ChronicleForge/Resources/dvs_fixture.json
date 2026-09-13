@@ -1,0 +1,2174 @@
+{
+  "canonical_hash": "0c8a38d2cfdf854a34457a972f82314a94eefeabe4e6a8ca88f3b0736adc84c9",
+  "discovery": {
+    "locked": [
+      "11d32aa9b184",
+      "1bf68bd5177d",
+      "31f70a8ba0df",
+      "4b1409cb8f27",
+      "4ed162f2da6d",
+      "52736778eadf",
+      "58d58c66f590",
+      "5fb265f31451",
+      "725211c5eccd",
+      "8873adf32d45",
+      "98bac4826928",
+      "a094fbcd5297",
+      "aedee376c3e1",
+      "c1e0f175c9b3",
+      "cc990714968a",
+      "d052b93677a5",
+      "e081e22aaf31",
+      "e553728e75da",
+      "ef3ff0c684e1",
+      "f958bca990fe",
+      "her:seed-0001",
+      "her:seed-0002",
+      "her:seed-0003"
+    ]
+  },
+  "engine_version": "0.1.0-p8-mvp",
+  "fixture_version": "1",
+  "inputs": [
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1"
+  ],
+  "stream": {
+    "beats": [
+      {
+        "era": "an age of warfare",
+        "life": 1,
+        "t": "rebirth",
+        "talent": "mentor",
+        "year": 0
+      },
+      {
+        "age": 16,
+        "era": "an age of warfare",
+        "header": "Something new stirs",
+        "life": 1,
+        "options": [
+          {
+            "heritage_id": null,
+            "kind": "Wildcard",
+            "label": "Support Karic",
+            "n": 1,
+            "target": "Karic",
+            "why": "tension rising"
+          },
+          {
+            "heritage_id": null,
+            "kind": "Wildcard",
+            "label": "Support Ashnon",
+            "n": 2,
+            "target": "Ashnon",
+            "why": "tension rising"
+          },
+          {
+            "heritage_id": null,
+            "kind": "Person",
+            "label": "Advocate Karic",
+            "n": 3,
+            "target": "Karic",
+            "why": "long neglected"
+          }
+        ],
+        "reason": "novelty",
+        "recognition": null,
+        "t": "juncture",
+        "year": 0
+      },
+      {
+        "age": 16,
+        "kind": "Wildcard",
+        "label": "Support Karic",
+        "life": 1,
+        "option": 1,
+        "planted": 1,
+        "t": "outcome",
+        "year": 0
+      },
+      {
+        "age": 22,
+        "life": 1,
+        "named": [],
+        "pending": 23,
+        "seed_years": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "t": "death",
+        "talent": "mentor",
+        "title": "The Mentor of Hollowfen",
+        "year": 6
+      },
+      {
+        "after_life": 1,
+        "events": [
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 7
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 7
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 7
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the faith takes root",
+            "scale": "large",
+            "year": 8
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 8
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 8
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 8
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 8
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 9
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 9
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 9
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 9
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "trade flourishes",
+            "scale": "medium",
+            "year": 9
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 9
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 10
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 10
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 10
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 10
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 10
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 11
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 11
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 11
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 11
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 12
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 12
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 12
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 13
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 13
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 13
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 13
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 14
+          }
+        ],
+        "from_year": 6,
+        "span": 8,
+        "t": "years",
+        "to_year": 14,
+        "world_ended": false
+      },
+      {
+        "after_life": 1,
+        "changes": [
+          {
+            "act": "Support Karic",
+            "consequence": "the order of rule shifts",
+            "first_year": 8,
+            "sealed": true,
+            "times": 5
+          },
+          {
+            "act": "found a local council",
+            "consequence": "the order of rule shifts",
+            "first_year": 8,
+            "sealed": false,
+            "times": 15
+          },
+          {
+            "act": "wage a battle",
+            "consequence": "war breaks out",
+            "first_year": 7,
+            "sealed": false,
+            "times": 13
+          }
+        ],
+        "echoes": [
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the faith takes root",
+            "scale": "large",
+            "year": 8
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 7
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 7
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 7
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 8
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 8
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 8
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 8
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 9
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 9
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 9
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 9
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "trade flourishes",
+            "scale": "medium",
+            "year": 9
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 9
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 10
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 10
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 10
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 10
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 10
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 11
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 11
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 11
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 11
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 12
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 12
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 12
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 13
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 13
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 13
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 13
+          },
+          {
+            "owners": [
+              1
+            ],
+            "phrase": "war breaks out",
+            "scale": "medium",
+            "year": 14
+          }
+        ],
+        "hardened": [],
+        "t": "aftermath",
+        "year": 14
+      },
+      {
+        "era": "an age of governance",
+        "life": 2,
+        "t": "rebirth",
+        "talent": "priest",
+        "year": 14
+      },
+      {
+        "age": 16,
+        "era": "an age of governance",
+        "header": "Something new stirs",
+        "life": 2,
+        "options": [
+          {
+            "heritage_id": null,
+            "kind": "Wildcard",
+            "label": "Support Ashnon",
+            "n": 1,
+            "target": "Ashnon",
+            "why": "tension rising"
+          },
+          {
+            "heritage_id": null,
+            "kind": "Wildcard",
+            "label": "Support Lynveth",
+            "n": 2,
+            "target": "Lynveth",
+            "why": null
+          },
+          {
+            "heritage_id": null,
+            "kind": "Place",
+            "label": "Develop The Sunken Vault",
+            "n": 3,
+            "target": "The Sunken Vault",
+            "why": null
+          }
+        ],
+        "reason": "novelty",
+        "recognition": null,
+        "t": "juncture",
+        "year": 14
+      },
+      {
+        "age": 16,
+        "kind": "Wildcard",
+        "label": "Support Ashnon",
+        "life": 2,
+        "option": 1,
+        "planted": 1,
+        "t": "outcome",
+        "year": 14
+      },
+      {
+        "age": 19,
+        "era": "an age of governance",
+        "header": "Something new stirs",
+        "life": 2,
+        "options": [
+          {
+            "heritage_id": null,
+            "kind": "Wildcard",
+            "label": "Support Ashnon",
+            "n": 1,
+            "target": "Ashnon",
+            "why": null
+          },
+          {
+            "heritage_id": null,
+            "kind": "Faction",
+            "label": "Further House of the Iron Seat",
+            "n": 2,
+            "target": "House of the Iron Seat",
+            "why": null
+          },
+          {
+            "heritage_id": null,
+            "kind": "Wildcard",
+            "label": "Support Lynveth",
+            "n": 3,
+            "target": "Lynveth",
+            "why": null
+          }
+        ],
+        "reason": "novelty",
+        "recognition": null,
+        "t": "juncture",
+        "year": 17
+      },
+      {
+        "age": 19,
+        "kind": "Wildcard",
+        "label": "Support Ashnon",
+        "life": 2,
+        "option": 1,
+        "planted": 1,
+        "t": "outcome",
+        "year": 17
+      },
+      {
+        "age": 21,
+        "era": "an age of warfare",
+        "header": "Something new stirs",
+        "life": 2,
+        "options": [
+          {
+            "heritage_id": null,
+            "kind": "Wildcard",
+            "label": "Support Ashnon",
+            "n": 1,
+            "target": "Ashnon",
+            "why": null
+          },
+          {
+            "heritage_id": null,
+            "kind": "Person",
+            "label": "Advocate Dunric",
+            "n": 2,
+            "target": "Dunric",
+            "why": "long neglected"
+          },
+          {
+            "heritage_id": null,
+            "kind": "Wildcard",
+            "label": "Support Kaveth",
+            "n": 3,
+            "target": "Kaveth",
+            "why": null
+          }
+        ],
+        "reason": "novelty",
+        "recognition": null,
+        "t": "juncture",
+        "year": 19
+      },
+      {
+        "age": 21,
+        "kind": "Wildcard",
+        "label": "Support Ashnon",
+        "life": 2,
+        "option": 1,
+        "planted": 1,
+        "t": "outcome",
+        "year": 19
+      },
+      {
+        "age": 22,
+        "life": 2,
+        "named": [],
+        "pending": 24,
+        "seed_years": [
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "t": "death",
+        "talent": "priest",
+        "title": "The Priest of Hollowfen",
+        "year": 20
+      },
+      {
+        "after_life": 2,
+        "events": [
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 22
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 22
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 22
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 22
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 23
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 23
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 23
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 23
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 24
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 24
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 24
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 25
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 25
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 25
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 25
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "a monument rises",
+            "scale": "medium",
+            "year": 26
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 26
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 26
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 26
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 27
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 27
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 27
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 27
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "a monument rises",
+            "scale": "medium",
+            "year": 28
+          }
+        ],
+        "from_year": 20,
+        "span": 8,
+        "t": "years",
+        "to_year": 28,
+        "world_ended": false
+      },
+      {
+        "after_life": 2,
+        "changes": [
+          {
+            "act": "Support Ashnon",
+            "consequence": "the order of rule shifts",
+            "first_year": 22,
+            "sealed": true,
+            "times": 3
+          },
+          {
+            "act": "found a local council",
+            "consequence": "the order of rule shifts",
+            "first_year": 22,
+            "sealed": false,
+            "times": 19
+          },
+          {
+            "act": "raise a great work",
+            "consequence": "a monument rises",
+            "first_year": 26,
+            "sealed": false,
+            "times": 2
+          }
+        ],
+        "echoes": [
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 22
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 22
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 22
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 22
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 23
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 23
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 23
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 23
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 24
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 24
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 24
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 25
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 25
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 25
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 25
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "a monument rises",
+            "scale": "medium",
+            "year": 26
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 26
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 26
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 26
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 27
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 27
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 27
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 27
+          },
+          {
+            "owners": [
+              2
+            ],
+            "phrase": "a monument rises",
+            "scale": "medium",
+            "year": 28
+          }
+        ],
+        "hardened": [
+          {
+            "founder_life": 1,
+            "longevity": 20,
+            "name": "Order of the Open Road",
+            "planted_year": 0,
+            "reach": 33,
+            "ref": "cc990714968a"
+          },
+          {
+            "founder_life": 1,
+            "longevity": 20,
+            "name": "Order of the Old Flame",
+            "planted_year": 0,
+            "reach": 32,
+            "ref": "a094fbcd5297"
+          },
+          {
+            "founder_life": 1,
+            "longevity": 19,
+            "name": "Order of the Quiet Hand",
+            "planted_year": 1,
+            "reach": 31,
+            "ref": "4b1409cb8f27"
+          },
+          {
+            "founder_life": 1,
+            "longevity": 19,
+            "name": "Order of the Long Dawn",
+            "planted_year": 1,
+            "reach": 30,
+            "ref": "d052b93677a5"
+          },
+          {
+            "founder_life": 1,
+            "longevity": 19,
+            "name": "Order of the First Light",
+            "planted_year": 1,
+            "reach": 29,
+            "ref": "1bf68bd5177d"
+          },
+          {
+            "founder_life": 1,
+            "longevity": 18,
+            "name": "Order of the Bright Ledger",
+            "planted_year": 2,
+            "reach": 28,
+            "ref": "ef3ff0c684e1"
+          },
+          {
+            "founder_life": 1,
+            "longevity": 18,
+            "name": "Order of the Seven Fires",
+            "planted_year": 2,
+            "reach": 27,
+            "ref": "58d58c66f590"
+          },
+          {
+            "founder_life": 1,
+            "longevity": 17,
+            "name": "Order of the Old Flame",
+            "planted_year": 3,
+            "reach": 26,
+            "ref": "725211c5eccd"
+          }
+        ],
+        "t": "aftermath",
+        "year": 28
+      },
+      {
+        "era": "an age of governance",
+        "life": 3,
+        "t": "rebirth",
+        "talent": "merchant",
+        "year": 28
+      },
+      {
+        "age": 16,
+        "era": "an age of governance",
+        "header": "A crisis gathers",
+        "life": 3,
+        "options": [
+          {
+            "heritage_id": "her:seed-0001",
+            "kind": "Legacy",
+            "label": "Tend the Order of the Open Road",
+            "n": 1,
+            "target": "legacy:seed-0001",
+            "why": "tension rising"
+          },
+          {
+            "heritage_id": null,
+            "kind": "Wildcard",
+            "label": "Support Lynveth",
+            "n": 2,
+            "target": "Lynveth",
+            "why": null
+          },
+          {
+            "heritage_id": null,
+            "kind": "Wildcard",
+            "label": "Support Kaveth",
+            "n": 3,
+            "target": "Kaveth",
+            "why": null
+          }
+        ],
+        "reason": "crisis",
+        "recognition": {
+          "founder_life": 1,
+          "founder_talent": "mentor",
+          "name": "Order of the Open Road",
+          "option": 1,
+          "planted_year": 0,
+          "reach": 33,
+          "sealed_act": "Support Karic"
+        },
+        "t": "juncture",
+        "year": 28
+      },
+      {
+        "age": 16,
+        "kind": "Legacy",
+        "label": "Tend the Order of the Open Road",
+        "life": 3,
+        "option": 1,
+        "planted": 1,
+        "t": "outcome",
+        "year": 28
+      },
+      {
+        "age": 17,
+        "era": "an age of governance",
+        "header": "A crisis gathers",
+        "life": 3,
+        "options": [
+          {
+            "heritage_id": "her:seed-0003",
+            "kind": "Legacy",
+            "label": "Tend the Order of the Quiet Hand",
+            "n": 1,
+            "target": "legacy:seed-0003",
+            "why": "tension rising"
+          },
+          {
+            "heritage_id": null,
+            "kind": "Wildcard",
+            "label": "Support Ashnon",
+            "n": 2,
+            "target": "Ashnon",
+            "why": null
+          },
+          {
+            "heritage_id": null,
+            "kind": "Wildcard",
+            "label": "Support Kaveth",
+            "n": 3,
+            "target": "Kaveth",
+            "why": null
+          }
+        ],
+        "reason": "crisis",
+        "recognition": {
+          "founder_life": 1,
+          "founder_talent": "mentor",
+          "name": "Order of the Quiet Hand",
+          "option": 1,
+          "planted_year": 1,
+          "reach": 31,
+          "sealed_act": null
+        },
+        "t": "juncture",
+        "year": 29
+      },
+      {
+        "age": 17,
+        "kind": "Legacy",
+        "label": "Tend the Order of the Quiet Hand",
+        "life": 3,
+        "option": 1,
+        "planted": 1,
+        "t": "outcome",
+        "year": 29
+      },
+      {
+        "age": 18,
+        "era": "an age of governance",
+        "header": "History remembers",
+        "life": 3,
+        "options": [
+          {
+            "heritage_id": "her:seed-0001",
+            "kind": "Legacy",
+            "label": "Tend the Order of the Open Road",
+            "n": 1,
+            "target": "legacy:seed-0001",
+            "why": "long neglected"
+          },
+          {
+            "heritage_id": null,
+            "kind": "Wildcard",
+            "label": "Support Ashnon",
+            "n": 2,
+            "target": "Ashnon",
+            "why": null
+          },
+          {
+            "heritage_id": null,
+            "kind": "Wildcard",
+            "label": "Support Lynveth",
+            "n": 3,
+            "target": "Lynveth",
+            "why": null
+          }
+        ],
+        "reason": "history",
+        "recognition": null,
+        "t": "juncture",
+        "year": 30
+      },
+      {
+        "age": 18,
+        "kind": "Legacy",
+        "label": "Tend the Order of the Open Road",
+        "life": 3,
+        "option": 1,
+        "planted": 1,
+        "t": "outcome",
+        "year": 30
+      },
+      {
+        "age": 19,
+        "era": "an age of governance",
+        "header": "History remembers",
+        "life": 3,
+        "options": [
+          {
+            "heritage_id": "her:seed-0002",
+            "kind": "Legacy",
+            "label": "Tend the Order of the Old Flame",
+            "n": 1,
+            "target": "legacy:seed-0002",
+            "why": null
+          },
+          {
+            "heritage_id": null,
+            "kind": "Wildcard",
+            "label": "Support Lynveth",
+            "n": 2,
+            "target": "Lynveth",
+            "why": null
+          },
+          {
+            "heritage_id": null,
+            "kind": "Wildcard",
+            "label": "Support Kaveth",
+            "n": 3,
+            "target": "Kaveth",
+            "why": null
+          }
+        ],
+        "reason": "history",
+        "recognition": {
+          "founder_life": 1,
+          "founder_talent": "mentor",
+          "name": "Order of the Old Flame",
+          "option": 1,
+          "planted_year": 0,
+          "reach": 32,
+          "sealed_act": null
+        },
+        "t": "juncture",
+        "year": 31
+      },
+      {
+        "age": 19,
+        "kind": "Legacy",
+        "label": "Tend the Order of the Old Flame",
+        "life": 3,
+        "option": 1,
+        "planted": 1,
+        "t": "outcome",
+        "year": 31
+      },
+      {
+        "age": 20,
+        "life": 3,
+        "named": [],
+        "pending": 16,
+        "seed_years": [
+          28,
+          29,
+          30,
+          31
+        ],
+        "t": "death",
+        "talent": "merchant",
+        "title": "The Merchant of Hollowfen",
+        "year": 32
+      },
+      {
+        "after_life": 3,
+        "events": [
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 36
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 36
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 36
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 36
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 37
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 37
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 37
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 37
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 38
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 38
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 38
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 38
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 39
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 39
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 39
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 39
+          }
+        ],
+        "from_year": 32,
+        "span": 8,
+        "t": "years",
+        "to_year": 40,
+        "world_ended": true
+      },
+      {
+        "after_life": 3,
+        "changes": [
+          {
+            "act": "Tend the Order of the Open Road",
+            "consequence": "the order of rule shifts",
+            "first_year": 36,
+            "sealed": true,
+            "times": 2
+          },
+          {
+            "act": "Tend the Order of the Quiet Hand",
+            "consequence": "the order of rule shifts",
+            "first_year": 37,
+            "sealed": true,
+            "times": 1
+          },
+          {
+            "act": "Tend the Order of the Old Flame",
+            "consequence": "the order of rule shifts",
+            "first_year": 39,
+            "sealed": true,
+            "times": 1
+          }
+        ],
+        "echoes": [
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 36
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 36
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 36
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 36
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 37
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 37
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 37
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 37
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 38
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 38
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 38
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 38
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 39
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 39
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 39
+          },
+          {
+            "owners": [
+              3
+            ],
+            "phrase": "the order of rule shifts",
+            "scale": "medium",
+            "year": 39
+          }
+        ],
+        "hardened": [],
+        "t": "aftermath",
+        "year": 40
+      },
+      {
+        "cases": [
+          {
+            "event": "the order of rule shifts",
+            "origin_act": "Support Karic",
+            "origin_life": 1,
+            "origin_sealed": true,
+            "origin_year": 0,
+            "other_origins": 1,
+            "posthumous": true,
+            "ref": "98bac4826928",
+            "steps": [
+              {
+                "phrase": "the order of rule shifts",
+                "year": 8
+              }
+            ],
+            "year": 8
+          },
+          {
+            "event": "the order of rule shifts",
+            "origin_act": "Support Karic",
+            "origin_life": 1,
+            "origin_sealed": true,
+            "origin_year": 0,
+            "other_origins": 2,
+            "posthumous": true,
+            "ref": "aedee376c3e1",
+            "steps": [
+              {
+                "phrase": "the order of rule shifts",
+                "year": 8
+              }
+            ],
+            "year": 9
+          },
+          {
+            "event": "the order of rule shifts",
+            "origin_act": "Support Karic",
+            "origin_life": 1,
+            "origin_sealed": true,
+            "origin_year": 0,
+            "other_origins": 3,
+            "posthumous": true,
+            "ref": "52736778eadf",
+            "steps": [
+              {
+                "phrase": "the order of rule shifts",
+                "year": 8
+              }
+            ],
+            "year": 9
+          },
+          {
+            "event": "the order of rule shifts",
+            "origin_act": "Support Karic",
+            "origin_life": 1,
+            "origin_sealed": true,
+            "origin_year": 0,
+            "other_origins": 4,
+            "posthumous": true,
+            "ref": "5fb265f31451",
+            "steps": [
+              {
+                "phrase": "the order of rule shifts",
+                "year": 8
+              }
+            ],
+            "year": 9
+          },
+          {
+            "event": "the order of rule shifts",
+            "origin_act": "Support Karic",
+            "origin_life": 1,
+            "origin_sealed": true,
+            "origin_year": 0,
+            "other_origins": 5,
+            "posthumous": true,
+            "ref": "e081e22aaf31",
+            "steps": [
+              {
+                "phrase": "the order of rule shifts",
+                "year": 8
+              }
+            ],
+            "year": 10
+          },
+          {
+            "event": "the order of rule shifts",
+            "origin_act": "Support Karic",
+            "origin_life": 1,
+            "origin_sealed": true,
+            "origin_year": 0,
+            "other_origins": 6,
+            "posthumous": true,
+            "ref": "8873adf32d45",
+            "steps": [
+              {
+                "phrase": "the order of rule shifts",
+                "year": 8
+              }
+            ],
+            "year": 10
+          },
+          {
+            "event": "the order of rule shifts",
+            "origin_act": "Support Karic",
+            "origin_life": 1,
+            "origin_sealed": true,
+            "origin_year": 0,
+            "other_origins": 7,
+            "posthumous": true,
+            "ref": "11d32aa9b184",
+            "steps": [
+              {
+                "phrase": "the order of rule shifts",
+                "year": 8
+              }
+            ],
+            "year": 11
+          },
+          {
+            "event": "the order of rule shifts",
+            "origin_act": "Support Karic",
+            "origin_life": 1,
+            "origin_sealed": true,
+            "origin_year": 0,
+            "other_origins": 8,
+            "posthumous": true,
+            "ref": "31f70a8ba0df",
+            "steps": [
+              {
+                "phrase": "the order of rule shifts",
+                "year": 8
+              }
+            ],
+            "year": 11
+          },
+          {
+            "event": "the order of rule shifts",
+            "origin_act": "Support Karic",
+            "origin_life": 1,
+            "origin_sealed": true,
+            "origin_year": 0,
+            "other_origins": 9,
+            "posthumous": true,
+            "ref": "f958bca990fe",
+            "steps": [
+              {
+                "phrase": "the order of rule shifts",
+                "year": 8
+              }
+            ],
+            "year": 12
+          },
+          {
+            "event": "the order of rule shifts",
+            "origin_act": "Support Karic",
+            "origin_life": 1,
+            "origin_sealed": true,
+            "origin_year": 0,
+            "other_origins": 10,
+            "posthumous": true,
+            "ref": "c1e0f175c9b3",
+            "steps": [
+              {
+                "phrase": "the order of rule shifts",
+                "year": 8
+              }
+            ],
+            "year": 13
+          },
+          {
+            "event": "the order of rule shifts",
+            "origin_act": "Support Karic",
+            "origin_life": 1,
+            "origin_sealed": true,
+            "origin_year": 0,
+            "other_origins": 11,
+            "posthumous": true,
+            "ref": "4ed162f2da6d",
+            "steps": [
+              {
+                "phrase": "the order of rule shifts",
+                "year": 8
+              }
+            ],
+            "year": 13
+          },
+          {
+            "event": "the order of rule shifts",
+            "origin_act": "Support Karic",
+            "origin_life": 1,
+            "origin_sealed": true,
+            "origin_year": 0,
+            "other_origins": 12,
+            "posthumous": true,
+            "ref": "e553728e75da",
+            "steps": [
+              {
+                "phrase": "the order of rule shifts",
+                "year": 8
+              }
+            ],
+            "year": 22
+          }
+        ],
+        "ending": "Imperial Age",
+        "legacies": [
+          {
+            "action": "found a local council",
+            "founder_life": "first",
+            "living": true,
+            "name": "Order of the Open Road"
+          },
+          {
+            "action": "found a local council",
+            "founder_life": "first",
+            "living": true,
+            "name": "Order of the Old Flame"
+          },
+          {
+            "action": "found a local council",
+            "founder_life": "first",
+            "living": true,
+            "name": "Order of the Quiet Hand"
+          },
+          {
+            "action": "found a local council",
+            "founder_life": "first",
+            "living": true,
+            "name": "Order of the Long Dawn"
+          },
+          {
+            "action": "found a local council",
+            "founder_life": "first",
+            "living": true,
+            "name": "Order of the First Light"
+          },
+          {
+            "action": "found a local council",
+            "founder_life": "first",
+            "living": true,
+            "name": "Order of the Bright Ledger"
+          },
+          {
+            "action": "found a local council",
+            "founder_life": "first",
+            "living": true,
+            "name": "Order of the Seven Fires"
+          },
+          {
+            "action": "found a local council",
+            "founder_life": "first",
+            "living": true,
+            "name": "Order of the Old Flame"
+          }
+        ],
+        "lives": 3,
+        "t": "closing",
+        "year": 40
+      }
+    ],
+    "end_year": 40,
+    "ending": "Imperial Age",
+    "lives": [
+      {
+        "birth_year": 0,
+        "death_year": 6,
+        "ordinal": 1,
+        "talent": "mentor"
+      },
+      {
+        "birth_year": 14,
+        "death_year": 20,
+        "ordinal": 2,
+        "talent": "priest"
+      },
+      {
+        "birth_year": 28,
+        "death_year": 32,
+        "ordinal": 3,
+        "talent": "merchant"
+      }
+    ],
+    "max_year": 40,
+    "place": "Hollowfen",
+    "seed": 1
+  }
+}
