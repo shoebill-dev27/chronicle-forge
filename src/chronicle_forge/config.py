@@ -1,7 +1,8 @@
 """Tunable constants. These are design-locked defaults (see docs/design.md).
 
-World lifespan is the only value expected to differ between dev/CI (40 years,
-fast iteration) and production (200 years); the logic is identical.
+Time domain (owner decisions, 2026-09): one simulation tick is one world year;
+the world horizon is 200 years; a playable life begins at 16 and ends by 80
+at the latest; death and the next life are exactly ten world years apart.
 
 Many values below were re-tuned in the P3.5 balance pass (see docs/playtest_p5.md
 and docs/playtest_p35.md) to fix theme freeze, heritage inflation, the wildcard
@@ -10,27 +11,14 @@ monopoly, and the fixed 2-life cycle.
 
 from __future__ import annotations
 
-# --- World lifespan (section 3) ---
-DEV_WORLD_MAX_YEARS = 40
-PROD_WORLD_MAX_YEARS = 200
+# --- World clock ---
+WORLD_MAX_YEARS = 200  # the horizon: the run ends here, mid-life or not
 
-# --- Player lifespan (section / "player") ---
-LIFESPAN_CAP = 80  # maximum age a life can reach
-
-# --- Post-death time skip (section 5) ---
-# skip = clamp(base(age) + seed_maturation_bonus, MIN_SKIP, MAX_SKIP)
-# Tightened so several lives fit a world (was 4..22, forcing exactly 2 lives).
-MIN_SKIP = 2
-MAX_SKIP = 8
-MAX_BASE = 7  # base skip for a death at age 0 (younger death -> longer)
-MIN_BASE = 2  # base skip for a death at LIFESPAN_CAP (old age -> shorter)
-SEED_BONUS_CAP = 5  # cap on the maturation bonus contribution
-
-# --- Natural lifespan distribution (P3.5) ---
-# Active world-years a life lasts before natural death (auto-player / default).
-NATURAL_SPAN_MIN = 2
-NATURAL_SPAN_MAX = 7
-COMBAT_DEATH_PROB_PER_YEAR = 0.06  # small chance a life ends in combat
+# --- Player lifespan ---
+LIFESPAN_CAP = 80  # natural maximum age; reaching it is death by LIFESPAN.
+# Death before the cap only comes from a registered hazard (see mortality.py);
+# there is no default one.
+REINCARNATION_GAP_YEARS = 10  # death -> next playable life, world-only years
 
 # --- Heritage promotion gate (P3.5; was: promote everything) ---
 HERITAGE_MIN_REACH = 4  # transitive descendant events required

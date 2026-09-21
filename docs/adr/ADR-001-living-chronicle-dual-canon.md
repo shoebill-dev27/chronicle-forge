@@ -11,7 +11,7 @@ The v1 design (SoT: definition, direction, UX spec, tutorial proof, content
 proof) required three linked product decisions: the presentation frame, the
 tutorial realization mode, and the integrity boundary between authored and
 generated content. The Engine review established hard facts: generated worlds
-have `MAX_SKIP = 8` years and a ~200-year span cap; junctures are
+have `MAX_SKIP = 8` years (since 2026-09 a fixed 10-year gap — `design_time_domain.md`) and a 200-year span cap; junctures are
 tension-driven and cannot be authored into position; lineage memory is not a
 persisted, generated artifact. The tutorial canon (54-year and 250-year skips,
 year 803, staged junctures, a remembering lineage) is therefore outside the

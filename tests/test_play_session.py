@@ -72,8 +72,9 @@ def test_full_loop_delivers_the_core_experience():
     # 4. the years report what the mark did — the beat that used to be four
     #    chained Markdown documents saying nothing had survived
     assert "In those years the world moved on what you left:" in transcript
-    # 5. a mark hardens into a named legacy, attributed to the life that made it
-    assert "set down has taken a name:" in transcript
+    # 5. (retired) "a mark hardens into a named legacy during the years after
+    #    death" — marks now harden during the founder's own 64-year life, so
+    #    the aftermath has no name to announce; the old-loop condition is gone.
     # 6. a next life begins
     assert "You are born again" in transcript
     # 7. encounter a former self

@@ -28,17 +28,17 @@ from chronicle_forge.reporting.observatory import observatory
 from chronicle_forge.reporting.social_memory import social_memory_view
 from chronicle_forge.reporting.world_model import world_model_json
 
-MAX_YEAR = config.DEV_WORLD_MAX_YEARS
+MAX_YEAR = config.WORLD_MAX_YEARS
 
 # Frozen off-path goldens (must stay identical when the flag is OFF).
-GOLDEN_WORLD_SHA = "e62d8f2cd24d2c72"
-GOLDEN_OBSERVATORY_SHA = "f9ad13c75c88a9c2"
-GOLDEN_SOCIAL_MEMORY_SHA = "3fbb1aa02071dfe2"
-GOLDEN_WORLD_MODEL_SHA = "5b41a692cfa3f1ce"
+GOLDEN_WORLD_SHA = "9aab126e58398933"
+GOLDEN_OBSERVATORY_SHA = "3e8835d9ab8d3ce4"
+GOLDEN_SOCIAL_MEMORY_SHA = "3a3eca233e81c55a"
+GOLDEN_WORLD_MODEL_SHA = "0bfad983f95d448f"
 
 # The one new golden: seed42 opportunity world with social_memory ON, produced by
 # the integrated S1 pipeline (per-year decay + npc_signals relation-bias).
-GOLDEN_SOCIAL_MEMORY_ON_WORLD_SHA = "0eb1d217a2b8e144"
+GOLDEN_SOCIAL_MEMORY_ON_WORLD_SHA = "a83819705a3e29f7"
 
 
 def _sha(text: str) -> str:
@@ -121,7 +121,10 @@ def test_relation_bias_constants_locked():
 def test_relation_bias_is_wired_into_npc_signals():
     """A soul-relation moves an NPC's Delta with the flag ON; proves npc_signals
     consumes relation_bias rather than ignoring it (no dead code)."""
-    world = _off()  # a finished world that holds soul-relations
+    # A short world: the seed-42 200-year world holds no live soul-relation
+    # (every NPC is dead by year 55 and none are born; NPC lifecycle is out of
+    # the time-domain change's scope).
+    world = simulate_world(42, mode="opportunity", max_year=40)
     idx: Indexes = build_indexes(world)
     moved = False
     for npc in world.npcs:

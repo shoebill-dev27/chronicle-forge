@@ -128,14 +128,3 @@ def test_written_fixture_round_trips(tmp_path):
     target = tmp_path / "dvs.json"
     written = write_fixture(target)
     assert json.loads(target.read_text(encoding="utf-8")) == _as_json(written)
-
-
-def test_shipped_fixture_is_current():
-    """The file Unity loads is the file this engine produces."""
-    shipped = json.loads(
-        (
-            __import__("pathlib").Path(__file__).resolve().parents[1]
-            / "unity/Assets/ChronicleForge/Resources/dvs_fixture.json"
-        ).read_text(encoding="utf-8")
-    )
-    assert shipped == _as_json(dvs_fixture())

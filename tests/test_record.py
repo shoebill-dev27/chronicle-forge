@@ -8,7 +8,7 @@ from chronicle_forge.play.session import run_human_world
 from chronicle_forge.persistence import build_recipe, replay_transcript
 from chronicle_forge.persistence.record import recording_reader
 
-MAX_YEAR = config.DEV_WORLD_MAX_YEARS
+MAX_YEAR = config.WORLD_MAX_YEARS
 
 
 def test_recording_reader_captures_consumed_lines():

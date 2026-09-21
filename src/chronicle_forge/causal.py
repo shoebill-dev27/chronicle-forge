@@ -13,7 +13,7 @@ contradiction-free (R1).
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Iterable
+from typing import Iterable, Optional
 
 from .enums import CausalEdgeKind
 from .models import CausalEdge, CausalNode, World
@@ -34,6 +34,16 @@ class CausalGraph:
         self.world = world
         self._nodes: dict[str, CausalNode] = {n.id: n for n in world.causal_nodes}
         self._seeds: dict[str, object] = {s.id: s for s in world.seeds}
+        # cause -> effects, built lazily and kept current by add_edge. A
+        # 200-year world carries tens of thousands of edges; rebuilding this
+        # per query made the year loop superlinear.
+        self._children: Optional[dict[str, set[str]]] = None
+        # Transitive-effect sets as bitmasks over ``_bits`` (id -> bit), memoised
+        # per graph and dropped on add_edge: the yearly heritage pass asks for
+        # the reach of hundreds of events over a graph with tens of thousands
+        # of edges, and set-per-query traversal made that the whole run time.
+        self._bits: dict[str, int] = {}
+        self._desc: dict[str, int] = {}
 
     @classmethod
     def from_world(cls, world: World) -> "CausalGraph":
@@ -66,11 +76,18 @@ class CausalGraph:
             raise ValueError(f"cause must exist (node or seed): {from_id}")
         if from_id == to_id:
             raise CausalCycleError(f"self-loop on {to_id}")
-        # Cycle iff the effect is already a transitive cause of the cause.
-        if to_id in self.ancestors(from_id):
+        # Cycle iff the effect is already a transitive cause of the cause —
+        # equivalently, the cause is already a transitive effect of the effect.
+        # Walked downward from ``to_id`` because a freshly generated event has
+        # no effects yet, so the common case is a single empty lookup.
+        if from_id in self.descendants(to_id):
             raise CausalCycleError(f"edge {from_id}->{to_id} would create a cycle")
         edge = CausalEdge(from_id=from_id, to_id=to_id, weight=weight, kind=kind)
         self._nodes[to_id].caused_by.append(edge)
+        if self._children is not None:
+            self._children[from_id].add(to_id)
+            self._bit(to_id)
+        self._desc.clear()
         return edge
 
     # --- traversal --------------------------------------------------------
@@ -94,24 +111,58 @@ class CausalGraph:
         return result
 
     def _child_map(self) -> dict[str, set[str]]:
-        children: dict[str, set[str]] = defaultdict(set)
-        for node in self._nodes.values():
-            for edge in node.caused_by:
-                children[edge.from_id].add(node.id)
-        return children
+        if self._children is None:
+            children: dict[str, set[str]] = defaultdict(set)
+            for node in self._nodes.values():
+                for edge in node.caused_by:
+                    children[edge.from_id].add(node.id)
+                self._bit(node.id)
+            self._children = children
+        return self._children
+
+    def _bit(self, ident: str) -> int:
+        bit = self._bits.get(ident)
+        if bit is None:
+            bit = self._bits[ident] = 1 << len(self._bits)
+        return bit
+
+    def _descendant_bits(self, ident: str) -> int:
+        """Bitmask of all transitive effects of ``ident``, memoised bottom-up
+        (iterative post-order, so a long causal chain cannot overflow the
+        stack)."""
+        cached = self._desc.get(ident)
+        if cached is not None:
+            return cached
+        children, bits, desc = self._child_map(), self._bits, self._desc
+        stack: list[tuple[str, Iterable[str]]] = [
+            (ident, iter(children.get(ident, ())))
+        ]
+        on_path = {ident}
+        while stack:
+            cur, pending = stack[-1]
+            for child in pending:
+                if child in desc or child in on_path:
+                    continue
+                on_path.add(child)
+                stack.append((child, iter(children.get(child, ()))))
+                break
+            else:
+                stack.pop()
+                on_path.discard(cur)
+                mask = 0
+                for child in children.get(cur, ()):
+                    mask |= bits[child] | desc.get(child, 0)
+                desc[cur] = mask
+        return desc[ident]
+
+    def reach(self, ident: str) -> int:
+        """How many distinct transitive effects ``ident`` has."""
+        return self._descendant_bits(ident).bit_count()
 
     def descendants(self, ident: str) -> set[str]:
         """All transitive effects of ``ident`` (excluding itself)."""
-        children = self._child_map()
-        result: set[str] = set()
-        stack: list[str] = list(children.get(ident, set()))
-        while stack:
-            cur = stack.pop()
-            if cur in result:
-                continue
-            result.add(cur)
-            stack.extend(children.get(cur, set()))
-        return result
+        mask = self._descendant_bits(ident)
+        return {name for name, bit in self._bits.items() if mask & bit}
 
     def trace_to_roots(self, node_id: str) -> list[list[str]]:
         """Return every cause path from ``node_id`` back to a root (section 9.4).

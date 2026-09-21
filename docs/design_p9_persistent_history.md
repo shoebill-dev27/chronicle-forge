@@ -1,5 +1,10 @@
 # P9 Persistent History — Design (For Review)
 
+> **Partially superseded 2026-09 (`design_time_domain.md` §5):** "the recipe is
+> the save" no longer holds as a product requirement — the Recipe is kept as a
+> reproduction/debug record and the future save is a versioned world snapshot.
+> Everything built on replay determinism (P9-1..5) still works as described.
+
 Status: **Design only. No implementation. Awaiting review to fix the
 implementation order.** No code, model, or formatter changes accompany this
 document.

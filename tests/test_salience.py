@@ -74,7 +74,9 @@ def make_world(
     seed=42,
 ):
     player = Player(id="player-0000")
-    life = Life(id="life-0000", player_id=player.id, birth_year=0)
+    life = Life(
+        id="life-0000", player_id=player.id, birth_year=-16, playable_start_year=0
+    )
     axes = {a: 20 for a in ThemeAxis}
     axes[dominant] = 80
     world = World(
@@ -399,7 +401,14 @@ def test_T2_jitter_from_immutable_inputs():
     world, life = make_world(npcs=npcs)
     first = select_opportunities(world, life, OpportunitySession())
     # Appending later lives must not change our life's index -> identical jitter.
-    world.lives.append(Life(id="life-9999", player_id=world.player.id, birth_year=5))
+    world.lives.append(
+        Life(
+            id="life-9999",
+            player_id=world.player.id,
+            birth_year=-11,
+            playable_start_year=5,
+        )
+    )
     second = select_opportunities(world, life, OpportunitySession())
     assert [(o.target_id, o.tension) for o in first] == [
         (o.target_id, o.tension) for o in second

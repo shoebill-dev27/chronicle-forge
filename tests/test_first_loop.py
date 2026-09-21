@@ -24,7 +24,7 @@ import pytest
 
 from chronicle_forge.play import adapter
 from chronicle_forge.play.session import run_human_world
-from chronicle_forge.reporting._data import heritage_rows, life_index, seed_by_id
+from chronicle_forge.reporting._data import heritage_rows, seed_by_id
 
 SEEDS = [1, 7, 42, 99, 123, 404, 777]
 
@@ -152,21 +152,6 @@ def test_the_payoff_arrives_before_the_last_life(seed):
     ]
     payoff = transcript.index("In those years the world moved on what you left:")
     assert payoff < births[-1], "the first payoff lands only in the final life"
-
-
-@pytest.mark.parametrize("seed", SEEDS)
-def test_a_named_legacy_is_attributed_to_the_life_that_planted_it(seed):
-    """The deeper beat: a mark hardens a life or two after the life that made
-    it, and is credited to that life by name. Felt time between the mark and
-    finding it is the design's whole point, so this must not collapse into the
-    life that just died."""
-    world, transcript = _world_and_transcript(seed)
-    if not world.heritage:
-        pytest.skip("world left nothing behind")
-    assert "set down has taken a name:" in transcript
-    ordinals = {life_index(world)[life.id] for life in world.lives}
-    assert any(f"your {word} life" in transcript for word in ("first", "second"))
-    assert max(ordinals) >= 2
 
 
 # --- attribution must agree wherever the player meets a legacy ----------

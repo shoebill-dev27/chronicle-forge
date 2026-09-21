@@ -1,5 +1,11 @@
 # P9-1 Save/Load — Detailed Design (For Review, test-first)
 
+> **Partially superseded 2026-09 (`design_time_domain.md` §5):** the `max_year`
+> gate (`UnsupportedRecipe` on `max_year != 40`) is removed — a recipe's own
+> horizon is replayed — and the Recipe is a reproduction/debug record rather
+> than the product save (a versioned world snapshot is the planned save). The
+> `engine_version` gate and seed42 EOF replay regression remain.
+
 Status: **Design + failing tests submitted for review. No implementation yet.**
 Parent: `docs/design_p9_persistent_history.md` (approved). Decisions locked by the
 reviewer: recipe is canonical, snapshot is an optional cache, `engine_version`

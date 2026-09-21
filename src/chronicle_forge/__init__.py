@@ -17,6 +17,7 @@ from .generation import fire_seeds, generate_events
 from .heritage import compute_heritage_score, promote_heritage
 from .life import begin_life, end_life, lifespan_reached
 from .macro import (
+    WorldHorizonReached,
     advance_to_next_life,
     advance_year,
     derive_rng,
@@ -40,7 +41,6 @@ from .ai import (
 )
 from .autoplay import simulate_report, simulate_world
 from .ending import classify_ending
-from .timeskip import compute_skip_years
 from .views import (
     full_report,
     render_causal_trace,
@@ -56,7 +56,6 @@ __version__ = "0.4.1"
 __all__ = [
     # world / causal core (P0/P1)
     "generate_world",
-    "compute_skip_years",
     "CausalGraph",
     "CausalCycleError",
     "fire_seeds",
@@ -81,6 +80,7 @@ __all__ = [
     # macro loop (P3)
     "time_skip",
     "advance_year",
+    "WorldHorizonReached",
     "advance_to_next_life",
     "fire_probabilistic_seeds",
     "step_wildcards",

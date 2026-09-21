@@ -16,7 +16,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional, Tuple, Union
 
-from ..config import DEV_WORLD_MAX_YEARS
 from ..models import World
 from ..persistence import (
     Recipe,
@@ -81,7 +80,7 @@ def _grow(request: PlayRequest, writer) -> Tuple[World, Recipe]:
     )
     recipe = build_recipe(
         seed=request.seed,
-        max_year=DEV_WORLD_MAX_YEARS,
+        max_year=world.max_year,
         mode=mode,
         inputs=captured,
         social_memory=True,

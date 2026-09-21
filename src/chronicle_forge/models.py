@@ -198,9 +198,12 @@ class LifeSummary(BaseModel):
 class Life(BaseModel):
     id: str
     player_id: str
+    # Actual birth year (the first life's is -START_AGE). Consecutive lives may
+    # overlap: the next person can be born before the previous one dies.
     birth_year: int
-    age: int = 0  # current age during the life
-    turns: int = 0  # action-time turns elapsed (drives aging)
+    playable_start_year: int  # the world year player control begins (age 16)
+    age: int = 0  # current age; always world.current_year - birth_year
+    turns: int = 0  # action-time turns elapsed (the decision cadence)
     death_year: Optional[int] = None
     age_at_death: Optional[int] = None
     death_cause: Optional[DeathCause] = None
@@ -208,6 +211,10 @@ class Life(BaseModel):
     activity_log: list[ActivityRecord] = Field(default_factory=list)
     evaluation: Evaluation = Field(default_factory=Evaluation)
     summary: Optional[LifeSummary] = None
+
+    @property
+    def alive(self) -> bool:
+        return self.death_year is None
 
 
 # --- Memory -------------------------------------------------------------

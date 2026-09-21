@@ -162,12 +162,19 @@ def recognizable_heritage(world, options, seen) -> Optional[str]:
     Pure: reads ``seen`` (already-recognized heritage *names*), never mutates it —
     the caller owns the recognition state. Recognition is shown only the first
     time a name is met, so a re-encounter reads as discovery, not notification."""
+    current = world.player.current_life_id
     for o in _top3(options):
         opp = o.opportunity
         if opp.kind is OpportunityKind.LEGACY:
             her = _heritage_by_id(world, opp.target_id)
-            if her is not None and heritage_name(her) not in seen:
-                return opp.target_id
+            if her is None or heritage_name(her) in seen:
+                continue
+            # A mark can now harden within its founder's own (long) life; a
+            # former self is by definition not the life being lived.
+            seed = seed_by_id(world, her.seed_id)
+            if seed is not None and seed.planted_by_life_id == current:
+                continue
+            return opp.target_id
     return None
 
 

@@ -26,7 +26,7 @@ from chronicle_forge.persistence import (
     write_export,
 )
 
-MAX_YEAR = config.DEV_WORLD_MAX_YEARS
+MAX_YEAR = config.WORLD_MAX_YEARS
 
 
 def _seed42_recipe():
@@ -45,8 +45,8 @@ def test_export_metadata_fields():
     assert isinstance(meta, ExportMetadata)
     assert meta.seed == 42
     assert meta.engine_version == ENGINE_VERSION
-    assert meta.world_hash.startswith("e62d8f2c")  # golden world
-    assert meta.transcript_hash.startswith("41cf1cfd")  # golden transcript
+    assert meta.world_hash.startswith("9aab126e")  # golden world
+    assert meta.transcript_hash.startswith("e544f884")  # golden transcript
     assert len(meta.recipe_hash) == 64  # full sha256 hex
 
 

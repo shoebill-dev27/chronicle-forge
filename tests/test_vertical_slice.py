@@ -27,21 +27,21 @@ import re
 from chronicle_forge import config
 from chronicle_forge.persistence import build_recipe, read_recipe, save_recipe
 
-MAX_YEAR = config.DEV_WORLD_MAX_YEARS
+MAX_YEAR = config.WORLD_MAX_YEARS
 
 # Frozen engine goldens P15 must NOT move (it adds an Application Layer only).
-GOLDEN_WORLD_SHA = "e62d8f2cd24d2c72"
-GOLDEN_OBSERVATORY_SHA = "f9ad13c75c88a9c2"
-GOLDEN_SOCIAL_MEMORY_SHA = "3fbb1aa02071dfe2"
-GOLDEN_WORLD_MODEL_SHA = "5b41a692cfa3f1ce"
-GOLDEN_NARRATIVE_SHA = "a32df9e5068d054a"
-GOLDEN_CHARACTER_SHA = "36c894fbde084e57"
-GOLDEN_TIMELINE_SHA = "ae42ed5ff91f5545"
-GOLDEN_TRANSCRIPT_SHA = "41cf1cfd843f6272"  # `play --seed 42 --auto` stdout
+GOLDEN_WORLD_SHA = "9aab126e58398933"
+GOLDEN_OBSERVATORY_SHA = "3e8835d9ab8d3ce4"
+GOLDEN_SOCIAL_MEMORY_SHA = "3a3eca233e81c55a"
+GOLDEN_WORLD_MODEL_SHA = "0bfad983f95d448f"
+GOLDEN_NARRATIVE_SHA = "b2d0f979091e0174"
+GOLDEN_CHARACTER_SHA = "080d89bd043ca9cd"
+GOLDEN_TIMELINE_SHA = "786d99434ef50955"
+GOLDEN_TRANSCRIPT_SHA = "e544f8845b16c9dd"  # `play --seed 42 --auto` stdout
 
 # The one new golden: seed42 chronicle_json hash. Pinned at GREEN; the placeholder
 # keeps the golden test RED for the right reason (the in-body import fails first).
-GOLDEN_CHRONICLE_SHA = "aa4c67a416178e92"  # seed42 chronicle_json hash (GREEN)
+GOLDEN_CHRONICLE_SHA = "978d1c4173ac78c5"  # seed42 chronicle_json hash (GREEN)
 
 # id-free negative contract (shared with P12/P13/P14): none may cross the boundary.
 _ID_RE = re.compile(r"[a-z]+-\d{4}")

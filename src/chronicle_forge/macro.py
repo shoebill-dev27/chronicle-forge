@@ -1,8 +1,10 @@
-"""Macro loop (section 4.1): post-death world time-skip and yearly world update.
+"""Macro loop (section 4.1): the world clock, and the gap between lives.
 
-This is the heart of "a reincarnator leaves a mark on the future": a life plants
-seeds, dies, and during the skip those seeds fire into world events that shape
-the world the next life is born into.
+``advance_year`` is the only way world time moves: one call, one year, whether
+the player is living through it (every ``TURNS_PER_YEAR`` action turns) or dead
+(the fixed reincarnation gap). It runs the world's yearly simulation, ages the
+current life, and lets the mortality seam end it. The world stops at its
+horizon and refuses to go past it.
 
 Determinism (R3): every stochastic step derives its RNG from
 ``(world.seed, world.current_year)`` via :func:`derive_rng` using pure
@@ -27,15 +29,15 @@ from .enums import (
 from .generation import fire_seeds, generate_events
 from .heritage import promote_heritage
 from .ids import next_id
-from .life import begin_life
+from .life import age_of, begin_life, end_life
 from .models import CausalNode, CausalSeed, Life, World
+from .mortality import HAZARD_SALT, check_mortality
 from .rng import DeterministicRNG
 from .theme import (
     FACTION_TYPE_TO_THEME,
     SEED_DOMAIN_TO_THEME,
     compute_theme,
 )
-from .timeskip import compute_skip_years
 
 # --- deterministic per-year RNG ----------------------------------------
 
@@ -258,13 +260,27 @@ def step_npcs_lifecycle(
 # --- yearly world update (priority 2) ----------------------------------
 
 
-def advance_year(world: World, rng: Optional[DeterministicRNG] = None) -> dict:
-    """Run one year of world simulation at ``world.current_year``.
+class WorldHorizonReached(Exception):
+    """``advance_year`` was asked to move past ``world.max_year``."""
 
-    Order: fire seeds (guaranteed + probabilistic) -> generate events ->
-    wildcard / faction / NPC steps -> recompute theme (snapshot) -> promote
-    heritage. The caller advances ``current_year``; this operates on it.
+
+def _current_life(world: World) -> Optional[Life]:
+    lid = world.player.current_life_id
+    return next((lf for lf in world.lives if lf.id == lid), None) if lid else None
+
+
+def advance_year(world: World, rng: Optional[DeterministicRNG] = None) -> dict:
+    """Move the world forward exactly one year — the single clock.
+
+    Order: advance ``current_year`` -> fire seeds (guaranteed + probabilistic)
+    -> generate events -> wildcard / faction / NPC steps -> recompute theme
+    (snapshot) -> promote heritage -> age the current life and check mortality.
+    Raises ``WorldHorizonReached`` at ``max_year``: the world never continues
+    silently past its end.
     """
+    if world.current_year >= world.max_year:
+        raise WorldHorizonReached(f"year {world.current_year} is the horizon")
+    world.current_year += 1
     rng = rng or derive_rng(world, world.current_year)
     graph = CausalGraph.from_world(world)
 
@@ -279,42 +295,42 @@ def advance_year(world: World, rng: Optional[DeterministicRNG] = None) -> dict:
     theme = compute_theme(world)
     heritage = promote_heritage(world, graph)
 
+    death = None
+    life = _current_life(world)
+    if life is not None and life.alive:
+        life.age = age_of(world, life)
+        death = check_mortality(
+            world, life, derive_rng(world, world.current_year, salt=HAZARD_SALT)
+        )
+        if death is not None:
+            end_life(world, life, death)
+
     return {
         "year": world.current_year,
         "fired_seeds": fired,
         "new_nodes": nodes,
         "theme": theme,
         "heritage": heritage,
+        "death": death,
     }
 
 
-# --- post-death time skip (priority 1) ---------------------------------
+# --- the gap between lives ---------------------------------------------
 
 
-def time_skip(world: World, deceased_life: Life, social_memory: bool = False) -> dict:
-    """Advance world time after a death (section 5), generating history yearly.
+def time_skip(world: World, social_memory: bool = False) -> dict:
+    """The world-only years between a death and the next life: exactly
+    ``REINCARNATION_GAP_YEARS``, cut short only by the horizon. Nobody acts;
+    the world simulates yearly through ``advance_year``. The next life is then
+    whoever is sixteen when the gap ends (see ``life.begin_life``).
 
-    Skip length = compute_skip_years(age_at_death, sum of the deceased life's
-    not-yet-fired seed maturation times), clamped so the world never exceeds its
-    max year.
-
-    When ``social_memory`` is on (P11-B L2), each skip-year first decays the
+    When ``social_memory`` is on (P11-B L2), each gap-year first decays the
     soul's cross-life memories and relations (S1 P1/P2) so the *next* life's
-    opportunity scoring observes the faded state. Off (default), not one L2 branch
-    runs and the skip is byte-identical to today.
+    opportunity scoring observes the faded state.
     """
-    pending = [
-        s
-        for s in world.seeds
-        if not s.fired and s.planted_by_life_id == deceased_life.id
-    ]
-    bonus = sum(s.maturation_time for s in pending)
-    skip_years = compute_skip_years(deceased_life.age_at_death or 0, bonus)
-
-    target = min(world.max_year, world.current_year + skip_years)
+    target = min(world.max_year, world.current_year + config.REINCARNATION_GAP_YEARS)
     years_run = 0
     while world.current_year < target:
-        world.current_year += 1
         if social_memory:
             from .social_memory_l2 import decay_world_one_year
 
@@ -323,18 +339,15 @@ def time_skip(world: World, deceased_life: Life, social_memory: bool = False) ->
         years_run += 1
 
     return {
-        "skip_years": skip_years,
+        "skip_years": config.REINCARNATION_GAP_YEARS,
         "years_run": years_run,
         "stopped_year": world.current_year,
         "world_ended": world.current_year >= world.max_year,
     }
 
 
-def advance_to_next_life(
-    world: World, deceased_life: Life, talent=None
-) -> tuple[dict, Optional[Life]]:
-    """Vertical slice: time-skip after a death, then reincarnate (unless the
-    world has reached its max year)."""
-    skip = time_skip(world, deceased_life)
+def advance_to_next_life(world: World, talent=None) -> tuple[dict, Optional[Life]]:
+    """Run the gap after a death, then reincarnate — unless the horizon came first."""
+    skip = time_skip(world)
     new_life = None if skip["world_ended"] else begin_life(world, talent=talent)
     return skip, new_life

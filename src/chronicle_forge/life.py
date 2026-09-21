@@ -1,9 +1,12 @@
 """Life lifecycle: reincarnation, aging, death, and the LifeSummary (section 4).
 
-Aging uses two-resolution time (section 4.3): action-time turns accumulate, and
-every ``TURNS_PER_YEAR`` turns advance one world year, age the player, and take a
-World Theme snapshot. Death produces a LifeSummary consumed by personal history,
-inheritance, and ending generation.
+Chronology: a life has an actual ``birth_year`` and a ``playable_start_year``,
+the world year the player took it up at ``START_AGE`` — so the first life,
+taken up in year 0, was born in year -16. Age is never counted separately: it
+is ``world.current_year - life.birth_year``, refreshed by the single clock
+(:func:`macro.advance_year`) every ``TURNS_PER_YEAR`` action turns. Death
+produces a LifeSummary consumed by personal history, inheritance, and ending
+generation.
 """
 
 from __future__ import annotations
@@ -16,22 +19,24 @@ from .enums import DeathCause, LocationType, Talent
 from .ids import next_id
 from .inheritance import derive_inheritance
 from .models import Life, LifeSummary, World
-from .rng import DeterministicRNG
-from .theme import SEED_DOMAIN_TO_THEME, compute_theme
+from .theme import SEED_DOMAIN_TO_THEME
 
-START_AGE = 16  # the reincarnator begins each life as a young adult
-TURNS_PER_YEAR = 4
+START_AGE = 16  # a playable life begins as a young adult
+TURNS_PER_YEAR = 4  # action-time turns per world year (the decision cadence)
 
 
-def begin_life(
-    world: World, talent: Optional[Talent] = None, birth_age: int = START_AGE
-) -> Life:
-    """Reincarnate: start a new life in the (continuing) world."""
+def begin_life(world: World, talent: Optional[Talent] = None) -> Life:
+    """Take up a new life: a different person, aged ``START_AGE`` now, in the
+    (continuing) world. They were born ``START_AGE`` years before this year —
+    after a death and the ten-year gap that is six years *before* the previous
+    life died, which is allowed: what moves at a death is the player's
+    continuity, not a birth (docs/design_time_domain.md §4)."""
     life = Life(
         id=next_id("life", world.lives),
         player_id=world.player.id,
-        birth_year=world.current_year,
-        age=birth_age,
+        birth_year=world.current_year - START_AGE,
+        playable_start_year=world.current_year,
+        age=START_AGE,
         talent=talent,
     )
     world.lives.append(life)
@@ -39,25 +44,27 @@ def begin_life(
     return life
 
 
+def age_of(world: World, life: Life) -> int:
+    """The age implied by the world clock — the only formula for age."""
+    return world.current_year - life.birth_year
+
+
 def advance_time(world: World, life: Life, turns: int = 1) -> None:
-    """Consume action-time turns, aging the player and the world accordingly."""
+    """Consume action-time turns; every ``TURNS_PER_YEAR`` of them the world
+    advances one year through the single clock, which ages ``life`` and may
+    end it. Turns after a death are not consumed."""
+    from .macro import advance_year  # macro imports this module
+
     for _ in range(turns):
+        if not life.alive:
+            return
         life.turns += 1
         if life.turns % TURNS_PER_YEAR == 0:
-            life.age += 1
-            world.current_year += 1
-            compute_theme(world)  # per-year theme snapshot
+            advance_year(world)
 
 
 def lifespan_reached(life: Life) -> bool:
     return life.age >= config.LIFESPAN_CAP
-
-
-def draw_natural_span(rng: DeterministicRNG) -> int:
-    """Active world-years a life lasts before natural death (lifespan
-    distribution, P3.5). Varies the per-cycle world-time so life counts are not
-    fixed at 2."""
-    return rng.randint(config.NATURAL_SPAN_MIN, config.NATURAL_SPAN_MAX)
 
 
 def build_life_summary(world: World, life: Life) -> LifeSummary:
@@ -133,8 +140,11 @@ def end_life(
     """Finalize a life: record death, build the summary, and apply inheritance.
 
     The post-death world time-skip and history generation are P3 (macro loop);
-    this function ends the micro loop and prepares the hand-off.
+    this function ends the micro loop and prepares the hand-off. A life dies
+    once: calling this on a dead life is a bug, not a no-op.
     """
+    if not life.alive:
+        raise RuntimeError(f"{life.id} already died in year {life.death_year}")
     life.death_year = world.current_year
     life.age_at_death = life.age
     life.death_cause = cause

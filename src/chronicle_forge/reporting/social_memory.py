@@ -59,11 +59,11 @@ def _life_ordinal_for_year(world: World, year: int) -> int:
     idx = life_index(world)
     for life in world.lives:
         end = life.death_year if life.death_year is not None else world.current_year
-        if life.birth_year <= year <= end:
+        if life.playable_start_year <= year <= end:
             return idx[life.id]
-    prior = [lf for lf in world.lives if lf.birth_year <= year]
+    prior = [lf for lf in world.lives if lf.playable_start_year <= year]
     if prior:
-        return idx[max(prior, key=lambda lf: lf.birth_year).id]
+        return idx[max(prior, key=lambda lf: lf.playable_start_year).id]
     return 1 if world.lives else 0
 
 

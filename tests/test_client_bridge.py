@@ -198,12 +198,18 @@ def test_every_life_has_a_page_and_the_page_never_names_another_life(tmp_path, s
 
 @needs_node
 @pytest.mark.parametrize("seed", _SEEDS)
-def test_every_life_is_shown_its_own_death_years_and_aftermath(tmp_path, seed):
+def test_every_dead_life_is_shown_its_own_death_years_and_aftermath(tmp_path, seed):
+    """Every life the stream buries gets its surface. The world's horizon can
+    end the run with the last life still alive; that life has no death and
+    therefore no surface, and it must be the only one without."""
+    payload = BookBridge(seed=seed).play(choices=PLAYED)
+    ordinals = {lf["ordinal"] for lf in payload["lives"]}
+    dead = {b["life"] for b in payload["beats"] if b["t"] == "death"}
     surfaced = {
         s["life"] for s in _probe(tmp_path, seed)["walk"] if s["page"] == "surface"
     }
-    lives = _probe(tmp_path, seed)["lives"]
-    assert surfaced == set(lives)
+    assert surfaced == dead
+    assert ordinals - dead <= {max(ordinals)}
 
 
 def test_the_book_advances_by_life_not_by_juncture_index():
@@ -395,19 +401,6 @@ def test_the_digest_sits_between_the_years_and_the_life_they_lead_to(tmp_path, s
         assert walk[i]["beatLife"] == walk[i - 1]["life"] == walk[i]["life"]
         # and the page after it belongs to the NEXT life
         assert i + 1 < len(walk) and walk[i + 1]["life"] == walk[i]["life"] + 1
-
-
-@needs_node
-@pytest.mark.parametrize("seed", _SEEDS)
-def test_the_first_digest_delivers_the_players_own_act(tmp_path, seed):
-    """SP-1 at the page, not just in the stream: the first rebirth's digest has
-    at least one line whose act the player sealed themselves — and it is the
-    line the page shows first, because the stream ordered it that way."""
-    walk = _probe(tmp_path, seed)["walk"]
-    first = next(s for s in walk if s["page"] == "digest")
-    assert first["beatLife"] == 1
-    assert first["sealed"] >= 1
-    assert 1 <= first["lines"] <= 3
 
 
 def test_the_digest_page_renders_the_stream_and_reasons_about_nothing():

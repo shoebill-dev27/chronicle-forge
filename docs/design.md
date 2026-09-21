@@ -9,7 +9,7 @@
 ## 0. Reading Guide & Glossary
 
 - **Reincarnator (player):** the world's single recurring soul. On death the player reincarnates; the world keeps running.
-- **World:** persists for a fixed lifespan (200 years in production, 40 years in dev/CI). On reaching the limit the game ends and produces a Chronicle and an Ending classification.
+- **World:** persists for a fixed horizon of **200 years** (no dev/CI variant; `max_year` is a debug parameter). On reaching the limit the game ends — even mid-life — and produces a Chronicle and an Ending classification. See `design_time_domain.md`.
 - **Causal Seed:** a tagged record of a player action that can later become the parent cause of world events. The central object of the whole game.
 - **Causal Graph (DAG):** the directed acyclic graph of events and their causes. Single source of truth for "why did this happen".
 - **Rules own truth, AI owns prose:** state transitions are decided deterministically by the rules engine; the LLM only narrates and makes a few bounded decisions. AI never mutates world state.
@@ -72,7 +72,7 @@ MVP = the minimum unit that lets a player experience **one complete causal loop*
 | 8 evaluation lenses (numeric) | learned evaluation weights |
 | Lineage data reserved (unused) | descendant/bloodline gameplay |
 
-Dev/CI uses **world lifespan = 40 years** (completes in 2-4 lives) for fast iteration; production 200 years is the same logic with a constant change.
+Dev/CI runs the same **200-year** world (a 200-year run is ~1.5 s); `max_year` stays a parameter for short debug worlds only. *(Superseded 2026-09: the former 40-year dev horizon — see `design_time_domain.md`.)*
 
 ---
 
@@ -103,9 +103,11 @@ reincarnation (apply inheritance, decide birthplace/age)
   -> death (lifespan / combat / choice)
 ```
 
-### 4.3 Time model (two resolutions)
-- **Action time (micro):** each player action consumes life-turns; a number of turns advances one world year and ages the player. NPCs near the player also move at high resolution.
-- **World time (macro):** death triggers a large skip (section 5) at low resolution; the whole world moves.
+### 4.3 Time model (one clock, two cadences)
+*(Superseded 2026-09 by `design_time_domain.md`; summary below.)*
+- **World time:** one simulation tick is one world year, and `macro.advance_year` is its only seam. The world simulates every year, during a life and between lives alike.
+- **Action time:** each player action consumes life-turns; every `TURNS_PER_YEAR` turns reaches `advance_year`. The decision cadence is not the tick.
+- **Chronology:** a life is taken up at 16 (`playable_start_year`); its `birth_year` is the actual birth, 16 years earlier (the first life was born in year -16). Age is `current_year - birth_year`. A life reaches 80 unless a registered hazard ends it; there is no default hazard.
 
 ### 4.4 Life Activity Templates (v0.3)
 
@@ -144,7 +146,13 @@ The build talent (section 6 / A-2) grants efficiency and affinity bonuses to cer
 
 ## 5. Post-Death Time Skip (History Correction)
 
-Adopted method: **age-based base + seed maturation bonus.**
+> **Superseded 2026-09 by `design_time_domain.md` §4.** The gap after a death is
+> a fixed **10 world years**, seed-independent; the next playable life is a
+> different 16-year-old alive at that time (born `death + 10 - 16`, so possibly
+> before the previous death — allowed by design). The formula below is the
+> historical P3 design and is no longer implemented.
+
+Adopted method (historical): **age-based base + seed maturation bonus.**
 
 ```
 skip_years = clamp( base(age) + seed_maturation_bonus, MIN_SKIP, MAX_SKIP )

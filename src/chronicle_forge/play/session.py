@@ -21,20 +21,14 @@ from typing import Callable, Optional
 
 from .. import config
 from ..ending import classify_ending
-from ..enums import DeathCause, Talent
+from ..enums import Talent
 from ..execution import (
     EXECUTION_SALT,
     execute_option,
     expand_options,
     make_auto_chooser,
 )
-from ..life import (
-    TURNS_PER_YEAR,
-    begin_life,
-    draw_natural_span,
-    end_life,
-    lifespan_reached,
-)
+from ..life import begin_life
 from ..macro import derive_rng, time_skip
 from ..opportunity import OpportunitySession, select_opportunities
 from ..worldgen import generate_world
@@ -69,6 +63,7 @@ def run_human_world(
     life_cap: int = 60,
     social_memory: bool = False,
     observer=None,
+    max_year: int = config.WORLD_MAX_YEARS,
 ):
     """Play a whole reincarnating world. Mirrors ``simulate_world``'s
     opportunity-mode outer loop exactly (derive rng per life, live, time-skip,
@@ -86,18 +81,20 @@ def run_human_world(
     writer = writer or _stdout_writer
     seen_recognitions: set = set()  # spans the run: a former self is met once
 
-    world = generate_world(seed)
+    world = generate_world(seed, max_year=max_year)
     while world.current_year < world.max_year and len(world.lives) < life_cap:
         rng = derive_rng(world, len(world.lives), salt=EXECUTION_SALT)
         life = _live_one(
             world, rng, reader, writer, seen_recognitions, social_memory, observer
         )
+        if life.alive:  # the horizon came first: no death, no gap, no aftermath
+            break
 
         # The skip is where marks harden into heritage, so what the years did
         # with the player's work can only be told *after* it runs — telling it at
         # the death instead is the contradiction `render.death_passage` documents.
         before = {h.seed_id for h in world.heritage}
-        skip = time_skip(world, life, social_memory)
+        skip = time_skip(world, social_memory)
         # A skip that ran no years has nothing to say; the closing page follows.
         transition = render.skip_transition(skip)
         if transition:
@@ -132,42 +129,31 @@ def _live_one(
     social_memory: bool = False,
     observer=None,
 ):
-    """One life: birth → juncture-gated turns → death reading. Reproduces the
-    opportunity-mode life mechanics (lifespan, per-action combat death) exactly;
-    the only added behaviour is asking the player at junctures. The auto-chooser
-    is consulted on every non-ask turn and whenever the player lets the season
-    pass, so the RNG stream matches autoplay unless the player actually acts."""
+    """One life: birth → juncture-gated turns → death reading. The clock and
+    the mortality seam live in ``advance_year`` (reached through each action's
+    turns); this loop only asks the player at junctures. The auto-chooser is
+    consulted on every non-ask turn and whenever the player lets the season
+    pass, so the RNG stream matches autoplay unless the player actually acts.
+    A life still alive when the world reaches its horizon is not killed: the
+    run ends, the life does not, and no death is read."""
     talent = rng.choice(list(Talent))
     life = begin_life(world, talent=talent)
     _emit(writer, render.rebirth_intro(world, life))
     if observer is not None:
         observer.on_rebirth(world, life)
 
-    death_year = life.birth_year + draw_natural_span(rng)
-    per_action_combat = config.COMBAT_DEATH_PROB_PER_YEAR / TURNS_PER_YEAR
-
     session = OpportunitySession()
     auto = make_auto_chooser(rng)
     human = make_human_chooser(reader, writer, on_let_pass=auto)
     gate = JunctureGate()
-    combat_death = False
 
-    while (
-        world.current_year < world.max_year
-        and world.current_year < death_year
-        and not lifespan_reached(life)
-    ):
+    while world.current_year < world.max_year and life.alive:
         opps = select_opportunities(world, life, session, social_memory)
         options = expand_options(opps, world, life, rng)
 
-        remaining = min(death_year, world.max_year) - world.current_year
-        decision = gate.decide(
-            world,
-            opps,
-            session.turn_index,
-            world.current_year,
-            is_final_turn=remaining <= 1,
-        )
+        # ``is_final_turn`` is not passed: the new clock knows no final turn
+        # ahead of time (see JunctureGate.decide).
+        decision = gate.decide(world, opps, session.turn_index, world.current_year)
 
         if decision.ask:
             recognize = render.recognizable_heritage(world, options, seen)
@@ -207,11 +193,8 @@ def _live_one(
         selected_id = choice.opportunity.target_id if choice.opportunity else None
         session.commit_turn(opps, selected_id)
 
-        if rng.random() < per_action_combat:
-            combat_death = True
-            break
-
-    end_life(world, life, DeathCause.COMBAT if combat_death else DeathCause.LIFESPAN)
+    if life.alive:  # the horizon ended the run, not the life
+        return life
     _emit(writer, render.death_passage(world, life))
     if observer is not None:
         observer.on_death(world, life)

@@ -52,7 +52,7 @@ def _strongest_bond(world: World, life: Life):
         for m in world.memories
         if m.actor_id == world.player.id
         and m.subject_id in npc_ids
-        and life.birth_year <= m.timestamp <= end
+        and life.playable_start_year <= m.timestamp <= end
     ]
     if not mine:
         return None
@@ -543,7 +543,7 @@ def _legacy_people(world: World, life: Life) -> list:
         for m in world.memories
         if m.actor_id == world.player.id
         and m.subject_id in names
-        and life.birth_year <= m.timestamp <= end
+        and life.playable_start_year <= m.timestamp <= end
     ]
     mine.sort(key=lambda m: (-m.intensity, m.id))
     seen, out = set(), []

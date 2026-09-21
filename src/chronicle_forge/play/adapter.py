@@ -84,7 +84,7 @@ def play_and_record(
     world = run_human_world(seed, reader=reader, writer=writer, life_cap=life_cap)
     recipe = build_recipe(
         seed=seed,
-        max_year=config.DEV_WORLD_MAX_YEARS,
+        max_year=world.max_year,
         mode=mode,
         inputs=captured,
     )

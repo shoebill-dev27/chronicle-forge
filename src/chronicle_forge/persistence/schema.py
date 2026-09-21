@@ -1,11 +1,13 @@
-"""The Recipe — the canonical, replayable save for a run.
+"""The Recipe — a reproduction record for a run.
 
-A Recipe holds only what determines a run: the engine version it was recorded
+A Recipe holds what re-executes a run: the engine version it was recorded
 under, the ``seed``, the ``max_year``, the play ``mode``, and the exact ordered
 ``inputs`` the chooser's reader yielded. Because the engine is byte-deterministic
-from ``seed`` + ``inputs`` (the P8 seed42 golden identity), this small record
-reconstructs the world exactly — the recipe *is* the save. Nothing here touches
-``models.py``; the Recipe is an isolated persistence schema.
+from ``seed`` + ``inputs``, this small record reproduces the world exactly under
+the same engine version — which makes it the right tool for debugging, goldens
+and bug reports. It is no longer the product's save: that role belongs to a
+versioned world snapshot (not yet built), so play can resume without replaying
+every input from year zero. Nothing here touches ``models.py``.
 """
 
 from __future__ import annotations
@@ -21,12 +23,6 @@ class EngineVersionMismatch(Exception):
     """A recipe was recorded under a different engine version; because the
     snapshot-free recipe can only be reconstructed by re-running the current
     engine, replay is refused rather than silently producing a divergent world."""
-
-
-class UnsupportedRecipe(Exception):
-    """A recipe the current engine cannot faithfully reconstruct — e.g. a
-    non-default ``max_year``, which ``run_human_world`` does not expose. Refused
-    rather than reconstructed at the wrong horizon (determinism over convenience)."""
 
 
 class Recipe(BaseModel):

@@ -23,7 +23,7 @@ from chronicle_forge.reporting.social_memory import (
 from chronicle_forge.worldgen import generate_world
 
 # Frozen at GREEN: the Social Memory view's permanent seed42 regression guard.
-GOLDEN_SOCIAL_MEMORY_SHA = "3fbb1aa02071dfe2"
+GOLDEN_SOCIAL_MEMORY_SHA = "3a3eca233e81c55a"
 
 # Note the extra ``player`` alternative: the soul id (player-0000) is internal.
 _INTERNAL_ID = re.compile(r"\b(seed|life|npc|node|loc|fac|her|player)-\d")
@@ -112,9 +112,9 @@ def test_life_ordinal_maps_each_life_span_to_its_ordinal():
         ordinal = idx[life.id]
         end = life.death_year if life.death_year is not None else world.current_year
         # both span endpoints attribute to this life
-        assert _life_ordinal_for_year(world, life.birth_year) == ordinal
+        assert _life_ordinal_for_year(world, life.playable_start_year) == ordinal
         assert _life_ordinal_for_year(world, end) == ordinal
-        for year in (life.birth_year, end):
+        for year in (life.playable_start_year, end):
             assert 1 <= _life_ordinal_for_year(world, year) <= count
 
 
@@ -126,11 +126,13 @@ def test_life_ordinal_clamps_out_of_range_years():
     # a year after every life maps to the most recent (last) life
     assert _life_ordinal_for_year(world, world.current_year + 50) == last
     # a year before the first birth falls back within bounds (no life lived yet)
-    earliest = min(lf.birth_year for lf in world.lives)
+    earliest = min(lf.playable_start_year for lf in world.lives)
     assert 1 <= _life_ordinal_for_year(world, earliest - 50) <= count
     # a gap year between two lives attributes to the most recent prior life
     assert (
-        first <= _life_ordinal_for_year(world, world.lives[0].birth_year + 0) <= count
+        first
+        <= _life_ordinal_for_year(world, world.lives[0].playable_start_year + 0)
+        <= count
     )
 
 

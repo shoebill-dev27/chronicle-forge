@@ -22,7 +22,7 @@ from .labels import seed_label
 
 # Frozen seeds (derived once via select_diverse_seeds over 1..40): each yields a
 # distinct ending — Golden / Mercantile / Arcane / Warring / Theocratic / Imperial.
-GALLERY_SEEDS = [1, 3, 4, 9, 15, 20]
+GALLERY_SEEDS = [1, 2, 4, 10, 17, 20]
 
 # One-line, deterministic explanation of why a world ended as it did (20-40 chars).
 _WHY_BY_ENDING = {

@@ -27,16 +27,16 @@ import re
 from chronicle_forge.autoplay import simulate_world
 
 # Frozen goldens P14 must NOT move (it adds files only). Main 9ad743e set.
-GOLDEN_WORLD_SHA = "e62d8f2cd24d2c72"
-GOLDEN_OBSERVATORY_SHA = "f9ad13c75c88a9c2"
-GOLDEN_SOCIAL_MEMORY_SHA = "3fbb1aa02071dfe2"
-GOLDEN_WORLD_MODEL_SHA = "5b41a692cfa3f1ce"
-GOLDEN_NARRATIVE_SHA = "a32df9e5068d054a"
-GOLDEN_CHARACTER_SHA = "36c894fbde084e57"
+GOLDEN_WORLD_SHA = "9aab126e58398933"
+GOLDEN_OBSERVATORY_SHA = "3e8835d9ab8d3ce4"
+GOLDEN_SOCIAL_MEMORY_SHA = "3a3eca233e81c55a"
+GOLDEN_WORLD_MODEL_SHA = "0bfad983f95d448f"
+GOLDEN_NARRATIVE_SHA = "b2d0f979091e0174"
+GOLDEN_CHARACTER_SHA = "080d89bd043ca9cd"
 
 # The one new golden: seed42 timeline_json hash (= sha256(timeline_json)[:16]).
 # Pinned at GREEN; the placeholder keeps the golden test RED via the in-body import.
-GOLDEN_TIMELINE_SHA = "ae42ed5ff91f5545"  # seed42 timeline_json hash (GREEN)
+GOLDEN_TIMELINE_SHA = "786d99434ef50955"  # seed42 timeline_json hash (GREEN)
 
 # id-free negative contract: none of these may cross the boundary.
 _ID_RE = re.compile(r"[a-z]+-\d{4}")  # entity id "<prefix>-NNNN" (ids.py)

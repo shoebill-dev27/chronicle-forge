@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from chronicle_forge import generate_world
 from chronicle_forge.config import (
-    DEV_WORLD_MAX_YEARS,
+    WORLD_MAX_YEARS,
     MVP_IMPORTANT_NPC_COUNT,
     MVP_NPC_COUNT,
     MVP_WILDCARD_COUNT,
@@ -57,7 +57,7 @@ def test_lineage_fields_reserved_but_unused():
 
 def test_defaults_and_population():
     w = generate_world(seed=99)
-    assert w.max_year == DEV_WORLD_MAX_YEARS
+    assert w.max_year == WORLD_MAX_YEARS
     assert w.population > 0
     assert w.player.powers.manifest_charges == 1
     assert w.theme.dominant is not None

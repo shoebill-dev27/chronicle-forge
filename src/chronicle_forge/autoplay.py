@@ -11,14 +11,8 @@ from __future__ import annotations
 from . import config
 from .discovery import explore_dungeon
 from .ending import classify_ending
-from .enums import ActivityCategory, DeathCause, DiscoveryType, LocationType, Talent
-from .life import (
-    TURNS_PER_YEAR,
-    begin_life,
-    draw_natural_span,
-    end_life,
-    lifespan_reached,
-)
+from .enums import ActivityCategory, DiscoveryType, LocationType, Talent
+from .life import begin_life
 from .macro import derive_rng, time_skip
 from .models import Life, World
 from .powers import imprint
@@ -52,16 +46,8 @@ def _live_one(world: World, rng: DeterministicRNG) -> Life:
         (loc for loc in world.locations if loc.type == LocationType.DUNGEON), None
     )
 
-    # Lifespan distribution (P3.5): each life lasts a drawn span of world-years.
-    death_year = life.birth_year + draw_natural_span(rng)
-    combat_death = False
-    per_action_combat = config.COMBAT_DEATH_PROB_PER_YEAR / TURNS_PER_YEAR
-
-    while (
-        world.current_year < world.max_year
-        and world.current_year < death_year
-        and not lifespan_reached(life)
-    ):
+    # The clock and mortality live in advance_year, reached through each action.
+    while world.current_year < world.max_year and life.alive:
         roll = rng.random()
         if dungeon is not None and roll < 0.15:
             explore_dungeon(world, life, dungeon.id, rng.choice(list(DiscoveryType)))
@@ -78,23 +64,17 @@ def _live_one(world: World, rng: DeterministicRNG) -> Life:
             npc = rng.choice(world.npcs)
             if npc.alive:
                 imprint(world, life, npc.id)
-        if rng.random() < per_action_combat:
-            combat_death = True
-            break
-
-    cause = DeathCause.COMBAT if combat_death else DeathCause.LIFESPAN
-    end_life(world, life, cause)
     return life
 
 
 def _live_one_opportunity(
     world: World, rng: DeterministicRNG, social_memory: bool = False
 ) -> Life:
-    """P6 opportunity-driven life loop. Reproduces the legacy life mechanics
-    (lifespan draw, per-action combat-death probability) exactly; the *only*
-    changed block is action choice, which now flows through the Execution Layer
-    (Opportunity -> Action). The legacy random ``imprint`` sprinkle is dropped
-    here -- it was scripted-agent noise that would distort Omega observation.
+    """P6 opportunity-driven life loop. Same clock and mortality as the legacy
+    loop (both live in ``advance_year``); the *only* changed block is action
+    choice, which flows through the Execution Layer (Opportunity -> Action).
+    The legacy random ``imprint`` sprinkle is dropped here -- it was
+    scripted-agent noise that would distort Omega observation.
     """
     from .execution import make_auto_chooser, play_turn  # local import avoids cycle
     from .opportunity import OpportunitySession
@@ -102,25 +82,11 @@ def _live_one_opportunity(
     talent = rng.choice(list(Talent))
     life = begin_life(world, talent=talent)
 
-    death_year = life.birth_year + draw_natural_span(rng)
-    combat_death = False
-    per_action_combat = config.COMBAT_DEATH_PROB_PER_YEAR / TURNS_PER_YEAR
-
     session = OpportunitySession()
     chooser = make_auto_chooser(rng)
 
-    while (
-        world.current_year < world.max_year
-        and world.current_year < death_year
-        and not lifespan_reached(life)
-    ):
+    while world.current_year < world.max_year and life.alive:
         play_turn(world, life, session, chooser, rng, social_memory)
-        if rng.random() < per_action_combat:
-            combat_death = True
-            break
-
-    cause = DeathCause.COMBAT if combat_death else DeathCause.LIFESPAN
-    end_life(world, life, cause)
     return life
 
 
@@ -129,8 +95,9 @@ def simulate_world(
     life_cap: int = 60,
     mode: str = "legacy",
     social_memory: bool = False,
+    max_year: int = config.WORLD_MAX_YEARS,
 ) -> World:
-    """Run a world from generation to its max year and return the finished world.
+    """Run a world from generation to ``max_year`` and return the finished world.
 
     ``mode="legacy"`` (default) drives play with the talent policy and is
     byte-identical to prior behavior (golden seed42 artifacts, P5 determinism).
@@ -142,7 +109,7 @@ def simulate_world(
     not one L2 branch runs and the world is byte-identical to today. The flag is
     a transient run argument and is never stored in ``World``.
     """
-    world = generate_world(seed)
+    world = generate_world(seed, max_year=max_year)
     while world.current_year < world.max_year and len(world.lives) < life_cap:
         if mode == "legacy":
             rng = derive_rng(world, len(world.lives), salt=_AUTOPLAY_SALT)
@@ -152,7 +119,9 @@ def simulate_world(
 
             rng = derive_rng(world, len(world.lives), salt=EXECUTION_SALT)
             life = _live_one_opportunity(world, rng, social_memory)
-        skip = time_skip(world, life, social_memory)
+        if life.alive:  # the horizon came first: no death, no gap
+            break
+        skip = time_skip(world, social_memory)
         if skip["world_ended"]:
             break
     classify_ending(world)

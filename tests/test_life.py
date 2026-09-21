@@ -19,7 +19,8 @@ def test_begin_life_sets_current_life():
     assert world.player.current_life_id == life.id
     assert life in world.lives
     assert life.age == 16
-    assert life.birth_year == world.current_year
+    assert life.playable_start_year == world.current_year
+    assert life.birth_year == world.current_year - 16
 
 
 def test_end_life_builds_summary_and_clears_current_life():
@@ -59,5 +60,7 @@ def test_summary_captures_fired_events_as_notable():
 
 def test_lifespan_reached_flag():
     world = generate_world(seed=4)
-    life = begin_life(world, birth_age=80)
+    life = begin_life(world)
+    assert lifespan_reached(life) is False
+    life.age = 80  # the cap itself, not a year past it
     assert lifespan_reached(life) is True

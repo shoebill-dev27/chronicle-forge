@@ -24,13 +24,13 @@ from chronicle_forge.reporting.social_memory import social_memory_view
 from chronicle_forge.reporting.world_model import world_model_json
 
 # Frozen goldens P12 must NOT move (it adds files only).
-GOLDEN_WORLD_SHA = "e62d8f2cd24d2c72"
-GOLDEN_OBSERVATORY_SHA = "f9ad13c75c88a9c2"
-GOLDEN_SOCIAL_MEMORY_SHA = "3fbb1aa02071dfe2"
-GOLDEN_WORLD_MODEL_SHA = "5b41a692cfa3f1ce"
+GOLDEN_WORLD_SHA = "9aab126e58398933"
+GOLDEN_OBSERVATORY_SHA = "3e8835d9ab8d3ce4"
+GOLDEN_SOCIAL_MEMORY_SHA = "3a3eca233e81c55a"
+GOLDEN_WORLD_MODEL_SHA = "0bfad983f95d448f"
 
 # The one new golden: seed42 narrative_json hash.
-GOLDEN_NARRATIVE_SHA = "a32df9e5068d054a"
+GOLDEN_NARRATIVE_SHA = "b2d0f979091e0174"
 
 # id-free negative contract: none of these may cross the boundary.
 _ID_RE = re.compile(r"[a-z]+-\d{4}")  # entity id "<prefix>-NNNN" (ids.py)

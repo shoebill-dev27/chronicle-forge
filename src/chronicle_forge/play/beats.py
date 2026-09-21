@@ -504,7 +504,7 @@ class BeatRecorder:
         self.beats.append(
             Rebirth(
                 life=self._life,
-                year=life.birth_year,
+                year=life.playable_start_year,
                 talent=life.talent.value if life.talent else "soul",
                 era=render._era(world),
             )

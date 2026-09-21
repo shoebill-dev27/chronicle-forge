@@ -23,7 +23,6 @@ from chronicle_forge.persistence import (
     EngineVersionMismatch,
     InvalidRecipe,
     Recipe,
-    UnsupportedRecipe,
     build_recipe,
     read_recipe,
     replay,
@@ -32,9 +31,9 @@ from chronicle_forge.persistence import (
     save_recipe,
 )
 
-MAX_YEAR = config.DEV_WORLD_MAX_YEARS
-GOLDEN_WORLD_SHA = "e62d8f2cd24d2c72"  # simulate_world(42, "opportunity")
-GOLDEN_TRANSCRIPT_SHA = "41cf1cfd843f6272"  # `play --seed 42 --auto` stdout
+MAX_YEAR = config.WORLD_MAX_YEARS
+GOLDEN_WORLD_SHA = "9aab126e58398933"  # simulate_world(42, "opportunity")
+GOLDEN_TRANSCRIPT_SHA = "e544f8845b16c9dd"  # `play --seed 42 --auto` stdout
 
 
 def _sha(text: str) -> str:
@@ -95,10 +94,12 @@ def test_replay_refuses_engine_version_mismatch():
         replay(r, writer=null_writer)
 
 
-def test_replay_refuses_unsupported_max_year():
-    r = build_recipe(seed=42, max_year=MAX_YEAR + 1, mode="auto", inputs=[])
-    with pytest.raises(UnsupportedRecipe):
-        replay(r, writer=null_writer)
+def test_replay_honors_recipe_max_year():
+    # Retired: the UnsupportedRecipe gate on max_year != 40. The recipe's own
+    # horizon is replayed, so a short debug world reproduces as recorded.
+    r = build_recipe(seed=42, max_year=30, mode="auto", inputs=[])
+    world = replay(r, writer=null_writer)
+    assert world.max_year == 30 and world.current_year == 30
 
 
 def test_replay_file_rejects_invalid_mode(tmp_path):

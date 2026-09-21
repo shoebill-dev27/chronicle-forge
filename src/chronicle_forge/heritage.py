@@ -60,12 +60,19 @@ def qualifies_as_heritage(reach: int, longevity: int, score: int) -> bool:
 
 
 def _triggered_node(world: World, seed_id: str) -> Optional[CausalNode]:
-    """The event a seed TRIGGERed, if any."""
+    """The event a seed TRIGGERed, if any (report-time lookup)."""
+    return _triggered_nodes(world).get(seed_id)
+
+
+def _triggered_nodes(world: World) -> dict[str, CausalNode]:
+    """seed id -> the (first) event it TRIGGERed. One pass, so the yearly
+    promotion is linear in edges rather than seeds x edges."""
+    triggered: dict[str, CausalNode] = {}
     for node in world.causal_nodes:
         for edge in node.caused_by:
-            if edge.from_id == seed_id and edge.kind == CausalEdgeKind.TRIGGER:
-                return node
-    return None
+            if edge.kind == CausalEdgeKind.TRIGGER:
+                triggered.setdefault(edge.from_id, node)
+    return triggered
 
 
 def promote_heritage(
@@ -78,17 +85,18 @@ def promote_heritage(
     """
     graph = graph or CausalGraph.from_world(world)
     existing = {h.seed_id: h for h in world.heritage}
+    triggered = _triggered_nodes(world)
     promoted: list[HeritageNode] = []
 
     for seed in world.seeds:
         if not seed.fired or seed.domain not in DOMAIN_TO_HERITAGE_TYPE:
             continue
-        node = _triggered_node(world, seed.id)
+        node = triggered.get(seed.id)
         if node is None:
             continue
 
         htype = DOMAIN_TO_HERITAGE_TYPE[seed.domain]
-        reach = len(graph.descendants(node.id))
+        reach = graph.reach(node.id)
         longevity = max(0, world.current_year - node.year)
         score = compute_heritage_score(longevity, reach, HERITAGE_TYPE_WEIGHT[htype])
 

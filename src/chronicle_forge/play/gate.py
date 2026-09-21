@@ -72,7 +72,12 @@ class JunctureGate:
         is_final_turn: bool = False,
     ) -> GateDecision:
         """Decide for one turn. ``opps`` is P6's untouched, tension-sorted offer.
-        ``is_final_turn`` lets the floor guarantee one ask per life."""
+
+        ``is_final_turn`` is legacy (P8): it let the floor guarantee one ask per
+        life when a life's last year was known in advance. Under the year-based
+        clock no caller knows a final turn ahead of time and ``play.session``
+        no longer passes it; it stays for the gate's own contract only and must
+        not gain a new meaning."""
         if not opps:
             # A barren turn still ends a life eventually; honour the floor.
             if is_final_turn and self.asks_this_life == 0:

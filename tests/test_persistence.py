@@ -22,7 +22,6 @@ from chronicle_forge.persistence import (
     ENGINE_VERSION,
     EngineVersionMismatch,
     Recipe,
-    UnsupportedRecipe,
     build_recipe,
     load_recipe,
     read_recipe,
@@ -30,10 +29,10 @@ from chronicle_forge.persistence import (
     save_recipe,
 )
 
-MAX_YEAR = config.DEV_WORLD_MAX_YEARS  # 40
+MAX_YEAR = config.WORLD_MAX_YEARS  # 200
 # first 16 hex of simulate_world(42, "opportunity").model_dump_json() — the P8
 # golden world. Reconstructing the seed42 EOF recipe must reproduce it forever.
-GOLDEN_SEED42_SHA = "e62d8f2cd24d2c72"
+GOLDEN_SEED42_SHA = "9aab126e58398933"
 
 
 def _world_sha(world) -> str:
@@ -133,15 +132,9 @@ def test_load_accepts_matching_engine_version(tmp_path):
     assert world.seed == 42
 
 
-# --- honest max_year gate ------------------------------------------------
-
-
-def test_load_rejects_unsupported_max_year(tmp_path):
-    r = build_recipe(seed=42, max_year=MAX_YEAR + 1, mode="auto", inputs=[])
-    p = tmp_path / "future.json"
-    save_recipe(r, p)
-    with pytest.raises(UnsupportedRecipe):
-        load_recipe(p)
+# The "honest max_year gate" (UnsupportedRecipe on max_year != 40) is retired:
+# run_human_world now takes the recipe's max_year, so any horizon replays.
+# See test_replay_honors_recipe_max_year in test_replay.py.
 
 
 # --- reconstruction determinism -----------------------------------------

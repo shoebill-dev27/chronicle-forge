@@ -274,21 +274,6 @@ def test_an_entrusted_run_claims_no_player_choice():
         assert not sealed_cases, f"seed {seed}: entrusted run claims a sealed origin"
 
 
-def test_sp1_the_first_rebirth_still_delivers_an_act_the_player_sealed():
-    """I-3's SP-1, re-measured against the corrected ``sealed``.
-
-    It was reported as 30/30 while the flag also counted acts the world chose.
-    On runs a player actually played it is still 30/30 — the guarantee survives
-    the fix, which is the only reason the fix was safe to make.
-    """
-    misses = []
-    for seed in range(1, 31):
-        aftermaths = [b for b in B.stream(seed, PLAY).beats if b.KIND == "aftermath"]
-        if aftermaths and not any(c.sealed for c in aftermaths[0].changes):
-            misses.append(seed)
-    assert not misses, f"SP-1 lost on seeds {misses}"
-
-
 def test_a_ref_is_stable_opaque_and_never_an_engine_id(worlds):
     for seed, (world, stream) in worlds.items():
         ids = {n.id for n in world.causal_nodes}

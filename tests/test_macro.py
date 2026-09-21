@@ -11,7 +11,6 @@ from chronicle_forge import (
     advance_to_next_life,
     advance_year,
     begin_life,
-    compute_skip_years,
     end_life,
     explore_dungeon,
     fire_probabilistic_seeds,
@@ -54,7 +53,7 @@ def _scenario(seed: int):
         )
     )
     end_life(world, life1)
-    advance_to_next_life(world, life1, talent=Talent.MERCHANT)
+    advance_to_next_life(world, talent=Talent.MERCHANT)
     return world
 
 
@@ -88,14 +87,14 @@ def test_life_seed_affects_next_life_world():
 
     assert caused_by_seed() == []  # not yet fired at death
 
-    skip, life2 = advance_to_next_life(world, life1, talent=Talent.WARRIOR)
+    skip, life2 = advance_to_next_life(world, talent=Talent.WARRIOR)
 
     # The life-1 seed fired during the skip and now shapes life-2's world.
     descendants = caused_by_seed()
     assert descendants, "the previous life's seed left no mark on the world"
     assert seed.fired is True
     assert life2 is not None
-    assert life2.birth_year > life1.death_year
+    assert life2.playable_start_year > life1.death_year
     # life 2 is born into a world that already contains life 1's consequence.
     assert descendants[0] in world.causal_nodes
 
@@ -122,22 +121,17 @@ def test_probabilistic_firing_is_deterministic():
     assert run() == run()
 
 
-def test_time_skip_length_matches_formula_and_respects_cap():
-    world = generate_world(seed=8)  # max_year = 40 (dev)
-    life = begin_life(world)
-    life.age_at_death = 30
-    life.death_year = world.current_year
-    skip = time_skip(world, life)
-    assert skip["skip_years"] == compute_skip_years(30, 0)
-    assert world.current_year <= world.max_year
+# Retired: test_time_skip_length_matches_formula_and_respects_cap — the
+# age/seed-based skip formula (timeskip.py) is gone; the gap is a fixed ten
+# years, pinned in test_time_domain.py.
 
 
 def test_time_skip_never_exceeds_max_year():
     world = generate_world(seed=8)
     world.current_year = world.max_year - 2
     life = begin_life(world)
-    life.age_at_death = 20  # would skip far, but cap applies
-    skip = time_skip(world, life)
+    end_life(world, life)
+    skip = time_skip(world)
     assert world.current_year == world.max_year
     assert skip["world_ended"] is True
 
@@ -163,13 +157,12 @@ def test_wildcard_ignites_with_player_support_and_hot_theme():
         )
     # Keep the innovation theme hot by injecting a fresh tech event each year.
     for y in range(30):
-        world.current_year += 1
         world.causal_nodes.append(
             CausalNode(
                 id=f"inj-{y}",
                 scale=EventScale.LARGE,
                 domain=SeedDomain.TECHNOLOGY,
-                year=world.current_year,
+                year=world.current_year + 1,  # the year advance_year runs next
             )
         )
         advance_year(world)
@@ -188,13 +181,12 @@ def test_wildcard_stays_dormant_without_player_support():
     wc = world.wildcards.wildcards[0]
     # Hot theme but NO player seeds -> must not ignite (player drives history).
     for y in range(20):
-        world.current_year += 1
         world.causal_nodes.append(
             CausalNode(
                 id=f"inj-{y}",
                 scale=EventScale.LARGE,
                 domain=SeedDomain.TECHNOLOGY,
-                year=world.current_year,
+                year=world.current_year + 1,  # the year advance_year runs next
             )
         )
         advance_year(world)

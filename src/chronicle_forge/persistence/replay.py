@@ -2,8 +2,8 @@
 
 Replay reuses the unchanged P8 engine: ``run_human_world`` over a scripted reader
 of the recipe's inputs, with a caller-supplied writer, so the transcript is
-*regenerated* (never stored). The two replay-time gates (engine version, then
-max_year) are shared with P9-1 load via ``_ensure_replayable``; a schema-invalid
+*regenerated* (never stored). The replay-time gate (engine version) is shared
+with P9-1 load via ``_ensure_replayable``; a schema-invalid
 recipe file surfaces as :class:`InvalidRecipe`. Every failure refuses — no
 fallback, no approximate world.
 """
@@ -35,14 +35,15 @@ class InvalidRecipe(Exception):
 
 def replay(recipe: Recipe, *, writer: Writer) -> World:
     """Reconstruct the world a recipe describes, emitting its regenerated
-    transcript to ``writer``. Gates engine version and max_year first; refuses
-    on mismatch (no fallback)."""
+    transcript to ``writer``. Gates the engine version first; refuses on
+    mismatch (no fallback)."""
     _ensure_replayable(recipe)
     return run_human_world(
         recipe.seed,
         reader=scripted_reader(recipe.inputs),
         writer=writer,
         social_memory=recipe.social_memory,
+        max_year=recipe.max_year,
     )
 
 
@@ -57,7 +58,7 @@ def replay_transcript(recipe: Recipe) -> Tuple[World, str]:
 def replay_file(path: PathLike, *, writer: Writer) -> World:
     """Read a recipe from disk and replay it. A schema-invalid file raises
     :class:`InvalidRecipe` (the closed 'invalid mode' / 'invalid inputs'
-    failures); the version/max_year gates raise as in :func:`replay`."""
+    failures); the version gate raises as in :func:`replay`."""
     try:
         recipe = read_recipe(path)
     except ValidationError as exc:

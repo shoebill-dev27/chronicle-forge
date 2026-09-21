@@ -107,7 +107,7 @@ def _initial_theme() -> WorldTheme:
     return WorldTheme(axes={axis: 20 for axis in ThemeAxis})
 
 
-def generate_world(seed: int, max_year: int = config.DEV_WORLD_MAX_YEARS) -> World:
+def generate_world(seed: int, max_year: int = config.WORLD_MAX_YEARS) -> World:
     """Build a deterministic MVP world from an integer seed."""
     rng = DeterministicRNG(seed)
     ids = IdFactory()
