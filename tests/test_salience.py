@@ -75,7 +75,11 @@ def make_world(
 ):
     player = Player(id="player-0000")
     life = Life(
-        id="life-0000", player_id=player.id, birth_year=-16, playable_start_year=0
+        id="life-0000",
+        player_id=player.id,
+        person_id="npc-player",  # salience never resolves the body, only the life
+        birth_year=-16,
+        playable_start_year=0,
     )
     axes = {a: 20 for a in ThemeAxis}
     axes[dominant] = 80
@@ -405,6 +409,7 @@ def test_T2_jitter_from_immutable_inputs():
         Life(
             id="life-9999",
             player_id=world.player.id,
+            person_id="npc-later",
             birth_year=-11,
             playable_start_year=5,
         )

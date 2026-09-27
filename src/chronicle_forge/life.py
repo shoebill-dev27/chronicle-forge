@@ -19,22 +19,29 @@ from .enums import DeathCause, LocationType, Talent
 from .ids import next_id
 from .inheritance import derive_inheritance
 from .models import Life, LifeSummary, World
+from .population import person_by_id, successor
 from .theme import SEED_DOMAIN_TO_THEME
 
-START_AGE = 16  # a playable life begins as a young adult
+START_AGE = config.ADULT_AGE  # a playable life begins as a young adult
 TURNS_PER_YEAR = 4  # action-time turns per world year (the decision cadence)
 
 
 def begin_life(world: World, talent: Optional[Talent] = None) -> Life:
-    """Take up a new life: a different person, aged ``START_AGE`` now, in the
-    (continuing) world. They were born ``START_AGE`` years before this year —
-    after a death and the ten-year gap that is six years *before* the previous
-    life died, which is allowed: what moves at a death is the player's
-    continuity, not a birth (docs/design_time_domain.md §4)."""
+    """Take up a life: become somebody the world already holds, who is
+    ``START_AGE`` this year (:func:`population.successor`).
+
+    They were born ``START_AGE`` years ago — after a death and the ten-year gap
+    that is six years *before* the previous life died, which is allowed: what
+    moves at a death is the player's continuity, not a birth
+    (docs/design_time_domain.md §4). Nobody is invented here; a world with no
+    sixteen-year-old raises rather than fabricating one.
+    """
+    person = successor(world)
     life = Life(
         id=next_id("life", world.lives),
         player_id=world.player.id,
-        birth_year=world.current_year - START_AGE,
+        person_id=person.id,
+        birth_year=person.lifecycle.birth_year,
         playable_start_year=world.current_year,
         age=START_AGE,
         talent=talent,
@@ -148,6 +155,17 @@ def end_life(
     life.death_year = world.current_year
     life.age_at_death = life.age
     life.death_cause = cause
+    # The body dies with the life: one death, recorded in both the player's
+    # record and the world's person registry, which outlives it.
+    person = person_by_id(world, life.person_id)
+    if person is None:  # person_id is required; a miss means a corrupt registry
+        raise RuntimeError(
+            f"{life.id} was lived as {life.person_id}, who is not in the registry"
+        )
+    if person.alive:
+        person.alive = False
+        person.lifecycle.age = life.age
+        person.lifecycle.death_year = life.death_year
     life.summary = build_life_summary(world, life)
     _apply_bequest(world, life)
     world.player.current_life_id = None

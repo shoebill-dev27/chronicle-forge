@@ -15,6 +15,7 @@ from .enums import ActivityCategory, DiscoveryType, LocationType, Talent
 from .life import begin_life
 from .macro import derive_rng, time_skip
 from .models import Life, World
+from .population import adults
 from .powers import imprint
 from .profiles import ACTIVITY_PROFILES
 from .rng import DeterministicRNG
@@ -55,7 +56,7 @@ def _live_one(world: World, rng: DeterministicRNG) -> Life:
             category = _pick_activity(rng, talent)
             target = None
             if category in _TARGETED:
-                living = [n for n in world.npcs if n.alive] or world.npcs
+                living = adults(world) or world.npcs
                 target = rng.choice(living).id
             from .activity import perform_activity  # local import avoids cycle
 

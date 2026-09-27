@@ -23,11 +23,11 @@ from .macro import (
     derive_rng,
     fire_probabilistic_seeds,
     step_factions,
-    step_npcs_lifecycle,
     step_wildcards,
     time_skip,
 )
 from .memory import form_memory
+from .population import adults, give_birth, step_population, successor
 from .npc import step_npc
 from .pipeline import advance_history
 from .powers import foresight, imprint, manifest_amplify
@@ -75,6 +75,10 @@ __all__ = [
     "foresight",
     "manifest_amplify",
     "step_npc",
+    "step_population",
+    "adults",
+    "give_birth",
+    "successor",
     "player_fight",
     "resolve_combat",
     # macro loop (P3)
@@ -85,7 +89,6 @@ __all__ = [
     "fire_probabilistic_seeds",
     "step_wildcards",
     "step_factions",
-    "step_npcs_lifecycle",
     "derive_rng",
     # observability (P5)
     "simulate_world",

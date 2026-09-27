@@ -17,8 +17,15 @@ History:
   taken up at 16 (``birth_year`` is the actual birth, 16 years earlier) and
   reaches 80 unless a registered hazard ends it (none by default); a fixed
   10-year gap between lives; a 200-year horizon that ends the run mid-life.
+- ``0.3.0-population-continuity`` — the world keeps a population across the
+  horizon. ``World.npcs`` became a historical registry of individually tracked
+  persons (birth year, death year, parents, generation) that nothing deletes;
+  worldgen seeds a child cohort as well as founders; one tracked person is born
+  every year; everyone dies at the lifespan cap; and a playable life is now
+  taken up as a person the world already holds, who is sixteen that year
+  (``Life.person_id``). Same seed, different world: world identity changed.
 """
 
 from __future__ import annotations
 
-ENGINE_VERSION = "0.2.0-time-domain"
+ENGINE_VERSION = "0.3.0-population-continuity"

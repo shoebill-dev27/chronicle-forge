@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from chronicle_forge import generate_world
 from chronicle_forge.config import (
+    ADULT_AGE,
     WORLD_MAX_YEARS,
     MVP_IMPORTANT_NPC_COUNT,
     MVP_NPC_COUNT,
@@ -31,13 +32,28 @@ def test_four_distinct_faction_types():
     }
 
 
+def _founders(world):
+    """The adults the world begins with — the people with no parents."""
+    return [n for n in world.npcs if not n.lineage.parent_ids]
+
+
 def test_npc_count_and_tiers():
     w = generate_world(seed=99)
-    assert len(w.npcs) == MVP_NPC_COUNT
+    founders = _founders(w)
+    assert len(founders) == MVP_NPC_COUNT
     s_tier = [n for n in w.npcs if n.tier == NPCTier.S]
-    a_tier = [n for n in w.npcs if n.tier == NPCTier.A]
     assert len(s_tier) == MVP_IMPORTANT_NPC_COUNT
-    assert len(a_tier) == MVP_NPC_COUNT - MVP_IMPORTANT_NPC_COUNT
+    assert all(n.tier == NPCTier.A for n in w.npcs if n not in s_tier)
+
+
+def test_the_world_begins_with_children_as_well_as_adults():
+    """A village with no young has no sixteen-year-old for the player to be
+    until the birth scaffold has run that many years."""
+    w = generate_world(seed=99)
+    ages = sorted(n.lifecycle.age for n in w.npcs)
+    assert ages[:ADULT_AGE] == list(range(ADULT_AGE))  # one child of each age
+    assert len(w.npcs) == MVP_NPC_COUNT + ADULT_AGE
+    assert min(n.lifecycle.age for n in _founders(w)) == ADULT_AGE
 
 
 def test_single_wildcard_designed_for_n():
@@ -47,17 +63,25 @@ def test_single_wildcard_designed_for_n():
     assert isinstance(w.wildcards.wildcards, list)
 
 
-def test_lineage_fields_reserved_but_unused():
+def test_the_founding_generation_has_no_ancestry_and_the_children_do():
     w = generate_world(seed=99)
-    for npc in w.npcs:
+    founder_ids = {n.id for n in _founders(w)}
+    for npc in _founders(w):
         assert npc.lineage.lineage_id is None
-        assert npc.lineage.parent_ids == []
         assert npc.lineage.generation == 0
+    children = [n for n in w.npcs if n.lineage.parent_ids]
+    assert len(children) == ADULT_AGE
+    for child in children:
+        assert child.lineage.parent_ids[0] in founder_ids
+        assert child.lineage.lineage_id == child.lineage.parent_ids[0]
+        assert child.lineage.generation == 1
 
 
 def test_defaults_and_population():
     w = generate_world(seed=99)
     assert w.max_year == WORLD_MAX_YEARS
+    # The aggregate populace is a crowd number; the tracked persons are a
+    # separate level of truth and neither is derived from the other.
     assert w.population > 0
     assert w.player.powers.manifest_charges == 1
     assert w.theme.dominant is not None

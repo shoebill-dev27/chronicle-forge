@@ -32,6 +32,7 @@ from .ids import next_id
 from .life import age_of, begin_life, end_life
 from .models import CausalNode, CausalSeed, Life, World
 from .mortality import HAZARD_SALT, check_mortality
+from .population import step_population
 from .rng import DeterministicRNG
 from .theme import (
     FACTION_TYPE_TO_THEME,
@@ -222,41 +223,6 @@ def step_factions(world: World, graph: CausalGraph, rng: DeterministicRNG) -> No
         b.power = max(0, b.power - 12)
 
 
-# --- NPC lifecycle (priority 6) ----------------------------------------
-
-NPC_DEATH_AGE = 80
-NPC_DEATH_PROBABILITY = 0.3
-NPC_PROMOTION_PROBABILITY = 0.1
-
-
-def step_npcs_lifecycle(
-    world: World, graph: CausalGraph, rng: DeterministicRNG
-) -> None:
-    """Age NPCs; resolve old-age death and ambitious promotion. A promotion emits
-    a governance event so NPC lives feed world history (P3.5)."""
-    for npc in world.npcs:
-        if not npc.alive:
-            continue
-        npc.lifecycle.age += 1
-        if npc.lifecycle.age > NPC_DEATH_AGE and rng.random() < NPC_DEATH_PROBABILITY:
-            npc.alive = False
-            npc.lifecycle.death_year = world.current_year
-        elif (
-            npc.personality.ambitious > 70
-            and npc.lifecycle.occupation != "leader"
-            and rng.random() < NPC_PROMOTION_PROBABILITY
-        ):
-            npc.lifecycle.occupation = "leader"
-            _emit_event(
-                world,
-                graph,
-                SeedDomain.GOVERNANCE,
-                f"{npc.name} rises to power",
-                [npc.id],
-                scale=EventScale.SMALL,
-            )
-
-
 # --- yearly world update (priority 2) ----------------------------------
 
 
@@ -273,7 +239,8 @@ def advance_year(world: World, rng: Optional[DeterministicRNG] = None) -> dict:
     """Move the world forward exactly one year — the single clock.
 
     Order: advance ``current_year`` -> fire seeds (guaranteed + probabilistic)
-    -> generate events -> wildcard / faction / NPC steps -> recompute theme
+    -> generate events -> wildcard / faction steps -> the population step
+    (everyone ages, the old die, children are born) -> recompute theme
     (snapshot) -> promote heritage -> age the current life and check mortality.
     Raises ``WorldHorizonReached`` at ``max_year``: the world never continues
     silently past its end.
@@ -290,7 +257,7 @@ def advance_year(world: World, rng: Optional[DeterministicRNG] = None) -> dict:
 
     step_wildcards(world, graph, rng)
     step_factions(world, graph, rng)
-    step_npcs_lifecycle(world, graph, rng)
+    step_population(world, graph, rng)
 
     theme = compute_theme(world)
     heritage = promote_heritage(world, graph)

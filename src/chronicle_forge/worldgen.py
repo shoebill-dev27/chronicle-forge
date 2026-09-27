@@ -20,6 +20,7 @@ from .enums import (
 from .models import (
     Faction,
     Lifecycle,
+    Lineage,
     Location,
     NPC,
     Personality,
@@ -88,11 +89,11 @@ _WILDCARD_SPECS = [
 ]
 
 
-def _make_name(rng: DeterministicRNG) -> str:
+def make_name(rng: DeterministicRNG) -> str:
     return rng.choice(_NAME_PREFIXES) + rng.choice(_NAME_SUFFIXES).strip()
 
 
-def _make_personality(rng: DeterministicRNG) -> Personality:
+def make_personality(rng: DeterministicRNG) -> Personality:
     return Personality(
         brave=rng.randint(10, 90),
         greedy=rng.randint(10, 90),
@@ -147,17 +148,47 @@ def generate_world(seed: int, max_year: int = config.WORLD_MAX_YEARS) -> World:
     for i in range(config.MVP_NPC_COUNT):
         tier = NPCTier.S if i < config.MVP_IMPORTANT_NPC_COUNT else NPCTier.A
         faction = rng.choice(factions)
-        age = rng.randint(16, 60)
+        age = rng.randint(config.ADULT_AGE, 60)
+        if i == 0:
+            # The world must contain somebody the player can be in year 0.
+            age = config.ADULT_AGE
         npcs.append(
             NPC(
                 id=ids.next("npc"),
-                name=_make_name(rng),
+                name=make_name(rng),
                 tier=tier,
-                personality=_make_personality(rng),
+                personality=make_personality(rng),
                 lifecycle=Lifecycle(
                     age=age,
                     faction_id=faction.id,
                     birth_year=-age,  # world starts at year 0
+                ),
+            )
+        )
+
+    # --- The children already alive: one per age below adulthood, each the
+    # child of one of the adults above. Without them the world has a hole where
+    # its young should be, and no sixteen-year-old for the player to become
+    # until the birth scaffold has run that many years (see population.py).
+    for age in range(config.ADULT_AGE - 1, -1, -1):
+        parent = rng.choice(npcs[: config.MVP_NPC_COUNT])
+        npcs.append(
+            NPC(
+                id=ids.next("npc"),
+                name=make_name(rng),
+                tier=NPCTier.A,
+                personality=make_personality(rng),
+                lifecycle=Lifecycle(
+                    age=age,
+                    life_stage="child",
+                    occupation="child",
+                    faction_id=parent.lifecycle.faction_id,
+                    birth_year=-age,
+                ),
+                lineage=Lineage(
+                    lineage_id=parent.id,
+                    parent_ids=[parent.id],
+                    generation=1,
                 ),
             )
         )
@@ -167,7 +198,7 @@ def generate_world(seed: int, max_year: int = config.WORLD_MAX_YEARS) -> World:
         wildcards=[
             WildCard(
                 id=ids.next("wc"),
-                name=_make_name(rng),
+                name=make_name(rng),
                 archetype=archetype,
                 status=WildCardStatus.DORMANT,
                 ignition_condition=(

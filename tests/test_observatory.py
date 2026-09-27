@@ -23,7 +23,7 @@ MVP_SECTIONS = ("Overview", "Lineage", "Heritage", "Theme")
 
 # Frozen at GREEN: the Observatory's permanent seed42 regression guard (mirroring
 # P9). simulate_world(42, "opportunity") -> observatory() default render.
-GOLDEN_OBSERVATORY_SHA = "3e8835d9ab8d3ce4"
+GOLDEN_OBSERVATORY_SHA = "b5da98da3cf2ecd9"
 
 _H2 = re.compile(r"(?m)^## (.+?)\s*$")
 _INTERNAL_ID = re.compile(r"\b(seed|life|npc|node|loc|fac|her)-\d")

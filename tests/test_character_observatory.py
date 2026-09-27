@@ -23,13 +23,13 @@ import re
 from chronicle_forge.autoplay import simulate_world
 
 # Frozen goldens P13 must NOT move (it adds files only). Main b5e310f set.
-GOLDEN_WORLD_SHA = "9aab126e58398933"
-GOLDEN_OBSERVATORY_SHA = "3e8835d9ab8d3ce4"
-GOLDEN_SOCIAL_MEMORY_SHA = "3a3eca233e81c55a"
-GOLDEN_WORLD_MODEL_SHA = "0bfad983f95d448f"
+GOLDEN_WORLD_SHA = "d81adc84cbe957d4"
+GOLDEN_OBSERVATORY_SHA = "b5da98da3cf2ecd9"
+GOLDEN_SOCIAL_MEMORY_SHA = "c722b5c2f22ce8e9"
+GOLDEN_WORLD_MODEL_SHA = "2f003785407e5189"
 
 # The one new golden: seed42 character_json hash (= sha256(character_json)[:16]).
-GOLDEN_CHARACTER_SHA = "080d89bd043ca9cd"
+GOLDEN_CHARACTER_SHA = "94725aea34321d52"
 
 # id-free negative contract: none of these may cross the boundary.
 _ID_RE = re.compile(r"[a-z]+-\d{4}")  # entity id "<prefix>-NNNN" (ids.py)

@@ -23,6 +23,7 @@ from typing import Optional
 
 from .enums import LocationType, NPCTier, WildCardArchetype, WildCardStatus
 from .macro import derive_rng
+from .population import adults
 from .models import NPC, Faction, Location, Life, WildCard, World
 from .social_memory_l2 import relation_bias
 from .theme import FACTION_TYPE_TO_THEME, SEED_DOMAIN_TO_THEME
@@ -322,14 +323,13 @@ def _gather(
         tension += jitter_rng.random() * JITTER_SCALE
         out.append(Opportunity(kind, tid, name, tension, sig, score))
 
-    for npc in world.npcs:
-        if npc.alive:
-            add(
-                OpportunityKind.NPC,
-                npc.id,
-                npc.name,
-                npc_signals(npc, world, idx, social_memory),
-            )
+    for npc in adults(world):  # a child exists in history, not in the offer
+        add(
+            OpportunityKind.NPC,
+            npc.id,
+            npc.name,
+            npc_signals(npc, world, idx, social_memory),
+        )
     for fac in world.factions:
         add(OpportunityKind.FACTION, fac.id, fac.name, faction_signals(fac, world, idx))
     for loc in world.locations:

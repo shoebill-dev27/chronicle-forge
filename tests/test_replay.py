@@ -32,8 +32,8 @@ from chronicle_forge.persistence import (
 )
 
 MAX_YEAR = config.WORLD_MAX_YEARS
-GOLDEN_WORLD_SHA = "9aab126e58398933"  # simulate_world(42, "opportunity")
-GOLDEN_TRANSCRIPT_SHA = "e544f8845b16c9dd"  # `play --seed 42 --auto` stdout
+GOLDEN_WORLD_SHA = "d81adc84cbe957d4"  # simulate_world(42, "opportunity")
+GOLDEN_TRANSCRIPT_SHA = "b90eae3c26809035"  # `play --seed 42 --auto` stdout
 
 
 def _sha(text: str) -> str:

@@ -1,7 +1,8 @@
 # Time Domain — the world clock, a life's chronology, mortality, and the gap
 
 Status: **accepted** (owner decisions 2026-09-17 / 2026-09-20 / 2026-09-21).
-Engine version: `0.2.0-time-domain`. Source of truth for everything below:
+Engine version: `0.2.0-time-domain` (superseded by
+`0.3.0-population-continuity`, which keeps this clock unchanged). Source of truth for everything below:
 `config.py`, `life.py`, `macro.py`, `mortality.py`, pinned by
 `tests/test_time_domain.py`.
 

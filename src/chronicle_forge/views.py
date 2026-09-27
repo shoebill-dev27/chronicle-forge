@@ -61,7 +61,9 @@ def render_world_summary(world: World) -> str:
     )
     alive = sum(1 for n in world.npcs if n.alive)
     lines.append(
-        f"npcs: {alive}/{len(world.npcs)} alive  population≈{world.population}"
+        # Two levels of truth: named individuals, and the crowd as a number.
+        f"tracked persons: {alive}/{len(world.npcs)} alive  "
+        f"populace≈{world.population}"
     )
     lines.append(
         f"theme dominant: {world.theme.dominant.value if world.theme.dominant else '—'}"

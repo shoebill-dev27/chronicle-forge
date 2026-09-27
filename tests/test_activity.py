@@ -17,12 +17,15 @@ def test_activity_plants_seed_of_profile_domain():
 
 
 def test_talent_match_boosts_magnitude_and_evaluation():
+    # Two worlds, not two lives: only one person is sixteen in year 0, and a
+    # soul can only be one of them.
     world = generate_world(seed=11)
     matched = begin_life(world, talent=Talent.MERCHANT)
     s_match = perform_activity(world, matched, ActivityCategory.COMMERCE)
 
-    other = begin_life(world, talent=Talent.WARRIOR)
-    s_plain = perform_activity(world, other, ActivityCategory.COMMERCE)
+    twin = generate_world(seed=11)
+    other = begin_life(twin, talent=Talent.WARRIOR)
+    s_plain = perform_activity(twin, other, ActivityCategory.COMMERCE)
 
     assert s_match.magnitude > s_plain.magnitude
     assert matched.evaluation.economy > other.evaluation.economy

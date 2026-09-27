@@ -14,6 +14,15 @@ from __future__ import annotations
 # --- World clock ---
 WORLD_MAX_YEARS = 200  # the horizon: the run ends here, mid-life or not
 
+# --- People ---
+ADULT_AGE = 16  # a person acts, and can be taken up by the player, from here
+# Tracked-person scaffold (see population.py): this many individually tracked
+# people enter the registry each world year, so the world still holds named
+# people at the horizon and always offers someone aged ADULT_AGE.
+# This is NOT the world's birth rate. It says nothing about ``World.population``,
+# the aggregate populace, which no rule here grows or shrinks.
+TRACKED_BIRTHS_PER_YEAR = 1
+
 # --- Player lifespan ---
 LIFESPAN_CAP = 80  # natural maximum age; reaching it is death by LIFESPAN.
 # Death before the cap only comes from a registered hazard (see mortality.py);

@@ -66,10 +66,11 @@ class Lifecycle(BaseModel):
 
 
 class Lineage(BaseModel):
-    """Reserved for the Post-MVP descendant/bloodline system (section 10).
+    """Genealogical truth: who this person descends from.
 
-    Present in the schema so future "the orphan you raised has a descendant who
-    becomes emperor" tracing needs no migration. Unused by MVP logic.
+    ``lineage_id`` names the bloodline by its founder's id and is ``None`` on a
+    founder itself. ``parent_ids`` is empty only for a founder. Parentage says
+    nothing about marriage or romance — it is ancestry, nothing more.
     """
 
     lineage_id: Optional[str] = None
@@ -78,6 +79,16 @@ class Lineage(BaseModel):
 
 
 class NPC(BaseModel):
+    """One *individually tracked* person — the player's own body included.
+
+    ``World.npcs`` is a historical registry: a dead person keeps their row
+    (``alive=False`` plus a ``death_year``) so history can still name them.
+
+    Tracked persons are not every human alive. The rest of humanity is
+    ``World.population``, an aggregate with no identity; the two are separate
+    levels of truth and neither is derived from the other.
+    """
+
     id: str
     name: str
     tier: NPCTier
@@ -202,6 +213,10 @@ class Life(BaseModel):
     # overlap: the next person can be born before the previous one dies.
     birth_year: int
     playable_start_year: int  # the world year player control begins (age 16)
+    # The tracked person the player lived as: their row in ``World.npcs`` holds
+    # the same chronology and outlives this record. Required — a playable life
+    # is always somebody the world already holds (population.successor).
+    person_id: str
     age: int = 0  # current age; always world.current_year - birth_year
     turns: int = 0  # action-time turns elapsed (the decision cadence)
     death_year: Optional[int] = None
@@ -351,10 +366,15 @@ class World(BaseModel):
     current_year: int = 0
     max_year: int
     theme: WorldTheme = Field(default_factory=WorldTheme)
-    population: int = 0  # Tier-B crowd as a number, not individuals
+    # The aggregate populace: humanity as a number, with no identity, birth
+    # year or ancestry. Deliberately unrelated to ``npcs`` — see
+    # docs/design_population_continuity.md §1. Nothing derives one from the
+    # other, and no rule in this engine yet moves this number.
+    population: int = 0
     player: Player
     locations: list[Location] = Field(default_factory=list)
     factions: list[Faction] = Field(default_factory=list)
+    # Individually tracked persons, living and dead — not every human alive.
     npcs: list[NPC] = Field(default_factory=list)
     wildcards: WildCardRegistry = Field(default_factory=WildCardRegistry)
     lives: list[Life] = Field(default_factory=list)

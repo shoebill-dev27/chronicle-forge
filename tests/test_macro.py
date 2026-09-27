@@ -128,7 +128,8 @@ def test_probabilistic_firing_is_deterministic():
 
 def test_time_skip_never_exceeds_max_year():
     world = generate_world(seed=8)
-    world.current_year = world.max_year - 2
+    while world.current_year < world.max_year - 2:
+        advance_year(world)  # a world that lived here has people here
     life = begin_life(world)
     end_life(world, life)
     skip = time_skip(world)

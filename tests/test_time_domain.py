@@ -34,6 +34,15 @@ def _run_until_dead(world, life):
         advance_year(world)
 
 
+def _world_at(year, seed=4):
+    """A world that has actually lived to ``year`` — so it holds the people
+    that year's history would have produced, the sixteen-year-olds included."""
+    world = generate_world(seed=seed)
+    while world.current_year < year:
+        advance_year(world)
+    return world
+
+
 def _dies_at(age):
     def hazard(world, life, rng):
         return DeathCause.COMBAT if life.age >= age else None
@@ -55,8 +64,7 @@ def test_the_first_life_is_taken_up_at_sixteen_in_year_zero():
 
 
 def test_a_life_taken_up_in_year_fifty_was_born_in_thirty_four():
-    world = generate_world(seed=4)
-    world.current_year = 50
+    world = _world_at(50)
     life = begin_life(world)
     assert life.playable_start_year == 50
     assert life.birth_year == 34
@@ -199,8 +207,7 @@ def test_world_keeps_simulating_during_the_gap():
 
 
 def test_death_near_horizon_runs_only_the_available_gap():
-    world = generate_world(seed=4)
-    world.current_year = 195
+    world = _world_at(195)
     life = begin_life(world)
     end_life(world, life, DeathCause.COMBAT)
     skip, nxt = advance_to_next_life(world)
@@ -219,8 +226,7 @@ def test_world_stops_exactly_at_two_hundred():
 
 
 def test_run_ends_at_horizon_with_the_life_still_alive():
-    world = generate_world(seed=4)
-    world.current_year = 197
+    world = _world_at(197)
     life = begin_life(world)
     for _ in range(3):
         advance_year(world)
