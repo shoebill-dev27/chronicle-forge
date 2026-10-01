@@ -113,6 +113,7 @@ def make_npc(
     brave=50,
     cautious=50,
     faction_id=None,
+    location_id="loc-0000",
 ):
     return NPC(
         id=npc_id,
@@ -120,7 +121,7 @@ def make_npc(
         tier=tier,
         alive=alive,
         personality=Personality(brave=brave, ambitious=ambitious, cautious=cautious),
-        lifecycle=Lifecycle(age=age, faction_id=faction_id),
+        lifecycle=Lifecycle(age=age, faction_id=faction_id, location_id=location_id),
     )
 
 

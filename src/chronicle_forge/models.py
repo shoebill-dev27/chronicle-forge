@@ -23,6 +23,8 @@ from .enums import (
     MemoryType,
     NPCTier,
     PlayerInteraction,
+    RoutineEndReason,
+    RoutineKind,
     SeedDomain,
     Talent,
     ThemeAxis,
@@ -63,6 +65,13 @@ class Lifecycle(BaseModel):
     life_stage: str = "adult"
     birth_year: Optional[int] = None  # world year of birth (negative = before year 0)
     death_year: Optional[int] = None  # set when the NPC dies during the skip
+    # Where this person is now: an id from ``World.locations``. Required —
+    # a tracked person is always somewhere, and a person with no place could
+    # not be worked beside, so "nowhere" is not a state the world may hold.
+    # There is no movement system yet, so this is where they were born or
+    # founded and where they die; their *past* places are held by their
+    # routines, not here.
+    location_id: str
 
 
 class Lineage(BaseModel):
@@ -98,7 +107,7 @@ class NPC(BaseModel):
     goals: list[str] = Field(default_factory=list)
     relations: dict[str, Relation] = Field(default_factory=dict)
     traits: list[str] = Field(default_factory=list)
-    lifecycle: Lifecycle = Field(default_factory=Lifecycle)
+    lifecycle: Lifecycle  # required: a person is an age and a place, not a blank
     lineage: Lineage = Field(default_factory=Lineage)
 
 
@@ -230,6 +239,37 @@ class Life(BaseModel):
     @property
     def alive(self) -> bool:
         return self.death_year is None
+
+
+# --- Routine: the years a person lived one way ---------------------------
+
+
+class Routine(BaseModel):
+    """One span of a person's life, held as a span and not as a decision.
+
+    "Worked beside Karic in Hollowfen from sixteen to twenty-three" is one
+    ``Routine`` row, not seven yearly choices. It stays in ``World.routines``
+    after it ends, and after its actor dies, because it is how a later life
+    reads what an earlier one actually did with its years.
+
+    Duration is never stored: it is ``end_year - start_year`` (and
+    ``world.current_year - start_year`` while still running), so the
+    chronology can never disagree with a counter. See ``routine.py``.
+    """
+
+    id: str
+    actor_person_id: str
+    kind: RoutineKind
+    location_id: str  # where the years were spent
+    # Set for the person-facing kinds; ``WORK_AT`` is aimed at its location.
+    target_person_id: Optional[str] = None
+    start_year: int
+    end_year: Optional[int] = None  # None while the person is still living it
+    end_reason: Optional[RoutineEndReason] = None
+
+    @property
+    def active(self) -> bool:
+        return self.end_year is None
 
 
 # --- Memory -------------------------------------------------------------
@@ -378,6 +418,8 @@ class World(BaseModel):
     npcs: list[NPC] = Field(default_factory=list)
     wildcards: WildCardRegistry = Field(default_factory=WildCardRegistry)
     lives: list[Life] = Field(default_factory=list)
+    # Every routine ever lived, by anyone, still here after it ended.
+    routines: list[Routine] = Field(default_factory=list)
     memories: list[Memory] = Field(default_factory=list)
     seeds: list[CausalSeed] = Field(default_factory=list)
     causal_nodes: list[CausalNode] = Field(default_factory=list)

@@ -241,7 +241,9 @@ def advance_year(world: World, rng: Optional[DeterministicRNG] = None) -> dict:
     Order: advance ``current_year`` -> fire seeds (guaranteed + probabilistic)
     -> generate events -> wildcard / faction steps -> the population step
     (everyone ages, the old die, children are born) -> recompute theme
-    (snapshot) -> promote heritage -> age the current life and check mortality.
+    (snapshot) -> promote heritage -> age the current life and check mortality
+    -> reconcile open routines against the year that just happened -> close
+    whatever is still open if this was the horizon.
     Raises ``WorldHorizonReached`` at ``max_year``: the world never continues
     silently past its end.
     """
@@ -271,6 +273,19 @@ def advance_year(world: World, rng: Optional[DeterministicRNG] = None) -> dict:
         )
         if death is not None:
             end_life(world, life, death)
+
+    # The year has now fully happened, so routines are reconciled against it:
+    # a death this year closes the spans it made untrue, at this exact year.
+    # This runs here, after the mortality seam, so a concrete ACTOR_DIED or
+    # TARGET_DIED is always written before the horizon has anything to say.
+    from .routine import close_at_horizon, step_routines
+
+    step_routines(world)
+    if world.current_year >= world.max_year:
+        # The world stops, so every way of living still open stops with it —
+        # but nobody dies of the horizon, and WORLD_ENDED never overwrites a
+        # death that already closed a span this year.
+        close_at_horizon(world)
 
     return {
         "year": world.current_year,

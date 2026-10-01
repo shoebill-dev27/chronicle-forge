@@ -28,6 +28,15 @@ from .macro import (
 )
 from .memory import form_memory
 from .population import adults, give_birth, step_population, successor
+from .routine import (
+    active_routine,
+    begin_routine,
+    change_routine,
+    continue_routine,
+    end_routine,
+    routine_years,
+    routines_of,
+)
 from .npc import step_npc
 from .pipeline import advance_history
 from .powers import foresight, imprint, manifest_amplify
@@ -79,6 +88,13 @@ __all__ = [
     "adults",
     "give_birth",
     "successor",
+    "active_routine",
+    "begin_routine",
+    "change_routine",
+    "continue_routine",
+    "end_routine",
+    "routine_years",
+    "routines_of",
     "player_fight",
     "resolve_combat",
     # macro loop (P3)

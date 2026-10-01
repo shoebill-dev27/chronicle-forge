@@ -167,6 +167,30 @@ class ManifestTargetKind(str, Enum):
     THEME_AXIS = "theme_axis"
 
 
+class RoutineKind(str, Enum):
+    """What a person spends their years doing (docs/design_routine.md).
+
+    A routine is a *span*, not an act: ``WORK_AT`` is the years someone worked
+    somewhere, ``WORK_WITH`` and ``ASSOCIATE_WITH`` the years they spent beside
+    another person. What that proximity does to either of them — friendship,
+    knowledge, rivalry — is not modelled here.
+    """
+
+    WORK_AT = "work_at"
+    WORK_WITH = "work_with"
+    ASSOCIATE_WITH = "associate_with"
+
+
+class RoutineEndReason(str, Enum):
+    """Why a way of living stopped. A routine always ends for a reason the
+    world can name; it never simply lapses."""
+
+    PLAYER_CHANGED = "player_changed"
+    TARGET_DIED = "target_died"
+    ACTOR_DIED = "actor_died"
+    WORLD_ENDED = "world_ended"
+
+
 class DeathCause(str, Enum):
     LIFESPAN = "lifespan"
     COMBAT = "combat"

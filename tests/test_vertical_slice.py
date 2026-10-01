@@ -30,7 +30,7 @@ from chronicle_forge.persistence import build_recipe, read_recipe, save_recipe
 MAX_YEAR = config.WORLD_MAX_YEARS
 
 # Frozen engine goldens P15 must NOT move (it adds an Application Layer only).
-GOLDEN_WORLD_SHA = "d81adc84cbe957d4"
+GOLDEN_WORLD_SHA = "6e733033832af5b2"
 GOLDEN_OBSERVATORY_SHA = "b5da98da3cf2ecd9"
 GOLDEN_SOCIAL_MEMORY_SHA = "c722b5c2f22ce8e9"
 GOLDEN_WORLD_MODEL_SHA = "2f003785407e5189"

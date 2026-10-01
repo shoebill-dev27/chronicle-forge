@@ -24,7 +24,7 @@ from chronicle_forge.reporting.social_memory import social_memory_view
 from chronicle_forge.reporting.world_model import world_model_json
 
 # Frozen goldens P12 must NOT move (it adds files only).
-GOLDEN_WORLD_SHA = "d81adc84cbe957d4"
+GOLDEN_WORLD_SHA = "6e733033832af5b2"
 GOLDEN_OBSERVATORY_SHA = "b5da98da3cf2ecd9"
 GOLDEN_SOCIAL_MEMORY_SHA = "c722b5c2f22ce8e9"
 GOLDEN_WORLD_MODEL_SHA = "2f003785407e5189"

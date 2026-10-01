@@ -31,14 +31,14 @@ from chronicle_forge.reporting.world_model import world_model_json
 MAX_YEAR = config.WORLD_MAX_YEARS
 
 # Frozen off-path goldens (must stay identical when the flag is OFF).
-GOLDEN_WORLD_SHA = "d81adc84cbe957d4"
+GOLDEN_WORLD_SHA = "6e733033832af5b2"
 GOLDEN_OBSERVATORY_SHA = "b5da98da3cf2ecd9"
 GOLDEN_SOCIAL_MEMORY_SHA = "c722b5c2f22ce8e9"
 GOLDEN_WORLD_MODEL_SHA = "2f003785407e5189"
 
 # The one new golden: seed42 opportunity world with social_memory ON, produced by
 # the integrated S1 pipeline (per-year decay + npc_signals relation-bias).
-GOLDEN_SOCIAL_MEMORY_ON_WORLD_SHA = "052aba78174d7564"
+GOLDEN_SOCIAL_MEMORY_ON_WORLD_SHA = "050c7b022771f0d7"
 
 
 def _sha(text: str) -> str:

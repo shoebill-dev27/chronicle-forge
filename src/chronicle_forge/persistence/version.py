@@ -24,8 +24,14 @@ History:
   every year; everyone dies at the lifespan cap; and a playable life is now
   taken up as a person the world already holds, who is sixteen that year
   (``Life.person_id``). Same seed, different world: world identity changed.
+- ``0.4.0-routine`` — a life is made of spans, not single acts. Tracked persons
+  gained ``Lifecycle.location_id`` (assigned by index in ``worldgen``, inherited
+  by every newborn from its parent) and the world gained ``World.routines``, a
+  registry of the year-spans people lived — kept after they end and after their
+  actor dies. Worldgen output changed, so world identity changed again; no
+  rendered lens did.
 """
 
 from __future__ import annotations
 
-ENGINE_VERSION = "0.3.0-population-continuity"
+ENGINE_VERSION = "0.4.0-routine"

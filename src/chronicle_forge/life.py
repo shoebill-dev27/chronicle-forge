@@ -166,6 +166,10 @@ def end_life(
         person.alive = False
         person.lifecycle.age = life.age
         person.lifecycle.death_year = life.death_year
+    # A way of living ends with the person living it; the record itself stays.
+    from .routine import close_on_death  # routine -> macro -> this module
+
+    close_on_death(world, person.id)
     life.summary = build_life_summary(world, life)
     _apply_bequest(world, life)
     world.player.current_life_id = None

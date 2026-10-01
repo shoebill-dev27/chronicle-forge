@@ -111,7 +111,7 @@ def descendants(world: World, person: NPC) -> List[NPC]:
 # --- the yearly step -------------------------------------------------------
 
 
-def _current_person_id(world: World) -> Optional[str]:
+def current_person_id(world: World) -> Optional[str]:
     """The body the player is in right now, or ``None`` between lives — a real
     world state, not a nullable ``Life.person_id`` (that field is required)."""
     life = next(
@@ -184,6 +184,8 @@ def give_birth(world: World, parent: NPC, rng: DeterministicRNG) -> NPC:
             occupation="child",
             faction_id=parent.lifecycle.faction_id,
             birth_year=world.current_year,
+            # No movement system yet: a child begins where their parent is.
+            location_id=parent.lifecycle.location_id,
         ),
         lineage=Lineage(
             # A founder's own id names the line; everyone below inherits it.
@@ -221,7 +223,7 @@ def step_population(world: World, graph: CausalGraph, rng: DeterministicRNG) -> 
     the living may rise, and children are born. Called only by
     ``macro.advance_year``. ``world.population`` is untouched — the aggregate
     populace is a separate level of truth this scaffold does not model."""
-    player_person_id = _current_person_id(world)
+    player_person_id = current_person_id(world)
     _grow_and_die(world, player_person_id)
     _promote(world, graph, rng)
     _births(world, derive_birth_rng(world), player_person_id)

@@ -130,6 +130,11 @@ def generate_world(seed: int, max_year: int = config.WORLD_MAX_YEARS) -> World:
         Location(id=ids.next("loc"), type=LocationType.FIELD, name="Thornreach"),
     ]
     locations = [village, dungeon, *fields]
+    # Where people live. The dungeon is a place to go, not a place to be from,
+    # so it is not a home. Homes are handed out by index rather than drawn from
+    # ``rng``: the assignment is just as deterministic and it leaves every other
+    # draw in this function on the stream it was already on.
+    homes = [loc for loc in locations if loc.type is not LocationType.DUNGEON]
 
     # --- Factions ---
     factions = [
@@ -162,6 +167,7 @@ def generate_world(seed: int, max_year: int = config.WORLD_MAX_YEARS) -> World:
                     age=age,
                     faction_id=faction.id,
                     birth_year=-age,  # world starts at year 0
+                    location_id=homes[i % len(homes)].id,
                 ),
             )
         )
@@ -170,6 +176,8 @@ def generate_world(seed: int, max_year: int = config.WORLD_MAX_YEARS) -> World:
     # child of one of the adults above. Without them the world has a hole where
     # its young should be, and no sixteen-year-old for the player to become
     # until the birth scaffold has run that many years (see population.py).
+    # A child is born where their parent is — the same rule ``population``
+    # applies to every birth afterwards.
     for age in range(config.ADULT_AGE - 1, -1, -1):
         parent = rng.choice(npcs[: config.MVP_NPC_COUNT])
         npcs.append(
@@ -184,6 +192,7 @@ def generate_world(seed: int, max_year: int = config.WORLD_MAX_YEARS) -> World:
                     occupation="child",
                     faction_id=parent.lifecycle.faction_id,
                     birth_year=-age,
+                    location_id=parent.lifecycle.location_id,
                 ),
                 lineage=Lineage(
                     lineage_id=parent.id,
