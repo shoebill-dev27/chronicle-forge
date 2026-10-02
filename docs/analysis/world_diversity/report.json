@@ -1,0 +1,451 @@
+{
+ "rows": [
+  {
+   "feature": "place name",
+   "family": "world",
+   "pool": 1,
+   "per_world": 1.0,
+   "H": 0.0,
+   "top_share": 1.0,
+   "world_exclusive_values": 0,
+   "coverage": 1.0,
+   "class": "FIXED"
+  },
+  {
+   "feature": "ending class",
+   "family": "world",
+   "pool": 7,
+   "per_world": 1.0,
+   "H": 0.309,
+   "top_share": 0.853,
+   "world_exclusive_values": 0,
+   "coverage": 0.143,
+   "class": "VARIABLE"
+  },
+  {
+   "feature": "location name",
+   "family": "place",
+   "pool": 4,
+   "per_world": 4.0,
+   "H": 1.0,
+   "top_share": 0.25,
+   "world_exclusive_values": 0,
+   "coverage": 1.0,
+   "class": "FIXED-SET"
+  },
+  {
+   "feature": "location type",
+   "family": "place",
+   "pool": 3,
+   "per_world": 3.0,
+   "H": 0.946,
+   "top_share": 0.5,
+   "world_exclusive_values": 0,
+   "coverage": 1.0,
+   "class": "FIXED-SET"
+  },
+  {
+   "feature": "location theme",
+   "family": "place",
+   "pool": 2,
+   "per_world": 2.0,
+   "H": 0.811,
+   "top_share": 0.75,
+   "world_exclusive_values": 0,
+   "coverage": 1.0,
+   "class": "FIXED-SET"
+  },
+  {
+   "feature": "faction name",
+   "family": "faction",
+   "pool": 4,
+   "per_world": 4.0,
+   "H": 1.0,
+   "top_share": 0.25,
+   "world_exclusive_values": 0,
+   "coverage": 1.0,
+   "class": "FIXED-SET"
+  },
+  {
+   "feature": "faction type",
+   "family": "faction",
+   "pool": 4,
+   "per_world": 4.0,
+   "H": 1.0,
+   "top_share": 0.25,
+   "world_exclusive_values": 0,
+   "coverage": 1.0,
+   "class": "FIXED-SET"
+  },
+  {
+   "feature": "faction ideology",
+   "family": "faction",
+   "pool": 4,
+   "per_world": 4.0,
+   "H": 1.0,
+   "top_share": 0.25,
+   "world_exclusive_values": 0,
+   "coverage": 1.0,
+   "class": "FIXED-SET"
+  },
+  {
+   "feature": "npc name",
+   "family": "actor",
+   "pool": 100,
+   "per_world": 9.53,
+   "H": 0.999,
+   "top_share": 0.013,
+   "world_exclusive_values": 0,
+   "coverage": 0.095,
+   "class": "VARIABLE"
+  },
+  {
+   "feature": "npc occupation",
+   "family": "actor",
+   "pool": 2,
+   "per_world": 1.91,
+   "H": 0.773,
+   "top_share": 0.773,
+   "world_exclusive_values": 0,
+   "coverage": 0.956,
+   "class": "VARIABLE"
+  },
+  {
+   "feature": "npc tier",
+   "family": "actor",
+   "pool": 2,
+   "per_world": 2.0,
+   "H": 0.722,
+   "top_share": 0.8,
+   "world_exclusive_values": 0,
+   "coverage": 1.0,
+   "class": "FIXED-SET"
+  },
+  {
+   "feature": "npc lineage id",
+   "family": "dynasty",
+   "pool": 1,
+   "per_world": 1.0,
+   "H": 0.0,
+   "top_share": 1.0,
+   "world_exclusive_values": 0,
+   "coverage": 1.0,
+   "class": "FIXED"
+  },
+  {
+   "feature": "event phrase",
+   "family": "event",
+   "pool": 8,
+   "per_world": 4.74,
+   "H": 0.48,
+   "top_share": 0.685,
+   "world_exclusive_values": 0,
+   "coverage": 0.593,
+   "class": "VARIABLE"
+  },
+  {
+   "feature": "event domain",
+   "family": "event",
+   "pool": 8,
+   "per_world": 4.74,
+   "H": 0.48,
+   "top_share": 0.685,
+   "world_exclusive_values": 0,
+   "coverage": 0.593,
+   "class": "VARIABLE"
+  },
+  {
+   "feature": "event scale",
+   "family": "event",
+   "pool": 3,
+   "per_world": 2.91,
+   "H": 0.532,
+   "top_share": 0.811,
+   "world_exclusive_values": 0,
+   "coverage": 0.971,
+   "class": "VARIABLE"
+  },
+  {
+   "feature": "event location",
+   "family": "event",
+   "pool": 1,
+   "per_world": 1.0,
+   "H": 0.0,
+   "top_share": 1.0,
+   "world_exclusive_values": 0,
+   "coverage": 1.0,
+   "class": "FIXED"
+  },
+  {
+   "feature": "raw node title",
+   "family": "event",
+   "pool": 1539,
+   "per_world": 54.73,
+   "H": 0.773,
+   "top_share": 0.015,
+   "world_exclusive_values": 164,
+   "coverage": 0.036,
+   "class": "VARIABLE"
+  },
+  {
+   "feature": "institution name",
+   "family": "institution",
+   "pool": 31,
+   "per_world": 6.93,
+   "H": 0.683,
+   "top_share": 0.15,
+   "world_exclusive_values": 4,
+   "coverage": 0.224,
+   "class": "VARIABLE"
+  },
+  {
+   "feature": "institution kind",
+   "family": "institution",
+   "pool": 4,
+   "per_world": 1.03,
+   "H": 0.051,
+   "top_share": 0.988,
+   "world_exclusive_values": 1,
+   "coverage": 0.257,
+   "class": "NEAR-FIXED"
+  },
+  {
+   "feature": "heritage type",
+   "family": "institution",
+   "pool": 4,
+   "per_world": 1.03,
+   "H": 0.051,
+   "top_share": 0.988,
+   "world_exclusive_values": 1,
+   "coverage": 0.257,
+   "class": "NEAR-FIXED"
+  },
+  {
+   "feature": "seed domain",
+   "family": "institution",
+   "pool": 8,
+   "per_world": 4.99,
+   "H": 0.483,
+   "top_share": 0.704,
+   "world_exclusive_values": 0,
+   "coverage": 0.624,
+   "class": "VARIABLE"
+  },
+  {
+   "feature": "life title",
+   "family": "life",
+   "pool": 8,
+   "per_world": 3.23,
+   "H": 1.0,
+   "top_share": 0.13,
+   "world_exclusive_values": 0,
+   "coverage": 0.404,
+   "class": "VARIABLE"
+  },
+  {
+   "feature": "life talent",
+   "family": "life",
+   "pool": 8,
+   "per_world": 3.23,
+   "H": 1.0,
+   "top_share": 0.13,
+   "world_exclusive_values": 0,
+   "coverage": 0.404,
+   "class": "VARIABLE"
+  },
+  {
+   "feature": "life death cause",
+   "family": "life",
+   "pool": 2,
+   "per_world": 1.61,
+   "H": 0.758,
+   "top_share": 0.781,
+   "world_exclusive_values": 0,
+   "coverage": 0.804,
+   "class": "VARIABLE"
+  },
+  {
+   "feature": "life dominant axis",
+   "family": "life",
+   "pool": 6,
+   "per_world": 1.43,
+   "H": 0.272,
+   "top_share": 0.866,
+   "world_exclusive_values": 0,
+   "coverage": 0.239,
+   "class": "VARIABLE"
+  },
+  {
+   "feature": "reputation sentiment",
+   "family": "lens",
+   "pool": 2,
+   "per_world": 0.88,
+   "H": 0.673,
+   "top_share": 0.823,
+   "world_exclusive_values": 0,
+   "coverage": 0.438,
+   "class": "VARIABLE"
+  },
+  {
+   "feature": "recognition hint",
+   "family": "lens",
+   "pool": 2,
+   "per_world": 1.01,
+   "H": 0.594,
+   "top_share": 0.856,
+   "world_exclusive_values": 0,
+   "coverage": 0.507,
+   "class": "VARIABLE"
+  },
+  {
+   "feature": "world shape axis",
+   "family": "lens",
+   "pool": 3,
+   "per_world": 1.03,
+   "H": 0.14,
+   "top_share": 0.97,
+   "world_exclusive_values": 0,
+   "coverage": 0.342,
+   "class": "NEAR-FIXED"
+  },
+  {
+   "feature": "dominant-axis path",
+   "family": "lens",
+   "pool": 948,
+   "per_world": 1.0,
+   "H": 0.994,
+   "top_share": 0.008,
+   "world_exclusive_values": 924,
+   "coverage": 0.001,
+   "class": "VARIABLE"
+  }
+ ],
+ "base_read_alike": 0.4641951881940885,
+ "share": {
+  "faction ideology": 16000,
+  "faction name": 16000,
+  "location name": 16000,
+  "npc name": 3578,
+  "institution name": 19041,
+  "ending class": 2966,
+  "event phrase": 13899,
+  "place name": 4000,
+  "recognition hint": 3080,
+  "life title": 5186,
+  "reputation sentiment": 2232
+ },
+ "roi": [
+  {
+   "改善": "institution names 24 -> 600",
+   "feature": "institution name",
+   "pool": 31,
+   "per_world": 6.93,
+   "shared_now": 4.76,
+   "shared_after": 0.25,
+   "read_alike_after": 0.3518,
+   "delta": 0.1124
+  },
+  {
+   "改善": "location names 4 -> 200",
+   "feature": "location name",
+   "pool": 4,
+   "per_world": 4.0,
+   "shared_now": 4.0,
+   "shared_after": 0.08,
+   "read_alike_after": 0.3654,
+   "delta": 0.0988
+  },
+  {
+   "改善": "faction names 8 -> 160",
+   "feature": "faction name",
+   "pool": 4,
+   "per_world": 4.0,
+   "shared_now": 4.0,
+   "shared_after": 0.1,
+   "read_alike_after": 0.3659,
+   "delta": 0.0983
+  },
+  {
+   "改善": "event phrases 6 -> 120",
+   "feature": "event phrase",
+   "pool": 8,
+   "per_world": 4.74,
+   "shared_now": 3.47,
+   "shared_after": 0.23,
+   "read_alike_after": 0.3812,
+   "delta": 0.0829
+  },
+  {
+   "改善": "life titles 60 -> 600",
+   "feature": "life title",
+   "pool": 8,
+   "per_world": 3.23,
+   "shared_now": 1.3,
+   "shared_after": 0.02,
+   "read_alike_after": 0.4293,
+   "delta": 0.0349
+  },
+  {
+   "改善": "place names 1 -> 200",
+   "feature": "place name",
+   "pool": 1,
+   "per_world": 1.0,
+   "shared_now": 1.0,
+   "shared_after": 0.01,
+   "read_alike_after": 0.4366,
+   "delta": 0.0276
+  },
+  {
+   "改善": "recognition hints 5 -> 40",
+   "feature": "recognition hint",
+   "pool": 2,
+   "per_world": 1.01,
+   "shared_now": 0.77,
+   "shared_after": 0.04,
+   "read_alike_after": 0.4433,
+   "delta": 0.0209
+  },
+  {
+   "改善": "npc names 20 -> 400",
+   "feature": "npc name",
+   "pool": 100,
+   "per_world": 9.53,
+   "shared_now": 0.89,
+   "shared_after": 0.22,
+   "read_alike_after": 0.4449,
+   "delta": 0.0193
+  },
+  {
+   "改善": "reputation sentiments 8 -> 40",
+   "feature": "reputation sentiment",
+   "pool": 2,
+   "per_world": 0.88,
+   "shared_now": 0.56,
+   "shared_after": 0.03,
+   "read_alike_after": 0.4486,
+   "delta": 0.0156
+  },
+  {
+   "改善": "ending classes 3 -> 12",
+   "feature": "ending class",
+   "pool": 7,
+   "per_world": 1.0,
+   "shared_now": 0.74,
+   "shared_after": 0.43,
+   "read_alike_after": 0.4543,
+   "delta": 0.0099
+  }
+ ],
+ "ablation": {
+  "actor": 0.6689887163177337,
+  "event": 0.4507837757687346,
+  "faction": 0.3733433870791428,
+  "institution": 0.45147498438586536,
+  "lens": 0.46041845409656684,
+  "life": 0.48589898603832365,
+  "place": 0.42232806057836114,
+  "world": 0.4507880953232986
+ },
+ "eff_worlds": 35.945644578965684,
+ "n_fingerprints": 128
+}
