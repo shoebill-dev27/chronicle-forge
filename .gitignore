@@ -31,7 +31,9 @@ output/
 
 # Editor / tooling
 .claude/
+.codex/
 .cursor/
+.serena/
 .vscode/
 .idea/
 .DS_Store
