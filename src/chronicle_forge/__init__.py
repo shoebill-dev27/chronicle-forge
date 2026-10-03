@@ -28,6 +28,11 @@ from .macro import (
 )
 from .memory import form_memory
 from .population import adults, give_birth, step_population, successor
+from .relationship import (
+    Relationship,
+    relationship_between,
+    relationships_of,
+)
 from .routine import (
     active_routine,
     begin_routine,
@@ -88,6 +93,9 @@ __all__ = [
     "adults",
     "give_birth",
     "successor",
+    "Relationship",
+    "relationship_between",
+    "relationships_of",
     "active_routine",
     "begin_routine",
     "change_routine",
