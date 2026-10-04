@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from .gate import GateDecision, JunctureGate
 from .human import make_human_chooser, make_script_chooser
+from .routine_session import run_routine_world
 from .session import run_human_world
 
 __all__ = [
@@ -23,4 +24,5 @@ __all__ = [
     "make_human_chooser",
     "make_script_chooser",
     "run_human_world",
+    "run_routine_world",
 ]

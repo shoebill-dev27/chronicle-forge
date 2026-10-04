@@ -31,7 +31,7 @@ from chronicle_forge.reporting.world_model import (
 from chronicle_forge.worldgen import generate_world
 
 # Frozen at GREEN: the read-model's permanent seed42 regression guard.
-GOLDEN_WORLD_MODEL_SHA = "2f003785407e5189"
+GOLDEN_WORLD_MODEL_SHA = "5ffc6e700d236253"
 
 # The soul id (player-0000) is itself internal — note the extra ``player`` alt.
 _INTERNAL_ID = re.compile(r"\b(seed|life|npc|node|loc|fac|her|player)-\d")

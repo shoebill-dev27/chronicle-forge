@@ -17,6 +17,10 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, model_validator
 
 Mode = Literal["auto", "human", "script"]
+# Which player loop consumed the inputs. They are different languages — the
+# juncture loop reads option numbers, the routine loop reads commands — so a
+# recipe has to say which one wrote it or replay would feed one to the other.
+Loop = Literal["juncture", "routine"]
 
 
 class EngineVersionMismatch(Exception):
@@ -42,6 +46,10 @@ class Recipe(BaseModel):
     # written before L2 (no field) loads as ``False`` and replays byte-identically
     # under ``extra="forbid"``; ENGINE_VERSION is intentionally not bumped.
     social_memory: bool = False
+    # Additive and defaulted, like ``social_memory`` above: every recipe written
+    # before the routine loop existed loads as ``"juncture"`` under
+    # ``extra="forbid"`` and replays exactly as it always did.
+    loop: Loop = "juncture"
 
     @model_validator(mode="after")
     def _auto_implies_no_inputs(self) -> "Recipe":

@@ -30,8 +30,19 @@ History:
   registry of the year-spans people lived — kept after they end and after their
   actor dies. Worldgen output changed, so world identity changed again; no
   rendered lens did.
+- ``0.5.0-playable-routine`` — the human game loop became the routine loop.
+  ``chronicle-forge play`` with a person at the keyboard now runs
+  ``play.routine_session``: you are a real sixteen-year-old, you choose how to
+  spend your years, and time moves only when you say so (``--auto`` and
+  ``--script`` stay on the juncture loop). A recipe records which input
+  language wrote it (``loop``), since routine commands and option numbers
+  cannot be replayed through each other. And the founding generation is now
+  chronologically possible: a child's parent was over ``ADULT_AGE`` *in the
+  year that child was born*, so a sixteen-year-old founder is no longer handed
+  a ten-year-old. That last one changes worldgen output, and with it world
+  identity.
 """
 
 from __future__ import annotations
 
-ENGINE_VERSION = "0.4.0-routine"
+ENGINE_VERSION = "0.5.0-playable-routine"

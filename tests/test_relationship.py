@@ -277,19 +277,32 @@ def test_a_grandparent_is_ancestry_not_a_relationship():
 
 
 def test_both_grounds_are_reported_when_both_hold():
-    world, _life, actor, _n, _o = _world()
-    child = next(p for p in world.npcs if actor.id in p.lineage.parent_ids)
-    child.lifecycle.birth_year = world.current_year - config.ADULT_AGE
-    child.lifecycle.location_id = actor.lifecycle.location_id
-    rt.begin_routine(world, RoutineKind.WORK_WITH, target_person_id=child.id)
+    """A person who spends years beside their own parent. The first playable
+    person is a founder with no family, so this is the *second* life: somebody
+    born in the world, whose parent is still alive where they grew up."""
+    world, life, _actor, _n, _o = _world()
+    end_life(world, life, DeathCause.COMBAT)
+    _skip, second = advance_to_next_life(world)
+    me = pop.person_by_id(world, second.person_id)
+    parent = pop.person_by_id(world, me.lineage.parent_ids[0])
+    # Nobody moves, so a child grew up where their parent still is.
+    assert parent.alive and parent.lifecycle.location_id == me.lifecycle.location_id
+
+    listed = [
+        p.id
+        for p in pop.adults(world)
+        if p.lifecycle.location_id == me.lifecycle.location_id
+    ]
+    assert parent.id in listed
+    rt.begin_routine(world, RoutineKind.WORK_WITH, target_person_id=parent.id)
     rt.continue_routine(world, 5)
 
-    tie = _tie(world, actor, child)
+    tie = _tie(world, me, parent)
     assert set(tie.evidence) == {
         RelationshipEvidence.SHARED_ROUTINE,
         RelationshipEvidence.GENEALOGY,
     }
-    assert tie.genealogical_role is GenealogicalRole.CHILD
+    assert tie.genealogical_role is GenealogicalRole.PARENT
     assert tie.shared_years == 5
 
 

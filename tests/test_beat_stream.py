@@ -24,7 +24,7 @@ SEEDS = (1, 7, 42, 99, 123)
 # I-3 P-10 digest, frozen over SEEDS (see test_the_digest_hash_is_frozen).
 # Re-frozen 2026-09-09: `Change.sealed` now means the player really answered
 # that juncture, so an entrusted run no longer reports acts as chosen.
-GOLDEN_DIGEST_SHA = "3c1eddd025ba41bd"
+GOLDEN_DIGEST_SHA = "a47abe45cc74e352"
 
 # A run somebody played. Needed wherever `sealed` is the subject.
 PLAYED = ["1"] * 60

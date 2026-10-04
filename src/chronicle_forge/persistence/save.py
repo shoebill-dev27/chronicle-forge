@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 from typing import Sequence, Union
 
-from .schema import Mode, Recipe
+from .schema import Loop, Mode, Recipe
 from .version import ENGINE_VERSION
 
 PathLike = Union[str, Path]
@@ -25,6 +25,7 @@ def build_recipe(
     mode: Mode,
     inputs: Sequence[str],
     social_memory: bool = False,
+    loop: Loop = "juncture",
 ) -> Recipe:
     """A Recipe stamped with the current engine version."""
     return Recipe(
@@ -34,6 +35,7 @@ def build_recipe(
         mode=mode,
         inputs=list(inputs),
         social_memory=social_memory,
+        loop=loop,
     )
 
 

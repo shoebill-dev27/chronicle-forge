@@ -17,6 +17,7 @@ from typing import Union
 
 from ..models import World
 from ..play.human import null_writer, scripted_reader
+from ..play.routine_session import run_routine_world
 from ..play.session import run_human_world
 from .save import read_recipe
 from .schema import EngineVersionMismatch, Recipe
@@ -41,6 +42,13 @@ def replay_recipe(recipe: Recipe) -> World:
     """Reconstruct the world a recipe describes by re-running the engine. Gates
     the engine version first; refuses on mismatch (no fallback)."""
     _ensure_replayable(recipe)
+    if recipe.loop == "routine":
+        return run_routine_world(
+            recipe.seed,
+            reader=scripted_reader(recipe.inputs),
+            writer=null_writer,
+            max_year=recipe.max_year,
+        )
     return run_human_world(
         recipe.seed,
         reader=scripted_reader(recipe.inputs),

@@ -18,6 +18,7 @@ from pydantic import ValidationError
 
 from ..models import World
 from ..play.human import scripted_reader
+from ..play.routine_session import run_routine_world
 from ..play.session import run_human_world
 from .load import _ensure_replayable
 from .save import read_recipe
@@ -38,6 +39,15 @@ def replay(recipe: Recipe, *, writer: Writer) -> World:
     transcript to ``writer``. Gates the engine version first; refuses on
     mismatch (no fallback)."""
     _ensure_replayable(recipe)
+    if recipe.loop == "routine":
+        # Routine commands are not option numbers; only the loop that wrote
+        # them can read them back.
+        return run_routine_world(
+            recipe.seed,
+            reader=scripted_reader(recipe.inputs),
+            writer=writer,
+            max_year=recipe.max_year,
+        )
     return run_human_world(
         recipe.seed,
         reader=scripted_reader(recipe.inputs),

@@ -56,6 +56,72 @@ def test_the_world_begins_with_children_as_well_as_adults():
     assert min(n.lifecycle.age for n in _founders(w)) == ADULT_AGE
 
 
+# --- the founding generation could have had the children it has -------------
+
+SWEEP = range(300)  # a seed sweep: the invariant must not be a property of 99
+
+
+def _parent_age_at_birth(child, parent) -> int:
+    """How old the parent was in the year the child was born — chronology, not
+    how old either of them happens to be now."""
+    return child.lifecycle.birth_year - parent.lifecycle.birth_year
+
+
+def test_every_initial_child_has_a_parent_who_could_have_had_them():
+    for seed in SWEEP:
+        w = generate_world(seed=seed)
+        by_id = {n.id: n for n in w.npcs}
+        for child in [n for n in w.npcs if n.lineage.parent_ids]:
+            parent = by_id.get(child.lineage.parent_ids[0])
+            assert parent is not None, f"seed {seed}: {child.id} has no parent row"
+            gap = _parent_age_at_birth(child, parent)
+            assert (
+                gap > ADULT_AGE
+            ), f"seed {seed}: {parent.name} was {gap} when {child.name} was born"
+
+
+def test_no_parent_was_born_after_their_own_child():
+    for seed in SWEEP:
+        w = generate_world(seed=seed)
+        by_id = {n.id: n for n in w.npcs}
+        for child in [n for n in w.npcs if n.lineage.parent_ids]:
+            parent = by_id[child.lineage.parent_ids[0]]
+            assert parent.lifecycle.birth_year < child.lifecycle.birth_year
+
+
+def test_the_first_playable_person_is_given_no_children():
+    """The sixteen-year-old the player may be taken up as in year 0 cannot be
+    anyone's parent — they were not born when any of these children were. It
+    falls out of the chronology, not out of a special case for the player."""
+    for seed in SWEEP:
+        w = generate_world(seed=seed)
+        youngest_adult = min(_founders(w), key=lambda n: (n.lifecycle.age, n.id))
+        assert youngest_adult.lifecycle.age == ADULT_AGE
+        assert not [
+            n for n in w.npcs if youngest_adult.id in n.lineage.parent_ids
+        ], f"seed {seed}: the age-{ADULT_AGE} founder was handed a child"
+
+
+def test_the_founding_generation_always_contains_someone_old_enough():
+    """The eldest child is ADULT_AGE - 1, so the world needs a founder who was
+    over ADULT_AGE that many years ago, or there would be no valid parent and
+    nothing honest to fall back on."""
+    for seed in SWEEP:
+        w = generate_world(seed=seed)
+        eldest_child_birth = -(ADULT_AGE - 1)
+        assert any(
+            eldest_child_birth - n.lifecycle.birth_year > ADULT_AGE
+            for n in _founders(w)
+        ), f"seed {seed}"
+
+
+def test_initial_genealogy_is_deterministic():
+    a, b = generate_world(seed=7), generate_world(seed=7)
+    assert [(n.id, n.lineage.parent_ids) for n in a.npcs] == [
+        (n.id, n.lineage.parent_ids) for n in b.npcs
+    ]
+
+
 def test_single_wildcard_designed_for_n():
     w = generate_world(seed=99)
     assert len(w.wildcards.wildcards) == MVP_WILDCARD_COUNT

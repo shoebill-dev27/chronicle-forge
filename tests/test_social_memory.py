@@ -23,7 +23,7 @@ from chronicle_forge.reporting.social_memory import (
 from chronicle_forge.worldgen import generate_world
 
 # Frozen at GREEN: the Social Memory view's permanent seed42 regression guard.
-GOLDEN_SOCIAL_MEMORY_SHA = "c722b5c2f22ce8e9"
+GOLDEN_SOCIAL_MEMORY_SHA = "88d6b648b274fc38"
 
 # Note the extra ``player`` alternative: the soul id (player-0000) is internal.
 _INTERNAL_ID = re.compile(r"\b(seed|life|npc|node|loc|fac|her|player)-\d")

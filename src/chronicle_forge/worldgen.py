@@ -157,6 +157,14 @@ def generate_world(seed: int, max_year: int = config.WORLD_MAX_YEARS) -> World:
         if i == 0:
             # The world must contain somebody the player can be in year 0.
             age = config.ADULT_AGE
+        elif i == 1:
+            # And somebody old enough to have already fathered the eldest of
+            # the children below: a founding generation has to be able to have
+            # produced the children it has. The eldest is ``ADULT_AGE - 1``,
+            # and a parent was over ``ADULT_AGE`` when that child was born, so
+            # this founder is exactly old enough and the cohort below can
+            # always find a parent.
+            age = 2 * config.ADULT_AGE
         npcs.append(
             NPC(
                 id=ids.next("npc"),
@@ -173,13 +181,27 @@ def generate_world(seed: int, max_year: int = config.WORLD_MAX_YEARS) -> World:
         )
 
     # --- The children already alive: one per age below adulthood, each the
-    # child of one of the adults above. Without them the world has a hole where
-    # its young should be, and no sixteen-year-old for the player to become
-    # until the birth scaffold has run that many years (see population.py).
+    # child of an adult above who was old enough, when that child was born, to
+    # have been their parent. Without them the world has a hole where its young
+    # should be, and no sixteen-year-old for the player to become until the
+    # birth scaffold has run that many years (see population.py).
     # A child is born where their parent is — the same rule ``population``
     # applies to every birth afterwards.
+    founders = npcs[: config.MVP_NPC_COUNT]
     for age in range(config.ADULT_AGE - 1, -1, -1):
-        parent = rng.choice(npcs[: config.MVP_NPC_COUNT])
+        birth_year = -age
+        # Chronology, not present-day age: a parent is someone who was over
+        # ``ADULT_AGE`` **in the year this child was born**, which is the same
+        # rule ``population._births`` applies to every birth afterwards. The
+        # sixteen-year-old the player may be taken up as is excluded by the
+        # arithmetic rather than by a special case — they were not yet born
+        # when any of these children were.
+        eligible = [
+            p
+            for p in founders
+            if birth_year - p.lifecycle.birth_year > config.ADULT_AGE
+        ]
+        parent = rng.choice(eligible)
         npcs.append(
             NPC(
                 id=ids.next("npc"),

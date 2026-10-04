@@ -32,7 +32,7 @@ from chronicle_forge.persistence import (
 MAX_YEAR = config.WORLD_MAX_YEARS  # 200
 # first 16 hex of simulate_world(42, "opportunity").model_dump_json() — the P8
 # golden world. Reconstructing the seed42 EOF recipe must reproduce it forever.
-GOLDEN_SEED42_SHA = "6e733033832af5b2"
+GOLDEN_SEED42_SHA = "114f070ee0e09908"
 
 
 def _world_sha(world) -> str:
@@ -55,6 +55,7 @@ def test_recipe_locked_fields():
         "mode",
         "inputs",
         "social_memory",
+        "loop",
     }
 
 
@@ -104,6 +105,7 @@ def test_saved_json_schema_is_fixed_and_deterministic(tmp_path):
         "mode",
         "inputs",
         "social_memory",
+        "loop",
     }
 
 

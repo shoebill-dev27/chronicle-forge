@@ -14,6 +14,7 @@ from typing import Callable, Optional, Sequence
 from .. import config
 from ..persistence import build_recipe, recording_reader
 from .human import scripted_reader
+from .routine_session import run_routine_world
 from .session import run_human_world
 
 Reader = Callable[[], Optional[str]]
@@ -78,14 +79,20 @@ def play_and_record(
     returned recipe. Returns ``(world, recipe)``."""
     writer = writer or (lambda text: sys.stdout.write(text))
     base = build_reader(auto=auto, script_lines=script_lines)
-    if base is None:  # human path: make stdin explicit so it can be recorded
+    human = base is None
+    if human:  # make stdin explicit so it can be recorded
         base = _stdin_reader
     reader, captured = recording_reader(base)
-    world = run_human_world(seed, reader=reader, writer=writer, life_cap=life_cap)
+    # A person at a keyboard plays the new core: they are a sixteen-year-old
+    # choosing how to spend their years. ``--auto`` and ``--script`` stay on the
+    # juncture loop, which is what the auto-player and the goldens are.
+    run = run_routine_world if human else run_human_world
+    world = run(seed, reader=reader, writer=writer, life_cap=life_cap)
     recipe = build_recipe(
         seed=seed,
         max_year=world.max_year,
         mode=mode,
         inputs=captured,
+        loop="routine" if human else "juncture",
     )
     return world, recipe
