@@ -207,6 +207,11 @@ def _start(world, kind: RoutineKind, target_person_id: Optional[str]) -> str:
 def _continue(world, years: int) -> str:
     """Live the years. The clock is ``advance_year``, reached one year at a
     time inside ``continue_routine``; nothing here touches ``current_year``."""
+    # Who is doing the living is settled before the years run, because they
+    # may not survive them, and the dead still saw the year they died in.
+    me = view.current_person(world)
+    seen_from = len(world.causal_nodes)
+
     result = continue_routine(world, years)
     ran = result["years_run"]
     lines = [
@@ -216,6 +221,8 @@ def _continue(world, years: int) -> str:
             else "No year passes."
         )
     ]
+    if me is not None:
+        lines += _observed_lines(world, me.id, world.causal_nodes[seen_from:])
     if result["ended"]:
         reason = result["end_reason"]
         lines.append(_END_REASON.get(reason, "That way of living ended."))
@@ -224,6 +231,19 @@ def _continue(world, years: int) -> str:
             f"It lasted {total} year" + ("" if total == 1 else "s") + " in all."
         )
     return "\n".join(lines) + "\n"
+
+
+def _observed_lines(world, person_id: str, nodes) -> List[str]:
+    """What the years looked like from where the player stood.
+
+    The world is not narrated to them and nothing is explained: each line is
+    an event that happened where they were. Why it happened is the engine's
+    to know, and it is not said here or anywhere the player can read.
+    """
+    events = view.observed_events(world, person_id, nodes)
+    if not events:
+        return []
+    return [""] + [f"  Year {e.year}. {e.text}." for e in events] + [""]
 
 
 def handle(world, line: str) -> str:

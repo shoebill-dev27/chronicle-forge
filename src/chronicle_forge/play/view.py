@@ -24,7 +24,7 @@ from .. import population as pop
 from .. import relationship as rel
 from .. import routine as rt
 from ..enums import RoutineEndReason, RoutineKind
-from ..models import NPC, Routine, World
+from ..models import NPC, CausalNode, Routine, World
 
 
 @dataclass(frozen=True)
@@ -62,6 +62,14 @@ class TieView:
     kinds: Tuple[RoutineKind, ...]
     parent_or_child: Optional[str]  # "parent" / "child", from the player's side
     alive: bool
+
+
+@dataclass(frozen=True)
+class EventView:
+    """Something that happened in the world, as this person could have seen it."""
+
+    year: int
+    text: str
 
 
 @dataclass(frozen=True)
@@ -177,3 +185,43 @@ def ties(world: World, person_id: str) -> List[TieView]:
             )
         )
     return out
+
+
+def _event_place(world: World, node: CausalNode) -> Optional[str]:
+    """Where this event happened, if the world actually knows.
+
+    Two kinds of answer would count, and only the second is currently ever
+    available: an event may carry its own ``location_id``, which no emitter in
+    the engine sets today, or it may name a tracked person, who is somewhere.
+    Nothing else is guessed. An event whose only actors are factions or
+    wildcards has no location anywhere in the world state, so it has none here
+    either, and is shown to nobody rather than to everybody.
+    """
+    if node.location_id is not None:
+        return node.location_id
+    for actor_id in node.actors:
+        person = pop.person_by_id(world, actor_id)
+        if person is not None:
+            return person.lifecycle.location_id
+    return None
+
+
+def observed_events(
+    world: World, person_id: str, nodes: List[CausalNode]
+) -> List[EventView]:
+    """The ones of ``nodes`` this person was in a position to see.
+
+    The test is the only one the world can support: it happened where they
+    were. It is deliberately not a feed of everything — a war between two
+    factions is real and is not shown, because the world does not record
+    where a war was.
+    """
+    person = pop.person_by_id(world, person_id)
+    if person is None:
+        return []
+    here = person.lifecycle.location_id
+    return [
+        EventView(year=node.year, text=node.title)
+        for node in nodes
+        if _event_place(world, node) == here and node.title
+    ]
