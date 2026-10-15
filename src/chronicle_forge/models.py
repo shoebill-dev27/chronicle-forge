@@ -20,6 +20,7 @@ from .enums import (
     HeritageType,
     LocationType,
     ManifestTargetKind,
+    KnowledgeSource,
     MemoryType,
     NPCTier,
     PlayerInteraction,
@@ -289,6 +290,29 @@ class Memory(BaseModel):
     timestamp: int = 0  # world year
 
 
+class PersonKnowledge(BaseModel):
+    """That one tracked person knows one thing that happened.
+
+    Discrete, and deliberately so: there is ``knows`` and there is ``does
+    not know``, with no confidence, certainty, intensity, importance or
+    valence. Those are readings, and this record is not a reading — it is a
+    fact about who was present for what.
+
+    ``event_id`` is a reference, never a copy. The event keeps its own title,
+    year, place and actors in ``World.causal_nodes``; duplicating any of that
+    here would create a second truth that could disagree with the first.
+
+    Knowledge belongs to the **person**, not to the player. The identity of a
+    row is the ``(person_id, event_id)`` pair — there is no surrogate id,
+    because a surrogate would let the same person know the same thing twice.
+    """
+
+    person_id: str
+    event_id: str  # a CausalNode id; the fact itself stays where it is
+    learned_year: int  # the year they first knew, and it never moves again
+    source: KnowledgeSource = KnowledgeSource.OBSERVED
+
+
 # --- Causal graph (core, section 9) ------------------------------------
 
 
@@ -421,6 +445,10 @@ class World(BaseModel):
     # Every routine ever lived, by anyone, still here after it ended.
     routines: list[Routine] = Field(default_factory=list)
     memories: list[Memory] = Field(default_factory=list)
+    # What individually tracked persons know, append-only and kept after they
+    # die — the same shape as ``npcs`` and ``routines``, because what somebody
+    # knew is part of history and not a property of whoever is alive.
+    knowledge: list[PersonKnowledge] = Field(default_factory=list)
     seeds: list[CausalSeed] = Field(default_factory=list)
     causal_nodes: list[CausalNode] = Field(default_factory=list)
     heritage: list[HeritageNode] = Field(default_factory=list)

@@ -104,6 +104,17 @@ class MemoryType(str, Enum):
     HUMILIATED = "humiliated"
 
 
+class KnowledgeSource(str, Enum):
+    """How a person came to know something.
+
+    One member, because one way of learning exists: you were there. Telling,
+    teaching and overhearing are a later unit, and each would be a member here
+    rather than a second kind of knowledge.
+    """
+
+    OBSERVED = "observed"
+
+
 class CausalEdgeKind(str, Enum):
     ENABLE = "enable"
     TRIGGER = "trigger"

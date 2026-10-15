@@ -35,6 +35,7 @@ from ..routine import (
     change_routine,
     continue_routine,
 )
+from ..knowledge import learn
 from ..worldgen import generate_world
 from . import view
 
@@ -222,7 +223,7 @@ def _continue(world, years: int) -> str:
         )
     ]
     if me is not None:
-        lines += _observed_lines(world, me.id, world.causal_nodes[seen_from:])
+        lines += _observe(world, me.id, world.causal_nodes[seen_from:])
     if result["ended"]:
         reason = result["end_reason"]
         lines.append(_END_REASON.get(reason, "That way of living ended."))
@@ -233,14 +234,20 @@ def _continue(world, years: int) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _observed_lines(world, person_id: str, nodes) -> List[str]:
-    """What the years looked like from where the player stood.
+def _observe(world, person_id: str, nodes) -> List[str]:
+    """What the years looked like from where the player stood — and, by the
+    same act, what this person now knows.
 
-    The world is not narrated to them and nothing is explained: each line is
-    an event that happened where they were. Why it happened is the engine's
-    to know, and it is not said here or anywhere the player can read.
+    Reporting and knowing are deliberately not separable here: an event shown
+    to the player is an event their body was present for, so it is written
+    into ``world.knowledge`` as this person's, and nothing is ever shown that
+    they do not thereby know. The page itself explains nothing — each line is
+    an event that happened where they were. Why it happened is the engine's to
+    know, and it is not said here or anywhere the player can read.
     """
     events = view.observed_events(world, person_id, nodes)
+    for event in events:
+        learn(world, person_id, event.event_id)
     if not events:
         return []
     return [""] + [f"  Year {e.year}. {e.text}." for e in events] + [""]

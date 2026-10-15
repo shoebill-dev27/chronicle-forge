@@ -66,8 +66,14 @@ class TieView:
 
 @dataclass(frozen=True)
 class EventView:
-    """Something that happened in the world, as this person could have seen it."""
+    """Something that happened in the world, as this person could have seen it.
 
+    ``event_id`` travels for the same reason a target's id does: what the
+    player saw has to be nameable afterwards, so that seeing it can be
+    recorded as knowing it. It is not what they read.
+    """
+
+    event_id: str
     year: int
     text: str
 
@@ -221,7 +227,7 @@ def observed_events(
         return []
     here = person.lifecycle.location_id
     return [
-        EventView(year=node.year, text=node.title)
+        EventView(event_id=node.id, year=node.year, text=node.title)
         for node in nodes
         if _event_place(world, node) == here and node.title
     ]

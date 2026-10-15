@@ -27,7 +27,7 @@ import re
 from chronicle_forge.autoplay import simulate_world
 
 # Frozen goldens P14 must NOT move (it adds files only). Main 9ad743e set.
-GOLDEN_WORLD_SHA = "114f070ee0e09908"
+GOLDEN_WORLD_SHA = "7f934e5a68866c12"
 GOLDEN_OBSERVATORY_SHA = "204439a87aa8bf24"
 GOLDEN_SOCIAL_MEMORY_SHA = "88d6b648b274fc38"
 GOLDEN_WORLD_MODEL_SHA = "5ffc6e700d236253"
