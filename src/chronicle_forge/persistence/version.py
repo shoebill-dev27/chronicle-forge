@@ -41,8 +41,16 @@ History:
   year that child was born*, so a sixteen-year-old founder is no longer handed
   a ten-year-old. That last one changes worldgen output, and with it world
   identity.
+- ``0.6.0-knowledge-transmission`` — a person can tell somebody what they
+  know. The routine loop gained ``tell`` and ``tell <n>``, which give the
+  current ``WORK_WITH`` / ``ASSOCIATE_WITH`` target a ``PersonKnowledge`` row
+  with ``source=TOLD`` and its first teller (``learned_from_person_id``). Under
+  0.5.0 the same two lines were refused as unknown commands, so a recipe
+  holding them now replays into a different ``World.knowledge``: same command
+  text, different meaning, and that is the replay boundary this marks.
+  Worldgen and every golden are unchanged.
 """
 
 from __future__ import annotations
 
-ENGINE_VERSION = "0.5.0-playable-routine"
+ENGINE_VERSION = "0.6.0-knowledge-transmission"

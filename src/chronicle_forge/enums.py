@@ -107,12 +107,13 @@ class MemoryType(str, Enum):
 class KnowledgeSource(str, Enum):
     """How a person came to know something.
 
-    One member, because one way of learning exists: you were there. Telling,
-    teaching and overhearing are a later unit, and each would be a member here
+    Two ways exist: you were there, or somebody who knew told you. Teaching,
+    overhearing and reading are not modelled; each would be a member here
     rather than a second kind of knowledge.
     """
 
     OBSERVED = "observed"
+    TOLD = "told"
 
 
 class CausalEdgeKind(str, Enum):

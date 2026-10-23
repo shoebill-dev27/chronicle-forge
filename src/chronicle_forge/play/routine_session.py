@@ -29,13 +29,14 @@ from ..life import begin_life
 from ..macro import time_skip
 from ..population import NoSuccessor
 from ..routine import (
+    PERSON_KINDS,
     RoutineRefused,
     active_routine,
     begin_routine,
     change_routine,
     continue_routine,
 )
-from ..knowledge import learn
+from ..knowledge import knowledge_of, learn, tell
 from ..worldgen import generate_world
 from . import view
 
@@ -51,6 +52,8 @@ HELP = """commands
   work with <n>           spend them working beside someone
   associate with <n>      spend them in someone's company
   continue [years]        live the years (1-%d, default 1)
+  tell                    what you could tell the person you are with
+  tell <n>                tell them that
   status                  where you are, who is here, how you live
   history                 the years you have spent, and with whom
   help                    this list
@@ -253,10 +256,48 @@ def _observe(world, person_id: str, nodes) -> List[str]:
     return [""] + [f"  Year {e.year}. {e.text}." for e in events] + [""]
 
 
+def _tell(world, rest: str) -> str:
+    """Tell the person this life is shared with something you know.
+
+    The recipient is never chosen: it is whoever the current routine is with,
+    so ``work at`` and an unsettled life have nobody to tell. Bare ``tell``
+    lists; ``tell <n>`` tells. Neither moves the clock or the routine.
+    """
+    me = view.current_person(world)
+    routine = active_routine(world)
+    if me is None or routine is None or routine.kind not in PERSON_KINDS:
+        raise RoutineRefused(
+            "There is nobody to tell. You can tell someone you work with or keep "
+            "company with."
+        )
+    them = view._name(world, routine.target_person_id)
+    facts = view.tellable(world, me.id, routine.target_person_id)
+    text = rest.strip()
+    if not text:
+        if not knowledge_of(world, me.id):
+            return (
+                "You know of nothing that has happened, so there is nothing to tell.\n"
+            )
+        if not facts:
+            return f"{them} already knows everything you know.\n"
+        lines = [f"Things you can tell {them}:"]
+        lines += [f"  [{i}] Year {f.year}. {f.text}." for i, f in enumerate(facts, 1)]
+        return "\n".join(lines) + "\n"
+    try:
+        n = int(text)
+    except ValueError:
+        raise RoutineRefused(f"{text!r} is not one of the listed numbers")
+    if not 1 <= n <= len(facts):
+        raise RoutineRefused(f"nothing is listed as [{n}]")
+    fact = facts[n - 1]
+    tell(world, me.id, routine.target_person_id, fact.event_id)
+    return f"You tell {them}: year {fact.year}, {fact.text}.\n"
+
+
 def handle(world, line: str) -> str:
     """Run one command against the world. Returns what the player reads.
 
-    ``status`` and ``history`` move no time; only ``continue`` does, and only
+    ``status``, ``history`` and ``tell`` move no time; only ``continue`` does, and only
     through the routine domain.
     """
     text = " ".join(line.strip().lower().split())
@@ -281,6 +322,8 @@ def handle(world, line: str) -> str:
             RoutineKind.ASSOCIATE_WITH,
             _target(world, text[len("associate with") :]),
         )
+    if text == "tell" or text.startswith("tell "):
+        return _tell(world, text[len("tell") :])
     if text == "continue" or text.startswith("continue "):
         return _continue(world, _parse_years(text[len("continue") :]))
     raise RoutineRefused(f"{text!r} is not something you can do. Try 'help'.")

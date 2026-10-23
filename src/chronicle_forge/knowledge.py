@@ -1,4 +1,4 @@
-"""What a person knows: discrete, person-owned, and only ever first-hand.
+"""What a person knows: discrete, person-owned, seen or told.
 
 One kind of truth lives here — *this tracked person knows that this thing
 happened*. Nothing more. There is no confidence, no certainty, no intensity,
@@ -15,13 +15,13 @@ Three rules shape it.
 * **It is a reference, never a copy.** A row names a ``CausalNode`` by id. The
   event's own title, year, place and actors stay in ``world.causal_nodes``,
   where they are already true.
-* **Only being there establishes it.** A person knows an event because the
-  observation rule (``play.view.observed_events``) found them where it
-  happened. Being somebody's parent does not transmit knowledge. Spending
-  twenty years beside them does not either. Telling, teaching and overhearing
-  are a later unit, and this module is written so that adding them means
-  adding a :class:`~.enums.KnowledgeSource` member — not a second notion of
-  what knowing is.
+* **Being there, or being told, establishes it — nothing else.** A person
+  knows an event because the observation rule (``play.view.observed_events``)
+  found them where it happened, or because somebody who knew it chose to tell
+  them (:func:`tell`). Being somebody's parent does not transmit knowledge.
+  Spending twenty years beside them does not either: telling is an act, and
+  only the act transmits. The row keeps who told whom, so a fact's path from
+  whoever saw it is followed through the registry, never stored twice.
 
 What is stored is the registry; what is derived is nothing. Unlike
 :mod:`relationship` and :mod:`routine_origin`, this *cannot* be a projection:
@@ -85,12 +85,14 @@ def learn(
     person_id: str,
     event_id: str,
     source: KnowledgeSource = KnowledgeSource.OBSERVED,
+    learned_from_person_id: Optional[str] = None,
 ) -> Optional[PersonKnowledge]:
     """Record that this person now knows this event, if they did not already.
 
     Returns the new row, or ``None`` when they already knew — learning the
-    same thing twice is not two pieces of knowledge, and the year they first
-    knew is not overwritten by the second time they saw it.
+    same thing twice is not two pieces of knowledge, and how they first came to
+    know — the year, the source, the teller — is never overwritten by a later
+    seeing or telling.
     """
     if person_by_id(world, person_id) is None:
         raise KnowledgeRefused(f"{person_id} is not in the registry")
@@ -110,6 +112,38 @@ def learn(
             event.year if source is KnowledgeSource.OBSERVED else world.current_year
         ),
         source=source,
+        learned_from_person_id=learned_from_person_id,
     )
     world.knowledge.append(row)
     return row
+
+
+def tell(
+    world: World, teller_id: str, recipient_id: str, event_id: str
+) -> Optional[PersonKnowledge]:
+    """One living person tells another living person about something they know.
+
+    The only thing it changes is that the recipient now knows a fact that
+    already existed, and from whom. No time passes, no seed is planted, no
+    tie is touched — and nothing about trust, belief or importance is implied,
+    because the engine knows none of those. Returns the new row, or ``None``
+    when the recipient already knew: their first way of knowing stands.
+
+    Who may be told is the caller's question. This only refuses what would
+    not be true: a teller who does not know it, or people who are not there.
+    """
+    for person_id in (teller_id, recipient_id):
+        person = person_by_id(world, person_id)
+        if person is None or not person.alive:
+            raise KnowledgeRefused(f"{person_id} is not a living person")
+    if teller_id == recipient_id:
+        raise KnowledgeRefused("nobody tells a thing to themselves")
+    if not knows(world, teller_id, event_id):
+        raise KnowledgeRefused(f"{teller_id} does not know {event_id}")
+    return learn(
+        world,
+        recipient_id,
+        event_id,
+        KnowledgeSource.TOLD,
+        learned_from_person_id=teller_id,
+    )

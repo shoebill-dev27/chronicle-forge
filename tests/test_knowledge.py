@@ -102,7 +102,9 @@ def test_knowing_is_a_reference_and_never_a_copy():
             "event_id",
             "learned_year",
             "source",
+            "learned_from_person_id",
         }
+        assert row.learned_from_person_id is None  # nobody told them; they saw
 
 
 def test_the_record_holds_no_reading_of_any_kind():

@@ -20,6 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
+from .. import knowledge as kn
 from .. import population as pop
 from .. import relationship as rel
 from .. import routine as rt
@@ -230,4 +231,16 @@ def observed_events(
         EventView(event_id=node.id, year=node.year, text=node.title)
         for node in nodes
         if _event_place(world, node) == here and node.title
+    ]
+
+
+def tellable(world: World, person_id: str, recipient_id: str) -> List[EventView]:
+    """What this person knows that the recipient does not, in the order it
+    happened. Only their own knowledge is offered — never the engine's — and a
+    fact the recipient already knows is left out, because telling it again
+    would change nothing."""
+    return [
+        EventView(event_id=node.id, year=node.year, text=node.title)
+        for node in kn.known_events(world, person_id)
+        if not kn.knows(world, recipient_id, node.id)
     ]

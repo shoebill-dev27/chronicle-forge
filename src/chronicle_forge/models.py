@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Annotated, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from .enums import (
     ActivationMode,
@@ -305,12 +305,28 @@ class PersonKnowledge(BaseModel):
     Knowledge belongs to the **person**, not to the player. The identity of a
     row is the ``(person_id, event_id)`` pair — there is no surrogate id,
     because a surrogate would let the same person know the same thing twice.
+
+    The row records how the person *first* came to know: ``source`` and, when
+    told, who told them. Being told again, or seeing it after being told,
+    changes nothing. The teller is a stable person reference, never a name, so
+    a chain of telling is followed row by row back to whoever was there.
     """
 
     person_id: str
     event_id: str  # a CausalNode id; the fact itself stays where it is
     learned_year: int  # the year they first knew, and it never moves again
     source: KnowledgeSource = KnowledgeSource.OBSERVED
+    learned_from_person_id: Optional[str] = None  # the teller; TOLD only
+
+    @model_validator(mode="after")
+    def _a_teller_exactly_when_told(self) -> "PersonKnowledge":
+        if (self.source is KnowledgeSource.TOLD) != (
+            self.learned_from_person_id is not None
+        ):
+            raise ValueError("a teller is recorded exactly when the source is TOLD")
+        if self.learned_from_person_id == self.person_id:
+            raise ValueError("nobody learns a thing by telling it to themselves")
+        return self
 
 
 # --- Causal graph (core, section 9) ------------------------------------
