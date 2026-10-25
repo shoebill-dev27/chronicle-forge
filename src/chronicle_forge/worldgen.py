@@ -31,6 +31,7 @@ from .models import (
     WorldTheme,
 )
 from .rng import DeterministicRNG, IdFactory
+from .spatial import is_residential
 
 # Fictional syllable pools for procedural names (no real-world correspondence).
 _NAME_PREFIXES = ["Ka", "Ve", "Tor", "Lyn", "Mor", "Sel", "Bra", "Dun", "Ash", "Wre"]
@@ -130,11 +131,11 @@ def generate_world(seed: int, max_year: int = config.WORLD_MAX_YEARS) -> World:
         Location(id=ids.next("loc"), type=LocationType.FIELD, name="Thornreach"),
     ]
     locations = [village, dungeon, *fields]
-    # Where people live. The dungeon is a place to go, not a place to be from,
-    # so it is not a home. Homes are handed out by index rather than drawn from
-    # ``rng``: the assignment is just as deterministic and it leaves every other
-    # draw in this function on the stream it was already on.
-    homes = [loc for loc in locations if loc.type is not LocationType.DUNGEON]
+    # Where people live (``spatial.is_residential``: not the dungeon). Homes are
+    # handed out by index rather than drawn from ``rng``: the assignment is just
+    # as deterministic and it leaves every other draw in this function on the
+    # stream it was already on.
+    homes = [loc for loc in locations if is_residential(loc)]
 
     # --- Factions ---
     factions = [

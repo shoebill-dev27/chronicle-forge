@@ -26,7 +26,7 @@ from .. import config
 from .. import population as pop
 from ..enums import RoutineEndReason, RoutineKind
 from ..life import begin_life
-from ..macro import time_skip
+from ..macro import advance_year, time_skip
 from ..population import NoSuccessor
 from ..routine import (
     PERSON_KINDS,
@@ -37,6 +37,7 @@ from ..routine import (
     continue_routine,
 )
 from ..knowledge import knowledge_of, learn, tell
+from ..spatial import relocate
 from ..worldgen import generate_world
 from . import view
 
@@ -54,6 +55,8 @@ HELP = """commands
   continue [years]        live the years (1-%d, default 1)
   tell                    what you could tell the person you are with
   tell <n>                tell them that
+  move                    the places you could live
+  move <n>                leave for one of them (takes a year)
   status                  where you are, who is here, how you live
   history                 the years you have spent, and with whom
   help                    this list
@@ -64,6 +67,7 @@ _END_REASON = {
     RoutineEndReason.ACTOR_DIED: "You died.",
     RoutineEndReason.WORLD_ENDED: "The chronicle reaches its end here.",
     RoutineEndReason.PLAYER_CHANGED: "You left that life behind.",
+    RoutineEndReason.RELOCATED: "You left that life behind with the place.",
 }
 
 _KIND_PHRASE = {
@@ -220,7 +224,7 @@ def _continue(world, years: int) -> str:
     ran = result["years_run"]
     lines = [
         (
-            f"{ran} year" + ("" if ran == 1 else "s") + " pass."
+            (f"{ran} year passes." if ran == 1 else f"{ran} years pass.")
             if ran
             else "No year passes."
         )
@@ -294,11 +298,60 @@ def _tell(world, rest: str) -> str:
     return f"You tell {them}: year {fact.year}, {fact.text}.\n"
 
 
+def _move(world, rest: str) -> str:
+    """Leave where you live for another place a person may live.
+
+    Bare ``move`` lists; ``move <n>`` goes. Going ends the way you lived here
+    and costs one year — ``advance_year``, once — and that year's events are
+    seen from where you arrive. Who lives there is not said until you are.
+    """
+    me = view.current_person(world)
+    if me is None:
+        raise RoutineRefused("You are no one at the moment.")
+    places = view.places(world)
+    text = rest.strip()
+    if not text:
+        lines = ["Places you could live:"]
+        lines += [
+            f"  [{i}] {p.name}" + (" (you live here)" if p.here else "")
+            for i, p in enumerate(places, start=1)
+        ]
+        return "\n".join(lines) + "\n"
+    try:
+        n = int(text)
+    except ValueError:
+        raise RoutineRefused(f"{text!r} is not one of the listed numbers")
+    if not 1 <= n <= len(places):
+        raise RoutineRefused(f"no place is listed as [{n}]")
+    place = places[n - 1]
+    if place.here:
+        raise RoutineRefused(f"You already live in {place.name}.")
+    if world.current_year >= world.max_year:
+        raise RoutineRefused("No year is left to move in.")
+
+    origin = view._location_name(world, me.lifecycle.location_id)
+    had_routine = active_routine(world) is not None
+    relocate(world, me.id, place.location_id)
+    seen_from = len(world.causal_nodes)
+    advance_year(world)
+
+    lines = [f"You leave {origin} and settle in {place.name}."]
+    if had_routine:
+        lines.append(_END_REASON[RoutineEndReason.RELOCATED])
+    lines.append("1 year passes.")
+    lines += _observe(world, me.id, world.causal_nodes[seen_from:])
+    if not me.alive:
+        lines.append(_END_REASON[RoutineEndReason.ACTOR_DIED])
+    elif world.current_year >= world.max_year:
+        lines.append(_END_REASON[RoutineEndReason.WORLD_ENDED])
+    return "\n".join(lines) + "\n"
+
+
 def handle(world, line: str) -> str:
     """Run one command against the world. Returns what the player reads.
 
-    ``status``, ``history`` and ``tell`` move no time; only ``continue`` does, and only
-    through the routine domain.
+    ``status``, ``history`` and ``tell`` move no time; ``move`` takes one year
+    and ``continue`` the years asked for, both only through ``advance_year``.
     """
     text = " ".join(line.strip().lower().split())
     if not text:
@@ -324,6 +377,8 @@ def handle(world, line: str) -> str:
         )
     if text == "tell" or text.startswith("tell "):
         return _tell(world, text[len("tell") :])
+    if text == "move" or text.startswith("move "):
+        return _move(world, text[len("move") :])
     if text == "continue" or text.startswith("continue "):
         return _continue(world, _parse_years(text[len("continue") :]))
     raise RoutineRefused(f"{text!r} is not something you can do. Try 'help'.")

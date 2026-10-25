@@ -24,6 +24,7 @@ from .. import knowledge as kn
 from .. import population as pop
 from .. import relationship as rel
 from .. import routine as rt
+from .. import spatial
 from ..enums import RoutineEndReason, RoutineKind
 from ..models import NPC, CausalNode, Routine, World
 
@@ -77,6 +78,16 @@ class EventView:
     event_id: str
     year: int
     text: str
+
+
+@dataclass(frozen=True)
+class PlaceView:
+    """A place a person may live. Its id travels so a command can name it; who
+    lives there, and what happened there, is not part of it."""
+
+    location_id: str
+    name: str
+    here: bool  # the player lives here now
 
 
 @dataclass(frozen=True)
@@ -163,6 +174,17 @@ def nearby(world: World) -> List[PersonView]:
         if p.id != person.id and p.lifecycle.location_id == person.lifecycle.location_id
     ]
     return [_person_view(world, p) for p in sorted(here, key=lambda p: p.id)]
+
+
+def places(world: World) -> List[PlaceView]:
+    """Every place a person may live, in the world's fixed order, so a number
+    names the same place wherever the player stands."""
+    person = current_person(world)
+    here = person.lifecycle.location_id if person is not None else None
+    return [
+        PlaceView(location_id=loc.id, name=loc.name, here=loc.id == here)
+        for loc in spatial.residential_locations(world)
+    ]
 
 
 def history(world: World, person_id: str) -> List[RoutineView]:

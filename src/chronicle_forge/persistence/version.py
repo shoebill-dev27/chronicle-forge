@@ -49,8 +49,15 @@ History:
   holding them now replays into a different ``World.knowledge``: same command
   text, different meaning, and that is the replay boundary this marks.
   Worldgen and every golden are unchanged.
+- ``0.7.0-movement`` — where the player lives is theirs to change. The routine
+  loop gained ``move`` (list the places a person may live) and ``move <n>``
+  (relocate there). Relocating closes the open routine (``RELOCATED``), changes
+  the person's ``location_id``, and costs exactly one ``advance_year``, whose
+  events are seen from the new place. Under 0.6.0 those lines were refused as
+  unknown commands, so a recipe holding them now replays into a different
+  world. Nobody else moves; worldgen and every golden are unchanged.
 """
 
 from __future__ import annotations
 
-ENGINE_VERSION = "0.6.0-knowledge-transmission"
+ENGINE_VERSION = "0.7.0-movement"

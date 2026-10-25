@@ -104,9 +104,7 @@ def _check_target(world: World, actor: NPC, target_person_id: Optional[str]) -> 
     if age_of(world, target) < config.ADULT_AGE:
         raise RoutineRefused(f"{target.id} is a child")
     if target.lifecycle.location_id != actor.lifecycle.location_id:
-        raise RoutineRefused(
-            f"{target.id} is not where {actor.id} is — there is no travel yet"
-        )
+        raise RoutineRefused(f"{target.id} is not where {actor.id} is")
     return target
 
 

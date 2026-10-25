@@ -69,9 +69,9 @@ class Lifecycle(BaseModel):
     # Where this person is now: an id from ``World.locations``. Required —
     # a tracked person is always somewhere, and a person with no place could
     # not be worked beside, so "nowhere" is not a state the world may hold.
-    # There is no movement system yet, so this is where they were born or
-    # founded and where they die; their *past* places are held by their
-    # routines, not here.
+    # It changes only through ``spatial.relocate`` (the player's ``move``);
+    # nobody else moves. Their *past* places are held by their routines, not
+    # here.
     location_id: str
 
 

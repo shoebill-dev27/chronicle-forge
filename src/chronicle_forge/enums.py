@@ -201,6 +201,9 @@ class RoutineEndReason(str, Enum):
     TARGET_DIED = "target_died"
     ACTOR_DIED = "actor_died"
     WORLD_ENDED = "world_ended"
+    # The actor left the place it was lived in. Not PLAYER_CHANGED: changing
+    # how you live and leaving where you live are different things to know.
+    RELOCATED = "relocated"
 
 
 class DeathCause(str, Enum):
