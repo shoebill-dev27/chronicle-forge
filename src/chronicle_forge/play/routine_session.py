@@ -55,6 +55,8 @@ HELP = """commands
   continue [years]        live the years (1-%d, default 1)
   tell                    what you could tell the person you are with
   tell <n>                tell them that
+  ask                     who here you could ask
+  ask <n>                 what they know of what has happened
   move                    the places you could live
   move <n>                leave for one of them (takes a year)
   status                  where you are, who is here, how you live
@@ -298,6 +300,43 @@ def _tell(world, rest: str) -> str:
     return f"You tell {them}: year {fact.year}, {fact.text}.\n"
 
 
+def _ask(world, rest: str) -> str:
+    """Ask somebody here what they know of what has happened.
+
+    Bare ``ask`` lists who is here, numbered as ``status`` numbers them; ``ask
+    <n>`` hears them out. Only what that person knows is said, and how they
+    first came to know it. Asking takes no time and teaches nobody anything —
+    not even the asker: what the player reads here, the person they are does
+    not thereby know.
+    """
+    if view.current_person(world) is None:
+        raise RoutineRefused("You are no one at the moment.")
+    if not rest.strip():
+        people = view.nearby(world)
+        if not people:
+            return "No grown person is here to ask.\n"
+        lines = ["People you could ask:"]
+        lines += [f"  [{i}] {p.name}, {p.age}" for i, p in enumerate(people, 1)]
+        return "\n".join(lines) + "\n"
+    person_id = _target(world, rest)
+    them = view._name(world, person_id)
+    known = view.recollections(world, person_id)
+    if not known:
+        return f"{them} knows of nothing that has happened.\n"
+    lines = [f"{them} remembers:"]
+    for r in known:
+        lines.append(f"  Year {r.year}. {r.text}.")
+        if r.teller_name is None:
+            lines.append("    Saw it happen.")
+        else:
+            age = f", then {r.teller_age}," if r.teller_age is not None else ""
+            lines.append(
+                f"    Heard of it in year {r.learned_year} from "
+                f"{r.teller_name}{age} in {r.told_in}."
+            )
+    return "\n".join(lines) + "\n"
+
+
 def _move(world, rest: str) -> str:
     """Leave where you live for another place a person may live.
 
@@ -350,7 +389,7 @@ def _move(world, rest: str) -> str:
 def handle(world, line: str) -> str:
     """Run one command against the world. Returns what the player reads.
 
-    ``status``, ``history`` and ``tell`` move no time; ``move`` takes one year
+    ``status``, ``history``, ``tell`` and ``ask`` move no time; ``move`` takes one year
     and ``continue`` the years asked for, both only through ``advance_year``.
     """
     text = " ".join(line.strip().lower().split())
@@ -377,6 +416,8 @@ def handle(world, line: str) -> str:
         )
     if text == "tell" or text.startswith("tell "):
         return _tell(world, text[len("tell") :])
+    if text == "ask" or text.startswith("ask "):
+        return _ask(world, text[len("ask") :])
     if text == "move" or text.startswith("move "):
         return _move(world, text[len("move") :])
     if text == "continue" or text.startswith("continue "):

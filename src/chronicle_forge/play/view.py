@@ -81,6 +81,25 @@ class EventView:
 
 
 @dataclass(frozen=True)
+class RecollectionView:
+    """One thing a person knows, and how they first came to know it.
+
+    Only what their own row says: the event, and either that they saw it or
+    the year, teller and place of the telling. The teller's age is read from
+    the teller's own birth year by id, so a namesake can never lend theirs.
+    Nothing says why it happened, who caused it, or who the teller was to
+    anybody.
+    """
+
+    year: int
+    text: str
+    learned_year: int
+    teller_name: Optional[str]  # None: they saw it themselves
+    teller_age: Optional[int]  # the teller's age in learned_year
+    told_in: Optional[str]  # the place they were told
+
+
+@dataclass(frozen=True)
 class PlaceView:
     """A place a person may live. Its id travels so a command can name it; who
     lives there, and what happened there, is not part of it."""
@@ -254,6 +273,36 @@ def observed_events(
         for node in nodes
         if _event_place(world, node) == here and node.title
     ]
+
+
+def recollections(world: World, person_id: str) -> List[RecollectionView]:
+    """What this person knows, in the order they came to know it. Their own
+    rows only — never the engine's events, nor anybody else's knowledge."""
+    nodes = {n.id: n for n in world.causal_nodes}
+    out: List[RecollectionView] = []
+    for row in kn.knowledge_of(world, person_id):
+        node = nodes[row.event_id]
+        teller = (
+            pop.person_by_id(world, row.learned_from_person_id)
+            if row.learned_from_person_id is not None
+            else None
+        )
+        born = teller.lifecycle.birth_year if teller is not None else None
+        out.append(
+            RecollectionView(
+                year=node.year,
+                text=node.title,
+                learned_year=row.learned_year,
+                teller_name=teller.name if teller is not None else None,
+                teller_age=row.learned_year - born if born is not None else None,
+                told_in=(
+                    _location_name(world, row.told_at_location_id)
+                    if row.told_at_location_id is not None
+                    else None
+                ),
+            )
+        )
+    return out
 
 
 def tellable(world: World, person_id: str, recipient_id: str) -> List[EventView]:

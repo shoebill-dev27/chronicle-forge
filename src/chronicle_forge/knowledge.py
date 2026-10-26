@@ -86,12 +86,13 @@ def learn(
     event_id: str,
     source: KnowledgeSource = KnowledgeSource.OBSERVED,
     learned_from_person_id: Optional[str] = None,
+    told_at_location_id: Optional[str] = None,
 ) -> Optional[PersonKnowledge]:
     """Record that this person now knows this event, if they did not already.
 
     Returns the new row, or ``None`` when they already knew — learning the
     same thing twice is not two pieces of knowledge, and how they first came to
-    know — the year, the source, the teller — is never overwritten by a later
+    know — the year, the source, the teller, the place — is never overwritten by a later
     seeing or telling.
     """
     if person_by_id(world, person_id) is None:
@@ -113,6 +114,7 @@ def learn(
         ),
         source=source,
         learned_from_person_id=learned_from_person_id,
+        told_at_location_id=told_at_location_id,
     )
     world.knowledge.append(row)
     return row
@@ -130,14 +132,17 @@ def tell(
     when the recipient already knew: their first way of knowing stands.
 
     Who may be told is the caller's question. This only refuses what would
-    not be true: a teller who does not know it, or people who are not there.
+    not be true: a teller who does not know it, or people who are not there —
+    telling happens in one place, and that place is recorded with it.
     """
-    for person_id in (teller_id, recipient_id):
-        person = person_by_id(world, person_id)
+    teller, recipient = (person_by_id(world, p) for p in (teller_id, recipient_id))
+    for person_id, person in ((teller_id, teller), (recipient_id, recipient)):
         if person is None or not person.alive:
             raise KnowledgeRefused(f"{person_id} is not a living person")
     if teller_id == recipient_id:
         raise KnowledgeRefused("nobody tells a thing to themselves")
+    if teller.lifecycle.location_id != recipient.lifecycle.location_id:
+        raise KnowledgeRefused(f"{recipient_id} is not where {teller_id} is")
     if not knows(world, teller_id, event_id):
         raise KnowledgeRefused(f"{teller_id} does not know {event_id}")
     return learn(
@@ -146,4 +151,5 @@ def tell(
         event_id,
         KnowledgeSource.TOLD,
         learned_from_person_id=teller_id,
+        told_at_location_id=teller.lifecycle.location_id,
     )

@@ -103,6 +103,7 @@ def test_knowing_is_a_reference_and_never_a_copy():
             "learned_year",
             "source",
             "learned_from_person_id",
+            "told_at_location_id",
         }
         assert row.learned_from_person_id is None  # nobody told them; they saw
 

@@ -111,13 +111,14 @@ def test_there_are_exactly_two_ways_to_know():
     assert set(KnowledgeSource) == {KnowledgeSource.OBSERVED, KnowledgeSource.TOLD}
 
 
-def test_the_record_gained_only_the_teller():
+def test_the_record_gained_only_the_teller_and_the_place():
     assert set(PersonKnowledge.model_fields) == {
         "person_id",
         "event_id",
         "learned_year",
         "source",
         "learned_from_person_id",
+        "told_at_location_id",  # added by knowledge discovery (0.8.0)
     }
 
 
@@ -129,6 +130,7 @@ def test_a_teller_is_recorded_exactly_when_told():
         learned_year=1,
         source=KnowledgeSource.TOLD,
         learned_from_person_id="a",
+        told_at_location_id="loc-0000",
     )
     with pytest.raises(ValidationError):
         PersonKnowledge(
@@ -145,6 +147,7 @@ def test_a_teller_is_recorded_exactly_when_told():
             learned_year=1,
             source=KnowledgeSource.TOLD,
             learned_from_person_id="a",
+            told_at_location_id="loc-0000",
         )
 
 

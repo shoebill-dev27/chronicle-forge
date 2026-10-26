@@ -307,9 +307,16 @@ class PersonKnowledge(BaseModel):
     because a surrogate would let the same person know the same thing twice.
 
     The row records how the person *first* came to know: ``source`` and, when
-    told, who told them. Being told again, or seeing it after being told,
-    changes nothing. The teller is a stable person reference, never a name, so
-    a chain of telling is followed row by row back to whoever was there.
+    told, who told them and where. Being told again, or seeing it after being
+    told, changes nothing. The teller is a stable person reference, never a
+    name, so a chain of telling is followed row by row back to whoever was
+    there.
+
+    The place is stored because it cannot be recovered later: people move, so
+    where the teller lives now is not where they spoke, and a routine span
+    closed in the year of the telling no longer covers it. Only telling has a
+    place here. Somebody who saw a thing saw it where it happened, which is
+    the event's truth, not this row's.
     """
 
     person_id: str
@@ -317,13 +324,15 @@ class PersonKnowledge(BaseModel):
     learned_year: int  # the year they first knew, and it never moves again
     source: KnowledgeSource = KnowledgeSource.OBSERVED
     learned_from_person_id: Optional[str] = None  # the teller; TOLD only
+    told_at_location_id: Optional[str] = None  # where they were told; TOLD only
 
     @model_validator(mode="after")
     def _a_teller_exactly_when_told(self) -> "PersonKnowledge":
-        if (self.source is KnowledgeSource.TOLD) != (
-            self.learned_from_person_id is not None
-        ):
+        told = self.source is KnowledgeSource.TOLD
+        if told != (self.learned_from_person_id is not None):
             raise ValueError("a teller is recorded exactly when the source is TOLD")
+        if told != (self.told_at_location_id is not None):
+            raise ValueError("a place is recorded exactly when the source is TOLD")
         if self.learned_from_person_id == self.person_id:
             raise ValueError("nobody learns a thing by telling it to themselves")
         return self

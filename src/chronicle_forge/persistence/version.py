@@ -56,8 +56,17 @@ History:
   events are seen from the new place. Under 0.6.0 those lines were refused as
   unknown commands, so a recipe holding them now replays into a different
   world. Nobody else moves; worldgen and every golden are unchanged.
+- ``0.8.0-knowledge-discovery`` — the player can ask somebody here what they
+  know. The routine loop gained ``ask`` (who here you could ask) and ``ask
+  <n>`` (what they know, and how they first came to know it: seen, or heard in
+  a year from a teller of an age in a place). Asking is read-only and takes no
+  time. A told ``PersonKnowledge`` row now records where it was told
+  (``told_at_location_id``), because people move and the place cannot be
+  recovered afterwards; ``tell`` refuses people in different places. Under
+  0.7.0 the ``ask`` lines were refused as unknown commands, and told rows had
+  no place.
 """
 
 from __future__ import annotations
 
-ENGINE_VERSION = "0.7.0-movement"
+ENGINE_VERSION = "0.8.0-knowledge-discovery"
